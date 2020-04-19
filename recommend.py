@@ -25,14 +25,15 @@ def data_read(spark, which_csv):
 
 def downsample(spark, df, fraction=0.01, seed=42):
     df.createOrReplaceTempView('df')
+    spark.sql('CREATE INDEX ind_id ON df(user_id)')
     unique_ids = spark.sql('SELECT distinct user_id FROM df')
     downsampled_ids = unique_ids.sample(False, fraction=fraction, seed=seed)
     downsampled_ids.show()
     downsampled_ids.createOrReplaceTempView('downsampled_ids')
     small_df = spark.sql('SELECT * FROM downsampled_ids LEFT JOIN df on downsampled_ids.user_id=df.user_id')
     small_df.createOrReplaceTempView('small_df')
-    spark.sql('SELECT COUNT(distint user_id) FROM small_df').show()
-    spark.sql('SELECT COUNT(distint user_id) FROM downsampled_ids').show()
+    spark.sql('SELECT COUNT(distinct user_id) FROM small_df').show()
+    spark.sql('SELECT COUNT(distinct user_id) FROM downsampled_ids').show()
     return small_df
 
 #def write_to_parquet()
