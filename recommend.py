@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-import sys
-
-user = sys.argv[1]
-
 
 #read in data
 def data_read(spark, which_csv):
