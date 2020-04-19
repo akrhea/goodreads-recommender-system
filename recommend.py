@@ -21,8 +21,20 @@ def data_read(spark, which_csv):
                                     schema = 'book_id_csv INT, book_id STRING')
         return df
     
-#subsetting and subsampling -- NOT DONE
-def data_prep(spark, spark_df, fraction=0.01, seed=42, savepq=True):
+
+
+def downsample(spark, df, fraction=0.01, seed=42):
+    df.createOrReplaceTempView('spark_df')
+    unique_ids = spark.sql('SELECT distinct user_id FROM df')
+    downsampled_ids = unique_ids.sample(False, fraction=fraction, seed=seed)
+    downsampled_ids.show()
+    small_df = spark.sql('SELECT * FROM downsampled_ids LEFT JOIN df on downsampled_ids.user_id=df.user_id')
+    spark.sql('SELECT COUNT(distint user_id) FROM small_df').show()
+    spark.sql('SELECT COUNT(distint user_id) FROM downsampled_ids').show()
+
+def write_to_parquet()
+
+def data_prep(spark, spark_df,  savepq=True):
     '''
     spark: spark
     spark_df: spark dataframe
@@ -37,6 +49,8 @@ def data_prep(spark, spark_df, fraction=0.01, seed=42, savepq=True):
     # from getpass import getuser
     # net_id=getuser()
 
+    
+
     if savepq == True:
 
         users=spark_df.select('user_id').distinct()
@@ -45,9 +59,7 @@ def data_prep(spark, spark_df, fraction=0.01, seed=42, savepq=True):
         #false = without replacement
         #df.sample(false ,fraction,seed)
         # Downsampling should follow similar logic to partitioning: don't downsample interactions directly. Instead, sample a percentage of users, and take all of their interactions to make a miniature version of the data.
-        temp=users.sample(False, fraction=fraction, seed=seed)
-        print(type(temp))
-        print('temp: ', temp)
+        
         
 
         temp=temp.toPandas().iloc[:,0]
