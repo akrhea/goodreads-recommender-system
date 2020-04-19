@@ -25,7 +25,6 @@ def data_read(spark, which_csv):
 
 def downsample(spark, df, fraction=0.01, seed=42):
     df.createOrReplaceTempView('df')
-    spark.sql('CREATE INDEX ind_id ON df(user_id)')
     unique_ids = spark.sql('SELECT distinct user_id FROM df')
     downsampled_ids = unique_ids.sample(False, fraction=fraction, seed=seed)
     downsampled_ids.show()
