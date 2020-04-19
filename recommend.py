@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+import sys
+
+user = sys.argv[1]
+
+
 #read in data
 def data_read(spark, which_csv):
     '''
@@ -21,7 +26,7 @@ def data_read(spark, which_csv):
         return df
     
 #subsetting and subsampling -- NOT DONE
-def data_prep(spark, spark_df, fraction=0.01, seed=42, savepq=False):
+def data_prep(spark, spark_df, fraction=0.01, seed=42, savepq=True):
     '''
     spark: spark
     spark_df: spark dataframe
@@ -32,8 +37,9 @@ def data_prep(spark, spark_df, fraction=0.01, seed=42, savepq=False):
 
     returns records object with random, specified subset of users
     '''
-    from getpass import getuser
-    net_id=getuser()
+    # uncomment if not passing filepath
+    # from getpass import getuser
+    # net_id=getuser()
 
     if savepq == True:
 
@@ -44,6 +50,10 @@ def data_prep(spark, spark_df, fraction=0.01, seed=42, savepq=False):
         #df.sample(false ,fraction,seed)
         # Downsampling should follow similar logic to partitioning: don't downsample interactions directly. Instead, sample a percentage of users, and take all of their interactions to make a miniature version of the data.
         temp=users.sample(False, fraction=fraction, seed=seed)
+        print(type(temp))
+        print('temp: ', temp)
+        
+
         temp=temp.toPandas().iloc[:,0]
         #temp=temp.iloc[:,0]
         temp=temp.tolist()
@@ -51,12 +61,14 @@ def data_prep(spark, spark_df, fraction=0.01, seed=42, savepq=False):
         records=spark_df[spark_df['user_id'].isin(temp)]
         print('Selected %f percent of users', records.select('user_id').distinct().count()/spark_df.select('user_id').distinct().count())
 
+        # fix so dont have to pass filepath
         #records.orderBy('user_id').write.parquet('hdfs:/user/'+net_id+'/'+spark_df+'.parquet')
-        records.orderBy('user_id').write.parquet('hdfs:/user/{net_id}/{spark_df}.parquet')
+        #records.orderBy('user_id').write.parquet('hdfs:/user/?/{spark_df}.parquet', net_id)
 
         #records.write.parquet(pq_path)
 
-    records_pq = spark.read.parquet('hdfs:/user/{net_id}/{spark_df}.parquet')
+
+    records_pq = spark.read.parquet('hdfs:/user/?/{spark_df}.parquet', net_id)
 
     return records_pq
 
