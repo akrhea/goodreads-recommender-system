@@ -39,7 +39,7 @@ def downsample(spark, df, fraction=0.01, seed=42):
     downsampled_ids.createOrReplaceTempView('downsampled_ids')
 
     # can read in is_read and is_reviewed if necessary
-    small_df = spark.sql('SELECT downsampled.user_id, book_id, rating FROM downsampled_ids LEFT JOIN df on downsampled_ids.user_id=df.user_id')
+    small_df = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN df on downsampled_ids.user_id=df.user_id')
     small_df.createOrReplaceTempView('small_df')
     spark.sql('SELECT COUNT(distinct user_id) FROM small_df').show()
     spark.sql('SELECT COUNT(distinct user_id) FROM downsampled_ids').show()
