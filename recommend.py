@@ -24,12 +24,22 @@ def data_read(spark, which_csv):
 
 
 def downsample(spark, df, fraction=0.01, seed=42):
+    ''' 
+    will be called by main
+    takes in spark df read in by data_read
+    returns downsampled dataframe
+    next step in main: save to parquet
+
+    future work: could be sped up
+    '''
     df.createOrReplaceTempView('df')
     unique_ids = spark.sql('SELECT distinct user_id FROM df')
     downsampled_ids = unique_ids.sample(False, fraction=fraction, seed=seed)
     downsampled_ids.show()
     downsampled_ids.createOrReplaceTempView('downsampled_ids')
-    small_df = spark.sql('SELECT * FROM downsampled_ids LEFT JOIN df on downsampled_ids.user_id=df.user_id')
+
+    # can read in is_read and is_reviewed if necessary
+    small_df = spark.sql('SELECT downsampled.user_id, book_id, rating FROM downsampled_ids LEFT JOIN df on downsampled_ids.user_id=df.user_id')
     small_df.createOrReplaceTempView('small_df')
     spark.sql('SELECT COUNT(distinct user_id) FROM small_df').show()
     spark.sql('SELECT COUNT(distinct user_id) FROM downsampled_ids').show()
