@@ -35,14 +35,11 @@ def downsample(spark, df, fraction=0.01, seed=42):
     df.createOrReplaceTempView('df')
     unique_ids = spark.sql('SELECT distinct user_id FROM df')
     downsampled_ids = unique_ids.sample(False, fraction=fraction, seed=seed)
-    downsampled_ids.show()
     downsampled_ids.createOrReplaceTempView('downsampled_ids')
 
     # can read in is_read and is_reviewed if necessary
     small_df = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN df on downsampled_ids.user_id=df.user_id')
     small_df.createOrReplaceTempView('small_df')
-    spark.sql('SELECT COUNT(distinct user_id) FROM small_df').show()
-    spark.sql('SELECT COUNT(distinct user_id) FROM downsampled_ids').show()
     return small_df
 
 #def write_to_parquet()
