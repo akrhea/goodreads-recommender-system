@@ -64,6 +64,21 @@ def downsample(spark, df, fraction=0.01, seed=42):
     small_df = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN df on downsampled_ids.user_id=df.user_id')
     return small_df
 
+
+
+from py4j.protocol import Py4JJavaError
+def path_exist(path):
+    '''
+    adapted from post by @Nandeesh on stackoverflow:
+    https://stackoverflow.com/questions/30405728/apache-spark-check-if-file-exists
+    '''
+    try:
+        rdd = sc.textFile(path)
+        rdd.take(1)
+        return True
+    except Py4JJavaError as e:
+        return False
+
 def write_to_parquet(spark, df, filename):
     '''
     df: data to be written to parquet
@@ -183,7 +198,6 @@ def train_val_test_split(spark, data, seed=42):
 def read_sample_split_pq(spark,  fraction=0.01, interactions_pq=True, seed=42):
     '''
     akr to integrate this function into main by 4/25/20
-    also callable on its own (without main)
 
     Reads in interactions data, downsamples, splits, and writes to parquet
     Returns parquet objects
@@ -194,14 +208,17 @@ def read_sample_split_pq(spark,  fraction=0.01, interactions_pq=True, seed=42):
                      has been written to parquet on user's hdfs
     seed: set random seed for reproducibility
     '''
-    assert fraction <= 1, 'fraction must be less than 1'
-    assert fraction > 0, 'fraction must be greater than 0'
+    assert fraction <= 1, 'downsample fraction must be less than 1'
+    assert fraction > 0, 'downsample fraction must be greater than 0'
 
-    if interactions_pq:
-        df = spark.read.parquet('hdfs:/user/'+net_id+'/books_1_full.parquet')
+    filepath = 'hdfs:/user/'+net_id+'/books_1_full.parquet'
+
+    if path_exists(filepath):  #interactions_pq:
+        # if full interactions dataset already saved to parquet, read in
+        df = spark.read.parquet(filepath)
     else:
-        # save full interactions dataset to parquet if not already saved
         df_csv = data_read(spark, 'interactions')
+        # write full interactions dataset to parquet if not already saved
         df = write_to_parquet(spark, df_csv, 'books_1_full')
         
     if fraction!=1:
