@@ -62,7 +62,6 @@ def downsample(spark, df, fraction=0.01, seed=42):
 
     # can read in is_read and/or is_reviewed if necessary
     small_df = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN df on downsampled_ids.user_id=df.user_id')
-    # small_df.createOrReplaceTempView('small_df') # remove this step?
     return small_df
 
 def write_to_parquet(spark, df, filename):
@@ -73,7 +72,7 @@ def write_to_parquet(spark, df, filename):
         - no need to distinguish between interactions/books/users,
           (assuming we're only ever working with 'interactions')
 
-    Takes in spark df (format returned by train/test/split)
+    Takes in spark df
     Orders df by user_id
         - Will we ever need to order by book_id?
     Writes to Parquet
@@ -96,8 +95,8 @@ def train_val_test_split(spark, data, seed=42):
 
     60/20/20 by user_id
 
-    Takes in small_view (temp view of downsampled interactions)
-    Returns train, val, test [in what format?]
+    Takes in spark df of downsampled interactions)
+    Returns train, val, test dfs
 
     Notes from Assignment:
         - Select 60% of users (and all of their interactions) to form the *training set*.
@@ -201,20 +200,18 @@ def read_sample_split_pq(spark,  fraction=0.01, interactions_pq=True, seed=42):
     if interactions_pq:
         df = spark.read.parquet('hdfs:/user/'+net_id+'/books_1_full.parquet')
     else:
-        # save full interactions set to parquet if not already saved
+        # save full interactions dataset to parquet if not already saved
         df_csv = data_read(spark, 'interactions')
         df = write_to_parquet(spark, df_csv, 'books_1_full')
         
     if fraction!=1:
         # downsample
-        small_view = downsample(spark, df, fraction=fraction, seed=seed)
-        train, val, test = train_val_test_split(spark, small_view, seed=seed)
-    else:
-        # do not downsample
-        # df.createOrReplaceTempView('df') # is this line necessary?
-        train, val, test = train_val_test_split(spark, df, seed=seed)
+        df = downsample(spark, df, fraction=fraction, seed=seed)
 
-    # write to parquet last
+    # split into train/val/test
+    train, val, test = train_val_test_split(spark, df, seed=seed)
+
+    # write splits to parquet
     train_pq = write_to_parquet(spark, train, 'books_{}_train'.format(fraction))
     val_pq = write_to_parquet(spark, val, 'books_{}_val'.format(fraction))
     test_pq = write_to_parquet(spark, test, 'books_{}_test'.format(fraction))
