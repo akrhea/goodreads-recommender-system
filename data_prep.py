@@ -189,6 +189,9 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42):
                 - rounds down to the neareast 0.01
     seed: set random seed for reproducibility
     '''
+    #get netid
+    from getpass import getuser
+    net_id=getuser()
 
     # retain only 2 decimal places (round down to nearest 0.01)
     fraction = int(fraction*100)/100
