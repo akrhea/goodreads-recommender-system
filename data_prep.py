@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
 
-from getpass import getuser
-net_id=getuser()
-
 '''
 Use argv for command line arguments?
 Or argparse?
@@ -15,7 +12,7 @@ Or argparse?
 
 
 
-def data_read(spark, which_csv):
+def read_data_from_csv(spark, which_csv):
     '''
     Reads in specified data file from Brian McFee's hdfs
     Returns: spark df object 
@@ -41,7 +38,7 @@ def data_read(spark, which_csv):
 def downsample(spark, df, fraction=0.01, seed=42):
     ''' 
     Takes in spark df
-    Returns downsampled tempview
+    Returns downsampled df
     
     arguments:
         fraction - decimal percentage of users to retrieve 
@@ -56,6 +53,10 @@ def downsample(spark, df, fraction=0.01, seed=42):
 
     future work: could be sped up 
     '''
+
+    assert fraction <= 1, 'downsample fraction must be less than 1'
+    assert fraction > 0, 'downsample fraction must be greater than 0'
+
     df.createOrReplaceTempView('df')
     unique_ids = spark.sql('SELECT distinct user_id FROM df')
     downsampled_ids = unique_ids.sample(False, fraction=fraction, seed=seed)
@@ -100,10 +101,8 @@ def path_exist(path):
 def write_to_parquet(spark, df, filename):
     '''
     df: data to be written to parquet
-    filename: name of file
-        - naming convention: books_[downsample fraction]_[full/train/val]
-        - no need to distinguish between interactions/books/users,
-          (assuming we're only ever working with 'interactions')
+    filename: name of file to save in user's hdfs file
+        - naming convention: [interactions/books/users]_[downsample percent]_[full/train/val/test]
 
     Takes in spark df
     Orders df by user_id
@@ -111,6 +110,10 @@ def write_to_parquet(spark, df, filename):
     Writes to Parquet
     Returns Parquet-written dataframe
     '''
+
+    #get netid
+    from getpass import getuser
+    net_id=getuser()
 
     # write to parquet
     df.orderBy('user_id').write.parquet('hdfs:/user/'+net_id+'/'+filename+'.parquet')
@@ -227,15 +230,15 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42):
     assert fraction <= 1, 'downsample fraction must be less than 1'
     assert fraction > 0, 'downsample fraction must be greater than 0'
 
-    filepath = 'hdfs:/user/'+net_id+'/books_1_full.parquet'
+    filepath = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
 
     if path_exist(filepath):
-        # if full interactions dataset already saved to parquet, read in
+        # if full interactions dataset already saved to parquet, read in pq df
         df = spark.read.parquet(filepath)
     else:
-        df_csv = data_read(spark, 'interactions')
+        df_csv = read_data_from_csv(spark, 'interactions')
         # write full interactions dataset to parquet if not already saved
-        df = write_to_parquet(spark, df_csv, 'books_1_full')
+        df = write_to_parquet(spark, df_csv, 'interactions_100_full')
         
     if fraction!=1:
         # downsample
@@ -245,9 +248,9 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42):
     train, val, test = train_val_test_split(spark, df, seed=seed)
 
     # write splits to parquet
-    train_pq = write_to_parquet(spark, train, 'books_{}_train'.format(fraction))
-    val_pq = write_to_parquet(spark, val, 'books_{}_val'.format(fraction))
-    test_pq = write_to_parquet(spark, test, 'books_{}_test'.format(fraction))
+    train_pq = write_to_parquet(spark, train, 'interactions_{}_train'.format(fraction*100))
+    val_pq = write_to_parquet(spark, val, 'interactions_{}_val'.format(fraction*100))
+    test_pq = write_to_parquet(spark, test, 'interactions_{}_test'.format(fraction*100))
 
     return train_pq, val_pq, test_pq
 
