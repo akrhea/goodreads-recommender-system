@@ -117,12 +117,12 @@ def path_exist(path):
     adapted from: 
     http://www.learn4master.com/big-data/pyspark/pyspark-check-if-file-exists
     '''
-    cmd = ['hadoop', 'fs', 'test', '-e', path]
+    cmd = ['hdfs', 'fs', 'test', '-e', path]
     code = run_cmd(cmd)
-    if code:
-        print(code)
+    if code == 0:
+        return True
     else:
-        print('no code')
+        return False
     return
 
 def write_to_parquet(spark, df, filename):
