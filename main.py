@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import read_sample_split_pq from data_prep
+from data_prep import read_sample_split_pq
 
 
 def save_down_splits():
@@ -31,6 +31,7 @@ if __name__ == "__main__":
     task = sys.argv[1]
     # arg2 = sys.argv[2]
     # etc.
+
     main()
 
 
