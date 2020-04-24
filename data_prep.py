@@ -248,9 +248,9 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42):
     train, val, test = train_val_test_split(spark, df, seed=seed)
 
     # write splits to parquet
-    train_pq = write_to_parquet(spark, train, 'interactions_{}_train'.format(fraction*100))
-    val_pq = write_to_parquet(spark, val, 'interactions_{}_val'.format(fraction*100))
-    test_pq = write_to_parquet(spark, test, 'interactions_{}_test'.format(fraction*100))
+    train_pq = write_to_parquet(spark, train, 'interactions_{}_train'.format(int(fraction*100)))
+    val_pq = write_to_parquet(spark, val, 'interactions_{}_val'.format(int(fraction*100)))
+    test_pq = write_to_parquet(spark, test, 'interactions_{}_test'.format(int(fraction*100)))
 
     return train_pq, val_pq, test_pq
 
