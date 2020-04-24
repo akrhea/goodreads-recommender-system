@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from pyspark import SparkContext
 from getpass import getuser
 net_id=getuser()
 
@@ -67,13 +68,13 @@ def downsample(spark, df, fraction=0.01, seed=42):
 
 
 from py4j.protocol import Py4JJavaError
-def path_exist(spark, path):
+def path_exist(path):
     '''
     adapted from post by @Nandeesh on stackoverflow:
     https://stackoverflow.com/questions/30405728/apache-spark-check-if-file-exists
     '''
     try:
-        sc = spark.SparkConf()
+        sc = SparkConf()
         rdd = sc.textFile(path)
         rdd.take(1)
         return True
