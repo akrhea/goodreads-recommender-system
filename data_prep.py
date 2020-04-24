@@ -67,22 +67,66 @@ def downsample(spark, df, fraction=0.01, seed=42):
 
 
 
-from py4j.protocol import Py4JJavaError
+# from py4j.protocol import Py4JJavaError
+# def path_exist(path):
+#     '''
+#     adapted from post by @Nandeesh on stackoverflow:
+#     https://stackoverflow.com/questions/30405728/apache-spark-check-if-file-exists
+#     '''
+    
+#     from pyspark import SparkContext
+#     sc = SparkContext()
+
+#     try:
+#         rdd = sc.textFile(path)
+#         rdd.take(1)
+#         return True
+#     except Py4JJavaError as e:
+#         return False
+
+
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+
+def run_cmd(args_list):
+    '''
+    adapted from: 
+    http://www.learn4master.com/big-data/pyspark/pyspark-check-if-file-exists
+    '''
+    import subprocess
+    
+    print('Running system command: {0}'.format(' '.join(args_list)))
+    proc = subprocess.Popen(args_list, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+    proc.communicate()
+    return proc.returncode
+ 
 def path_exist(path):
     '''
-    adapted from post by @Nandeesh on stackoverflow:
-    https://stackoverflow.com/questions/30405728/apache-spark-check-if-file-exists
+    adapted from: 
+    http://www.learn4master.com/big-data/pyspark/pyspark-check-if-file-exists
     '''
-    
-    from pyspark import SparkContext
-    sc = SparkContext()
+    cmd = ['hadoop', 'fs', 'test', '-e', path]
+    code = run_cmd(cmd)
+    if code:
+        print(code)
+    else:
+        print('no code')
+    return
 
-    try:
-        rdd = sc.textFile(path)
-        rdd.take(1)
-        return True
-    except Py4JJavaError as e:
-        return False
+if code:
+    print 'file not exist'
 
 def write_to_parquet(spark, df, filename):
     '''
