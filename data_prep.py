@@ -73,10 +73,11 @@ def path_exist(path):
     adapted from post by @Nandeesh on stackoverflow:
     https://stackoverflow.com/questions/30405728/apache-spark-check-if-file-exists
     '''
-    sc = pyspark.SparkContext()
     
+    from pyspark import SparkContext
+    sc = SparkContext()
+
     try:
-        
         rdd = sc.textFile(path)
         rdd.take(1)
         return True
