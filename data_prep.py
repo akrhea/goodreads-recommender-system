@@ -11,7 +11,6 @@ Or argparse?
     # etc.
 
 
-
 def read_data_from_csv(spark, which_csv):
     '''
     Reads in specified data file from Brian McFee's hdfs
@@ -150,30 +149,35 @@ def train_val_test_split(spark, data, seed=42):
         You may discard these users from the experiment.
 
     '''
+    #Training Set - 60% of users and all interactions
+    users=data.select('user_id').distinct()
+    #users_train=users.sample(False, fraction=0.6, seed=seed)
+    users_train, users_val, users_test = randomSplit([0.6, 0.2, 0.2])
+    users_train.createOrReplaceTempView('users_train')
+    data.createOrReplaceTempView('data')
+    train = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN df on downsampled_ids.user_id=df.user_id')
 
-    print(records_pq.select('user_id').distinct().count())
+    #Validation Set - 20% of users and half their interactions (half back into training)
+
+    #Test Set - remaininf 20% of users and half their interactions (half back into training)
+
+
+    #print(records_pq.select('user_id').distinct().count())
 
     #spark_pq.createOrReplaceTempView('interactions')
 
     # Select 60% of users (and all of their interactions) to form the training setself.
     # Select 20% of users to form the validation set. 
-    users=records_pq.select('user_id').distinct()
-    temp=users.sample(False, fraction=0.6, seed=seed)
-    temp=temp.toPandas().iloc[:,0]
-    temp=temp.tolist()
-    train=records_pq[records_pq['user_id'].isin(temp)].toPandas() # all interactions
-    test_val=records_pq[~records_pq['user_id'].isin(temp)]
+
+
+
 
     # split test (20%), val (20%), putting half back into training set
-    users=test_val.select('user_id').distinct()
-    temp=users.sample(False, fraction=0.5, seed=seed)
-    temp=temp.toPandas().iloc[:,0]
-    temp=temp.tolist()
-    test=test_val[test_val['user_id'].isin(temp)].toPandas()
-    val=test_val[~test_val['user_id'].isin(temp)].toPandas()
+    #users=test_val.select('user_id').distinct()
+    #temp=users.sample(False, fraction=0.5, seed=seed)
+ 
 
     #from sklearn.model_selection import GroupShuffleSplit
-    import pandas as pd
 
     #train_ind, test_ind = next(GroupShuffleSplit(test_size=0.5, n_splits=2, random_state = seed).split(test, groups=test['user_id']))
     #test_train = test.iloc[train_ind]
@@ -202,7 +206,6 @@ def train_val_test_split(spark, data, seed=42):
     #train=pd.concat([train, val_train], axis=0)
     #train=pd.concat([train, test_train], axis=0)
     #pd.concat([survey_sub, survey_sub_last10], axis=0)
-    train=pd.concat([train, val_train, test_train], axis=0)
     #print(len(train['user_id'].unique()))
     # add a check to make sure this works
     train=spark.createDataFrame(train, schema = 'user_id INT, book_id INT, is_read INT, rating FLOAT, is_reviewed INT')
