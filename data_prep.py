@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+from getpass import getuser
+net_id=getuser()
+
 '''
 Use argv for command line arguments?
 Or argparse?
@@ -57,20 +60,25 @@ def downsample(spark, df, fraction=0.01, seed=42):
     downsampled_ids = unique_ids.sample(False, fraction=fraction, seed=seed)
     downsampled_ids.createOrReplaceTempView('downsampled_ids')
 
-    # can read in is_read and is_reviewed if necessary
+    # can read in is_read and/or is_reviewed if necessary
     small_df = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN df on downsampled_ids.user_id=df.user_id')
-    small_df.createOrReplaceTempView('small_df') # remove this step?
+    # small_df.createOrReplaceTempView('small_df') # remove this step?
     return small_df
 
 def write_to_parquet(spark, df, filename):
     '''
-    Takes in spark df (format returned by train/test/split)
-    Writes to Parquet
-    Returns Parquet object
-    '''
+    df: data to be written to parquet
+    filename: name of file
+        - naming convention: books_[downsample fraction]_[full/train/val].parquet
+        - no need to distinguish between interactions/books/users,
+          (assuming we're only ever working with 'interactions')
 
-    from getpass import getuser
-    net_id=getuser()
+    Takes in spark df (format returned by train/test/split)
+    Orders df by user_id
+        - Will we ever need to order by book_id?
+    Writes to Parquet
+    Returns Parquet-written dataframe
+    '''
 
     # write to parquet
     df.orderBy('user_id').write.parquet('hdfs:/user/'+net_id+'/'+filename+'.parquet')
@@ -173,7 +181,7 @@ def train_val_test_split(spark, data, seed=42):
     return train, val, test
 
 
-def read_sample_split_pq(spark,  fraction=0.01, savepq_first=False, seed=42):
+def read_sample_split_pq(spark,  fraction=0.01, interactions_pq=True, seed=42):
     '''
     akr to integrate this function into main by 4/25/20
     also callable on its own (without main)
@@ -183,42 +191,36 @@ def read_sample_split_pq(spark,  fraction=0.01, savepq_first=False, seed=42):
 
     spark: spark
     fraction: decimal percentage of users to retrieve (i.e. 0.01, 0.05, 0.25)
-    savepq_first: bool, current implementation only supports False
+    interactions_pq: bool, indicates whether 'goodreads_interactions.csv' 
+                     has been written to parquet on user's hdfs
     seed: set random seed for reproducibility
     '''
     assert fraction <= 1, 'fraction must be less than 1'
     assert fraction > 0, 'fraction must be greater than 0'
 
-    if savepq_first == False:
-        # call other data prep functions
-        df = data_read(spark, 'interactions')
-
-        if fraction!=1:
-            # downsample
-            small_view = downsample(spark, df, fraction=fraction, seed=seed)
-            train, val, test = train_val_test_split(spark, small_view, seed=seed)
-        else:
-            # do not downsample
-            df.createOrReplaceTempView('df')
-            train, val, test = train_val_test_split(spark, df, seed=seed)
-
-        # write to parquet last
-        train_pq = write_to_parquet(spark, train, 'books_{}_train'.format(fraction))
-        val_pq = write_to_parquet(spark, val, 'books_{}_val'.format(fraction))
-        test_pq = write_to_parquet(spark, test, 'books_{}_test'.format(fraction))
+    if interactions_pq:
+        df = spark.read.parquet('hdfs:/user/'+net_id+'/books_1_full.parquet')
+    else:
+        # save full interactions set to parquet if not already saved
+        df_csv = data_read(spark, 'interactions')
+        df = write_to_parquet(spark, df_csv, 'books_1_full')
         
-        return train_pq, val_pq, test_pq
+    if fraction!=1:
+        # downsample
+        small_view = downsample(spark, df, fraction=fraction, seed=seed)
+        train, val, test = train_val_test_split(spark, small_view, seed=seed)
+    else:
+        # do not downsample
+        # df.createOrReplaceTempView('df') # is this line necessary?
+        train, val, test = train_val_test_split(spark, df, seed=seed)
 
-    elif savepq_first == True:
+    # write to parquet last
+    train_pq = write_to_parquet(spark, train, 'books_{}_train'.format(fraction))
+    val_pq = write_to_parquet(spark, val, 'books_{}_val'.format(fraction))
+    test_pq = write_to_parquet(spark, test, 'books_{}_test'.format(fraction))
 
-        # write to parquet first
+    return train_pq, val_pq, test_pq
 
-        # call other data prep functions
-        # (functions would need to be adapted/rewritten)
-        
-        # return train_pq, val_pq, test_pq ?
-
-        return 
 
 
 
