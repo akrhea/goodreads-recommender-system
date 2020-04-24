@@ -234,7 +234,7 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42):
     '''
 
     # retain only 2 decimal places (round down to nearest 0.01)
-    fraction = int(fraction*100))/100
+    fraction = int(fraction*100)/100
 
     # check that 0 < fraction <= 1
     assert fraction <= 1, 'downsample fraction must be less than 1'
