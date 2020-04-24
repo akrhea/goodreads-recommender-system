@@ -66,41 +66,10 @@ def downsample(spark, df, fraction=0.01, seed=42):
     return small_df
 
 
-
-# from py4j.protocol import Py4JJavaError
-# def path_exist(path):
-#     '''
-#     adapted from post by @Nandeesh on stackoverflow:
-#     https://stackoverflow.com/questions/30405728/apache-spark-check-if-file-exists
-#     '''
-    
-#     from pyspark import SparkContext
-#     sc = SparkContext()
-
-#     try:
-#         rdd = sc.textFile(path)
-#         rdd.take(1)
-#         return True
-#     except Py4JJavaError as e:
-#         return False
-
-
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-
 def run_cmd(args_list):
     '''
+    Runs command from shell outside Spark session
+
     adapted from: 
     http://www.learn4master.com/big-data/pyspark/pyspark-check-if-file-exists
     '''
@@ -114,6 +83,9 @@ def run_cmd(args_list):
  
 def path_exist(path):
     '''
+    Returns True if path exists in hdfs
+    Returns False if path does not exist in hdfs
+
     adapted from: 
     http://www.learn4master.com/big-data/pyspark/pyspark-check-if-file-exists
     '''
@@ -129,7 +101,7 @@ def write_to_parquet(spark, df, filename):
     '''
     df: data to be written to parquet
     filename: name of file
-        - naming convention: books_[downsample fraction]_[full/train/val].parquet
+        - naming convention: books_[downsample fraction]_[full/train/val]
         - no need to distinguish between interactions/books/users,
           (assuming we're only ever working with 'interactions')
 
@@ -241,7 +213,7 @@ def train_val_test_split(spark, data, seed=42):
     return train, val, test
 
 
-def read_sample_split_pq(spark,  fraction=0.01, interactions_pq=True, seed=42):
+def read_sample_split_pq(spark,  fraction=0.01, seed=42):
     '''
     akr to integrate this function into main by 4/25/20
 
@@ -250,8 +222,6 @@ def read_sample_split_pq(spark,  fraction=0.01, interactions_pq=True, seed=42):
 
     spark: spark
     fraction: decimal percentage of users to retrieve (i.e. 0.01, 0.05, 0.25)
-    interactions_pq: bool, indicates whether 'goodreads_interactions.csv' 
-                     has been written to parquet on user's hdfs
     seed: set random seed for reproducibility
     '''
     assert fraction <= 1, 'downsample fraction must be less than 1'
@@ -259,7 +229,7 @@ def read_sample_split_pq(spark,  fraction=0.01, interactions_pq=True, seed=42):
 
     filepath = 'hdfs:/user/'+net_id+'/books_1_full.parquet'
 
-    if path_exist(filepath):  #interactions_pq:
+    if path_exist(filepath):
         # if full interactions dataset already saved to parquet, read in
         df = spark.read.parquet(filepath)
     else:
