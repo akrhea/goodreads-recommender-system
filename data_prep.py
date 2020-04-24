@@ -67,7 +67,7 @@ def downsample(spark, df, fraction=0.01, seed=42):
 
 
 from py4j.protocol import Py4JJavaError
-def path_exist(path):
+def path_exist(spark, path):
     '''
     adapted from post by @Nandeesh on stackoverflow:
     https://stackoverflow.com/questions/30405728/apache-spark-check-if-file-exists
