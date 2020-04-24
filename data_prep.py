@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from pyspark import SparkContext
+
 from getpass import getuser
 net_id=getuser()
 
@@ -73,6 +73,8 @@ def path_exist(path):
     adapted from post by @Nandeesh on stackoverflow:
     https://stackoverflow.com/questions/30405728/apache-spark-check-if-file-exists
     '''
+    from pyspark import SparkContext
+    
     try:
         sc = SparkConf()
         rdd = sc.textFile(path)
