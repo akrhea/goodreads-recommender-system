@@ -156,6 +156,7 @@ def train_val_test_split(spark, data, seed=42):
     users_train.createOrReplaceTempView('users_train')
     data.createOrReplaceTempView('data')
     train = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN df on downsampled_ids.user_id=df.user_id')
+    return users_train, users_val, users_test
 
     #Validation Set - 20% of users and half their interactions (half back into training)
 
@@ -168,9 +169,6 @@ def train_val_test_split(spark, data, seed=42):
 
     # Select 60% of users (and all of their interactions) to form the training setself.
     # Select 20% of users to form the validation set. 
-
-
-
 
     # split test (20%), val (20%), putting half back into training set
     #users=test_val.select('user_id').distinct()
@@ -186,37 +184,16 @@ def train_val_test_split(spark, data, seed=42):
     #val_train = val.iloc[train_ind]
     #val = val.iloc[test_ind]
 
-    # split test into 2 dfs: test and training interactions for all users 
-    # note this excludes users with one interaction right now - should we subset first?
-    temp=test.groupby('user_id').apply(lambda x: x.sample(frac=0.5)).reset_index(drop=True)
-    keys = list(temp.columns.values) 
-    i1 = test.set_index(keys).index
-    i2 = temp.set_index(keys).index
-    test_train = test[~i1.isin(i2)]
-    test = temp
-
-    temp=val.groupby('user_id').apply(lambda x: x.sample(frac=0.5)).reset_index(drop=True)
-    keys = list(temp.columns.values) 
-    i1 = val.set_index(keys).index
-    i2 = temp.set_index(keys).index
-    val_train = val[~i1.isin(i2)]
-    val = temp
-
-    # https://stackoverflow.com/questions/54797508/how-to-generate-a-train-test-split-based-on-a-group-id
-    #train=pd.concat([train, val_train], axis=0)
-    #train=pd.concat([train, test_train], axis=0)
-    #pd.concat([survey_sub, survey_sub_last10], axis=0)
-    #print(len(train['user_id'].unique()))
     # add a check to make sure this works
-    train=spark.createDataFrame(train, schema = 'user_id INT, book_id INT, is_read INT, rating FLOAT, is_reviewed INT')
-    val=spark.createDataFrame(val, schema = 'user_id INT, book_id INT, is_read INT, rating FLOAT, is_reviewed INT')
-    test=spark.createDataFrame(test, schema = 'user_id INT, book_id INT, is_read INT, rating FLOAT, is_reviewed INT')
+    #train=spark.createDataFrame(train, schema = 'user_id INT, book_id INT, is_read INT, rating FLOAT, is_reviewed INT')
+    #val=spark.createDataFrame(val, schema = 'user_id INT, book_id INT, is_read INT, rating FLOAT, is_reviewed INT')
+    #test=spark.createDataFrame(test, schema = 'user_id INT, book_id INT, is_read INT, rating FLOAT, is_reviewed INT')
 
-    print(train.select('user_id').distinct().count())
-    print(val.select('user_id').distinct().count())
-    print(test.select('user_id').distinct().count())
+    #print(train.select('user_id').distinct().count())
+    #print(val.select('user_id').distinct().count())
+    #print(test.select('user_id').distinct().count())
 
-    return train, val, test
+    #return train, val, test
 
 
 def read_sample_split_pq(spark,  fraction=0.01, seed=42):
