@@ -73,7 +73,8 @@ def path_exist(path):
     https://stackoverflow.com/questions/30405728/apache-spark-check-if-file-exists
     '''
     try:
-        rdd = SparkConf().textFile(path)
+        sc = spark.SparkConf()
+        rdd = sc.textFile(path)
         rdd.take(1)
         return True
     except Py4JJavaError as e:
