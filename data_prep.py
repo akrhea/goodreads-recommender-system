@@ -73,7 +73,7 @@ def path_exist(path):
     https://stackoverflow.com/questions/30405728/apache-spark-check-if-file-exists
     '''
     try:
-        rdd = sc.textFile(path)
+        rdd = SparkConf().textFile(path)
         rdd.take(1)
         return True
     except Py4JJavaError as e:
@@ -213,7 +213,7 @@ def read_sample_split_pq(spark,  fraction=0.01, interactions_pq=True, seed=42):
 
     filepath = 'hdfs:/user/'+net_id+'/books_1_full.parquet'
 
-    if path_exists(filepath):  #interactions_pq:
+    if path_exist(filepath):  #interactions_pq:
         # if full interactions dataset already saved to parquet, read in
         df = spark.read.parquet(filepath)
     else:
