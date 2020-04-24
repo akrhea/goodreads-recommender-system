@@ -149,52 +149,32 @@ def train_val_test_split(spark, data, seed=42):
         You may discard these users from the experiment.
 
     '''
-    #Training Set - 60% of users and all interactions
     users=data.select('user_id').distinct()
-    #users_train=users.sample(False, fraction=0.6, seed=seed)
-    users_train, users_val, users_test = users.randomSplit([0.6, 0.2, 0.2])
+    users_train, users_val, users_test = users.randomSplit([0.6, 0.2, 0.2], seed=seed)
+    
     users_train.createOrReplaceTempView('users_train')
+    users_val.createOrReplaceTempView('users_val')
+    users_val.createOrReplaceTempView('users_test')
     data.createOrReplaceTempView('data')
+    
+    #Training Set - 60% of users and all interactions
     train = spark.sql('SELECT users_train.user_id, book_id, rating FROM users_train LEFT JOIN data on users_train.user_id=data.user_id')
-    return users_train, users_val, users_test
 
     #Validation Set - 20% of users and half their interactions (half back into training)
+    val_all = spark.sql('SELECT users_val.user_id, book_id, rating FROM users_val LEFT JOIN data on users_val.user_id=data.user_id')
+    val, val_to_train = val_all.randomSplit([0.5, 0.5], seed=seed)
+    
+    #concatenate rows from val_to_train to train
+    train=train.unionAll(val_to_train)
 
-    #Test Set - remaininf 20% of users and half their interactions (half back into training)
+    #Test Set - remaining 20% of users and half their interactions (half back into training)
+    test_all = spark.sql('SELECT users_test.user_id, book_id, rating FROM users_test LEFT JOIN data on users_test.user_id=data.user_id')
+    test, test_to_train = test_all.randomSplit([0.5, 0.5], seed=seed)
 
+    #concatenate rows from test_to_train to train
+    train=train.unionAll(test_to_train)
 
-    #print(records_pq.select('user_id').distinct().count())
-
-    #spark_pq.createOrReplaceTempView('interactions')
-
-    # Select 60% of users (and all of their interactions) to form the training setself.
-    # Select 20% of users to form the validation set. 
-
-    # split test (20%), val (20%), putting half back into training set
-    #users=test_val.select('user_id').distinct()
-    #temp=users.sample(False, fraction=0.5, seed=seed)
- 
-
-    #from sklearn.model_selection import GroupShuffleSplit
-
-    #train_ind, test_ind = next(GroupShuffleSplit(test_size=0.5, n_splits=2, random_state = seed).split(test, groups=test['user_id']))
-    #test_train = test.iloc[train_ind]
-    #test = test.iloc[test_ind]
-    #train_ind, test_ind = next(GroupShuffleSplit(test_size=0.5, n_splits=2, random_state = seed).split(val, groups=val['user_id']))
-    #val_train = val.iloc[train_ind]
-    #val = val.iloc[test_ind]
-
-    # add a check to make sure this works
-    #train=spark.createDataFrame(train, schema = 'user_id INT, book_id INT, is_read INT, rating FLOAT, is_reviewed INT')
-    #val=spark.createDataFrame(val, schema = 'user_id INT, book_id INT, is_read INT, rating FLOAT, is_reviewed INT')
-    #test=spark.createDataFrame(test, schema = 'user_id INT, book_id INT, is_read INT, rating FLOAT, is_reviewed INT')
-
-    #print(train.select('user_id').distinct().count())
-    #print(val.select('user_id').distinct().count())
-    #print(test.select('user_id').distinct().count())
-
-    #return train, val, test
-
+    return train, val, test
 
 def read_sample_split_pq(spark,  fraction=0.01, seed=42):
     '''
