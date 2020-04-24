@@ -117,7 +117,7 @@ def path_exist(path):
     adapted from: 
     http://www.learn4master.com/big-data/pyspark/pyspark-check-if-file-exists
     '''
-    cmd = ['hdfs', 'fs', 'test', '-e', path]
+    cmd = ['hdfs', 'dfs', '-test', '-e', path]
     code = run_cmd(cmd)
     if code == 0:
         return True
