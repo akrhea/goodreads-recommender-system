@@ -152,10 +152,10 @@ def train_val_test_split(spark, data, seed=42):
     #Training Set - 60% of users and all interactions
     users=data.select('user_id').distinct()
     #users_train=users.sample(False, fraction=0.6, seed=seed)
-    users_train, users_val, users_test = randomSplit([0.6, 0.2, 0.2])
+    users_train, users_val, users_test = users.randomSplit([0.6, 0.2, 0.2])
     users_train.createOrReplaceTempView('users_train')
     data.createOrReplaceTempView('data')
-    train = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN df on downsampled_ids.user_id=df.user_id')
+    train = spark.sql('SELECT users_train.user_id, book_id, rating FROM users_train LEFT JOIN data on users_train.user_id=data.user_id')
     return users_train, users_val, users_test
 
     #Validation Set - 20% of users and half their interactions (half back into training)
