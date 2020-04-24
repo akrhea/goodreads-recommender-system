@@ -50,8 +50,6 @@ def downsample(spark, df, fraction=0.01, seed=42):
         don't downsample interactions directly. 
     - Instead, sample a percentage of users, 
         and take all of their interactions to make a miniature version of the data.
-
-    future work: could be sped up 
     '''
 
     assert fraction <= 1, 'downsample fraction must be less than 1'
@@ -62,7 +60,7 @@ def downsample(spark, df, fraction=0.01, seed=42):
     downsampled_ids = unique_ids.sample(False, fraction=fraction, seed=seed)
     downsampled_ids.createOrReplaceTempView('downsampled_ids')
 
-    # can read in is_read and/or is_reviewed if necessary
+    # can also read in is_read and/or is_reviewed if necessary
     small_df = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN df on downsampled_ids.user_id=df.user_id')
     return small_df
 
@@ -84,8 +82,10 @@ def run_cmd(args_list):
  
 def path_exist(path):
     '''
-    Returns True if path exists in hdfs
+    Returns True if path already exists in hdfs
     Returns False if path does not exist in hdfs
+
+    path: filepath to check
 
     adapted from: 
     http://www.learn4master.com/big-data/pyspark/pyspark-check-if-file-exists
@@ -100,15 +100,15 @@ def path_exist(path):
 
 def write_to_parquet(spark, df, filename):
     '''
-    df: data to be written to parquet
-    filename: name of file to save in user's hdfs file
-        - naming convention: [interactions/books/users]_[downsample percent]_[full/train/val/test]
-
     Takes in spark df
     Orders df by user_id
         - Will we ever need to order by book_id?
     Writes to Parquet
     Returns Parquet-written dataframe
+
+    df: data to be written to parquet
+    filename: name of file to save in user's hdfs file
+        - naming convention: [interactions/books/users]_[downsample percent]_[full/train/val/test]
     '''
 
     #get netid
@@ -218,20 +218,26 @@ def train_val_test_split(spark, data, seed=42):
 
 def read_sample_split_pq(spark,  fraction=0.01, seed=42):
     '''
-    akr to integrate this function into main by 4/25/20
-
-    Reads in interactions data, downsamples, splits, and writes to parquet
-    Returns parquet objects
+    Reads in interactions data (write to Parquet if not already saved)
+    Downsamples fraction of user_id's
+    Splits into training/validation/test sets
+    Writes splits to parquet
+    Returns train, val, test dfs (from parquet)
 
     spark: spark
     fraction: decimal percentage of users to retrieve (i.e. 0.01, 0.05, 0.25)
+                - rounds down to the neareast 0.01
     seed: set random seed for reproducibility
     '''
+
+    # retain only 2 decimal places (round down to nearest 0.01)
+    fraction = int(fraction*100))/100
+
+    # check that 0 < fraction <= 1
     assert fraction <= 1, 'downsample fraction must be less than 1'
     assert fraction > 0, 'downsample fraction must be greater than 0'
 
     filepath = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
-
     if path_exist(filepath):
         # if full interactions dataset already saved to parquet, read in pq df
         df = spark.read.parquet(filepath)
