@@ -59,36 +59,26 @@ def downsample(spark, df, fraction=0.01, seed=42):
 
     # can read in is_read and is_reviewed if necessary
     small_df = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN df on downsampled_ids.user_id=df.user_id')
-    small_df.createOrReplaceTempView('small_df')
+    small_df.createOrReplaceTempView('small_df') # remove this step?
     return small_df
 
-def write_to_parquet(spark, data):
-'''
-akr to write this function by 4/25/20
+def write_to_parquet(spark, df, filename):
+    '''
+    Takes in spark df (format returned by train/test/split)
+    Writes to Parquet
+    Returns Parquet object
+    '''
 
-Takes in data in the format returned by train/test/split
-Writes to Parquet
-Returns Parquet object
+    from getpass import getuser
+    net_id=getuser()
 
-# try not to pass filepath
-pq_path: save and/or read from path (i.e. 'hdfs:/user/lhd258/onepct_int.parquet')
+    # write to parquet
+    df.orderBy('user_id').write.parquet('hdfs:/user/'+net_id+'/'+filename+'.parquet')
 
+    # read parquet
+    pq = spark.read.parquet('hdfs:/user/'+net_id+'/'+filename+'.parquet')
 
-utilize getpass import getuser
-'''
-
-# net_id=getuser()
-
- # fix so dont have to pass filepath
-        #records.orderBy('user_id').write.parquet('hdfs:/user/'+net_id+'/'+spark_df+'.parquet')
-        #records.orderBy('user_id').write.parquet('hdfs:/user/?/{spark_df}.parquet', net_id)
-
-        #records.write.parquet(pq_path)
-
-
-    records_pq = spark.read.parquet('hdfs:/user/?/{spark_df}.parquet', net_id)
-
-    return records_pq
+    return pq
 
 
 def train_val_test_split(spark, data, seed=42):
@@ -196,6 +186,9 @@ def read_sample_split_pq(spark,  fraction=0.01, savepq_first=False, seed=42):
     savepq_first: bool, current implementation only supports False
     seed: set random seed for reproducibility
     '''
+    assert fraction <= 1, 'fraction must be less than 1'
+    assert fraction > 0, 'fraction must be greater than 0'
+
     if savepq_first == False:
         # call other data prep functions
         df = data_read(spark, 'interactions')
@@ -210,9 +203,9 @@ def read_sample_split_pq(spark,  fraction=0.01, savepq_first=False, seed=42):
             train, val, test = train_val_test_split(spark, df, seed=seed)
 
         # write to parquet last
-        train_pq = write_to_parquet(spark, train)
-        val_pq = write_to_parquet(spark, val)
-        test_pq = write_to_parquet(spark, test)
+        train_pq = write_to_parquet(spark, train, 'books_{}_train'.format(fraction))
+        val_pq = write_to_parquet(spark, val, 'books_{}_val'.format(fraction))
+        test_pq = write_to_parquet(spark, test, 'books_{}_test'.format(fraction))
         
         return train_pq, val_pq, test_pq
 
