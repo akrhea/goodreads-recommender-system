@@ -125,9 +125,6 @@ def path_exist(path):
         print('no code')
     return
 
-if code:
-    print 'file not exist'
-
 def write_to_parquet(spark, df, filename):
     '''
     df: data to be written to parquet
