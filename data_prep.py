@@ -116,8 +116,11 @@ def write_to_parquet(spark, df, filename):
 
     try:
         # read parquet file if exists
+        print('trying to read in ', filename)
         pq = spark.read.parquet('hdfs:/user/'+net_id+'/'+filename+'.parquet')
+        print('successfully read in ', filename)
     except:
+        print('exception, writing ', filename)
         # write to parquet
         df.orderBy('user_id').write.parquet('hdfs:/user/'+net_id+'/'+filename+'.parquet')
 
@@ -210,12 +213,17 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42):
     test_path = 'hdfs:/user/'+net_id+'/interactions_{}_test.parquet'.format(int(fraction*100))
     
     try:
+        print('frac ', fraction, ' about to do parquet read try')
         # read in dfs from parquet if they exist
         train_pq = spark.read.parquet(train_path)
+        print('frac ', fraction, ' successfully passed train parquet read try')
         val_pq = spark.read.parquet(val_path)
+        print('frac ', fraction, ' successfully passed val parquet read try')
         test_pq = spark.read.parquet(test_path)
+        print('frac ', fraction, ' successfully passed all 3 parquet reading tries')
     
     except:
+        print('eeeexception. gonna go through the whole thing for frac ', fraction)
         full_data_path = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
         if path_exist(full_data_path):
             # if full interactions dataset already saved to parquet, read in pq df
