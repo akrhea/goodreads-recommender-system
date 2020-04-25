@@ -2,7 +2,8 @@
 
 #starting point: train, val, test in memory from data_prep
 
-def dummy_run():
+def dummy_run(spark):
+    import spark.implicits._
     train = Seq(
     (82, 124, 5.0),
     (64, 123, 4.0),
@@ -19,13 +20,13 @@ def dummy_run():
     (12, 122, 4.0)
     ).toDF("user_id", "book_id", "ratings") 
     
-    predictions=als(train, val, lamb=0.01, rank=3)
+    predictions=als(spark, train, val, lamb=0.01, rank=3)
     print(predictions)
     print(type(predictions))
     predictions.show()
     return 
 
-def als(train, val, lamb, rank):
+def als(spark, train, val, lamb, rank):
     ''' 
         Fits ALS model from train and makes predictions 
         Imput: training file
