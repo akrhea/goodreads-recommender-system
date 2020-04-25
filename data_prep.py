@@ -172,7 +172,7 @@ def train_val_test_split(spark, data, seed=42):
     val_all = spark.sql('SELECT users_val.user_id, book_id, rating FROM users_val LEFT JOIN data on users_val.user_id=data.user_id')
 
     # Sample 50% of interactions from each user in val_all, to keep for val set
-    val_dict = val_all.select(val_all.user_id).distinct().rdd.map(lambda x : (x[0], 0.5).collectAsMap()
+    val_dict = val_all.select(val_all.user_id).distinct().rdd.map(lambda x : (x[0], 0.5)).collectAsMap()
     val = val_all.sampleBy("user_id", fractions=val_dict, seed=seed)
 
     #Put other 50% of interactions back into train
@@ -183,7 +183,7 @@ def train_val_test_split(spark, data, seed=42):
     test_all = spark.sql('SELECT users_test.user_id, book_id, rating FROM users_test LEFT JOIN data on users_test.user_id=data.user_id')
 
     # Sample 50% of interactions from each user in test_all, to keep for test set
-    test_dict = test_all.select(test_all.user_id).distinct().rdd.map(lambda x : (x[0], 0.5).collectAsMap()
+    test_dict = test_all.select(test_all.user_id).distinct().rdd.map(lambda x : (x[0], 0.5)).collectAsMap()
     test = test_all.sampleBy("user_id", fractions=test_dict, seed=seed)
 
     #Put other 50% of interactions back into train
