@@ -298,14 +298,14 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
 def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
     
     for fraction in sample_fractions:
-        train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, pq=True)
+        train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=True)
     return
 
 def qc(spark, fraction):
     from getpass import getuser
     net_id=getuser()
 
-    train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, pq=False, rm_unobserved=False)
+    train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=False, rm_unobserved=False)
     full_data_path = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
     full = spark.read.parquet(full_data_path)
 
