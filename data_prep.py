@@ -239,6 +239,12 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42):
 
     return train_pq, val_pq, test_pq
 
+def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
+    
+    for fraction in sample_fractions:
+        print('frac: ', fraction)
+        train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42)
+    return
 
 
 
