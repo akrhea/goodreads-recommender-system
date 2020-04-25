@@ -2,14 +2,30 @@
 
 #starting point: train, val, test in memory from data_prep
 
-def make_dummy:
-    val someDF = Seq(
-    (82, 123, 5.0),
-    (64, 123, 4.5),
-    (27, 124 "horse")
-    ).toDF("user_id", "book_id", "ratings")    
+def dummy_run():
+    train = Seq(
+    (82, 124, 5.0),
+    (64, 123, 4.0),
+    (27, 122, 3.0),
+    (25, 122, 1.0),
+    (12, 124, 2.0)
+    ).toDF("user_id", "book_id", "ratings") 
 
-def fit_als(train, lamb, rank):
+    val = Seq(
+    (82, 123, 5.0),
+    (64, 122, 4.0),
+    (27, 124, 3.0),
+    (64, 123, 2.0),
+    (12, 122, 4.0)
+    ).toDF("user_id", "book_id", "ratings") 
+    
+    predictions=als(train, val, lamb=0.01, rank=3)
+    print(predictions)
+    print(type(predictions))
+    predictions.show()
+    return 
+
+def als(train, val, lamb, rank):
     ''' 
         Fits ALS model from train and makes predictions 
         Imput: training file
@@ -35,7 +51,7 @@ def fit_als(train, lamb, rank):
     model = als.fit(train)
    
     predictions = model.transform(val)
-
+    return predictions
 
 def evaluate(truth, preds):
 
