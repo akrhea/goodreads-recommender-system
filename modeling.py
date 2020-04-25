@@ -2,6 +2,13 @@
 
 #starting point: train, val, test in memory from data_prep
 
+def make_dummy:
+    val someDF = Seq(
+    (82, 123, 5.0),
+    (64, 123, 4.5),
+    (27, 124 "horse")
+    ).toDF("user_id", "book_id", "ratings")    
+
 def fit_als(train, lamb, rank):
     ''' 
         Fits ALS model from train and makes predictions 
@@ -27,6 +34,8 @@ def fit_als(train, lamb, rank):
     als = ALS(rank = rank, regParam=lamb, userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
     model = als.fit(train)
    
+    predictions = model.transform(val)
+
 
 def evaluate(truth, preds):
 

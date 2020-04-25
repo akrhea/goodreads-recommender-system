@@ -309,6 +309,9 @@ def qc(spark, fraction):
     full_data_path = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
     full = spark.read.parquet(full_data_path)
 
+    columns_to_drop = ['is_read', 'is_reviewed']
+    full = full.drop(*columns_to_drop)  
+
     train = train.cache()
     test = test.cache()
     val = val.cache()
@@ -316,28 +319,28 @@ def qc(spark, fraction):
 
     all_users=full.select('user_id').distinct()
     all_users_count=all_users.count()
-    print('all users count: ', all_users_count)
+    print('&&&all users count: ', all_users_count)
 
     train_users=train.select('user_id').distinct()
     train_users_count=train_users.count()
-    print('train users count: ', train_users_count)
+    print('&&&train users count: ', train_users_count)
     
     val_users=val.select('user_id').distinct()
     val_users_count=val_users.count()
-    print('val users count: ', val_users_count)
+    print('&&&val users count: ', val_users_count)
 
     test_users=test.select('user_id').distinct()
     test_users_count=test_users.count()
-    print('test users count:' , test_users_count)
+    print('&&&test users count:' , test_users_count)
 
-    print('train user prop: ', train_users_count/all_users_count)
-    print('val user prop: ', val_users_count/all_users_count)
-    print('test user prop: ', test_users_count/all_users_count)
+    print('&&&train user prop: ', train_users_count/all_users_count)
+    print('&&&val user prop: ', val_users_count/all_users_count)
+    print('&&&test user prop: ', test_users_count/all_users_count)
 
-    print('full interactions: ', full.count())
-    print('train interactions: ', train.count())
-    print('val interactions: ', val.count())
-    print('test interactions: ', test.count())
+    print('&&&full interactions: ', full.count())
+    print('&&&train interactions: ', train.count())
+    print('&&&val interactions: ', val.count())
+    print('&&&test interactions: ', test.count())
 
     full2=train.union(val).union(test)
     full.createOrReplaceTempView('full')
@@ -346,6 +349,10 @@ def qc(spark, fraction):
     print('full - full2: ', differences1.count())
     differences2 = spark.sql('SELECT * FROM full2 EXCEPT SELECT * FROM full')
     print('full2 - full: ', differences2.count())
+
+    print('&&&duplicates: ')
+    full2.groupby(['user_id', 'book_id']).count().where('count > 1').sort('count', ascending=False).show()
+
     return full, train, val, test
 
 
