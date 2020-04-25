@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 '''
 Use argv for command line arguments?
 Or argparse?
@@ -10,7 +9,6 @@ Or argparse?
     # arg2 = sys.argv[2]
     # etc.
 
-
 def read_data_from_csv(spark, which_csv):
     '''
     Reads in specified data file from Brian McFee's hdfs
@@ -19,7 +17,7 @@ def read_data_from_csv(spark, which_csv):
     spark: spark
     which_csv: 'interactions', 'users', 'books'
     '''
-
+    
     if which_csv=='interactions':
         print('Reading interactions from csv.')
         df=spark.read.csv('hdfs:/user/bm106/pub/goodreads/goodreads_interactions.csv', header = True, 
@@ -36,7 +34,6 @@ def read_data_from_csv(spark, which_csv):
                                     schema = 'book_id_csv INT, book_id STRING')
         return df
     
-
 def downsample(spark, df, fraction=0.01, seed=42):
     ''' 
     Takes in spark df
@@ -162,7 +159,7 @@ def train_val_test_split(spark, data, seed=42):
     print('Get all distinct users')
     users=data.select('user_id').distinct()
     print('Sampling users with randomSplit')
-    users_train, users_val, users_test = users.randomSplit([0.6, 0.2, 0.2], seed=seed)
+    users_train, users_val, users_test = users.randomSplit([0.6, 0.2, 0.2], seed=seed, rm_unobserved=True)
     
     users_train.createOrReplaceTempView('users_train')
     users_val.createOrReplaceTempView('users_val')
@@ -212,13 +209,14 @@ def train_val_test_split(spark, data, seed=42):
     train=train.union(test_to_train) # can add .distinct() if necessary
 
     # Remove unobserved items from val and test
-    print('Get all distinct observed items')
-    observed_items=train.select('book_id').distinct()
-    observed_items.createOrReplaceTempView('observed_items')
-    print('Remove unobserved items from validation')
-    val = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items LEFT JOIN val on observed_items.book_id=val.book_id')
-    print('Remove unobserved items from test')
-    test = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items LEFT JOIN test on observed_items.book_id=test.book_id')
+    if rm_unobserved:
+        print('Get all distinct observed items')
+        observed_items=train.select('book_id').distinct()
+        observed_items.createOrReplaceTempView('observed_items')
+        print('Remove unobserved items from validation')
+        val = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items LEFT JOIN val on observed_items.book_id=val.book_id')
+        print('Remove unobserved items from test')
+        test = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items LEFT JOIN test on observed_items.book_id=test.book_id')
 
     return train, val, test
 
