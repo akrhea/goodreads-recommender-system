@@ -176,9 +176,9 @@ def train_val_test_split(spark, data, seed=42):
     val = val_all.sampleBy("user_id", fractions=val_dict, seed=seed)
 
     #Put other 50% of interactions back into train
-    test_all.createOrReplaceTempView('test_all')
-    test.createOrReplaceTempView('test')
-    test_to_train = spark.sql('SELECT * FROM test_all EXCEPT SELECT * FROM test')
+    val_all.createOrReplaceTempView('val_all')
+    val.createOrReplaceTempView('val')
+    val_to_train = spark.sql('SELECT * FROM val_all EXCEPT SELECT * FROM val')
     train=train.union(val_to_train) # can add .distinct() if necessary
 
     #Test Set - 20% of users
