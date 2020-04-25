@@ -133,7 +133,7 @@ def write_to_parquet(spark, df, filename):
     return pq
 
 
-def train_val_test_split(spark, data, seed=42):
+def train_val_test_split(spark, data, seed=42, rm_unobserved=True):
 
     '''
     lhda to do
@@ -159,7 +159,7 @@ def train_val_test_split(spark, data, seed=42):
     print('Get all distinct users')
     users=data.select('user_id').distinct()
     print('Sampling users with randomSplit')
-    users_train, users_val, users_test = users.randomSplit([0.6, 0.2, 0.2], seed=seed, rm_unobserved=True)
+    users_train, users_val, users_test = users.randomSplit([0.6, 0.2, 0.2], seed=seed)
     
     users_train.createOrReplaceTempView('users_train')
     users_val.createOrReplaceTempView('users_val')
@@ -202,7 +202,8 @@ def train_val_test_split(spark, data, seed=42):
 
     #Put other 50% of interactions back into train
     test_all.createOrReplaceTempView('test_all')
-    test.createOrReplaceTempView('test')
+    
+    
     print('Select remaining interactions for training')
     test_to_train = spark.sql('SELECT * FROM test_all EXCEPT SELECT * FROM test')
     print('Merge remaining interactions with train')
@@ -220,17 +221,21 @@ def train_val_test_split(spark, data, seed=42):
 
     return train, val, test
 
-def remove_lowitem_users(spark):
+def remove_lowitem_users(spark, interactions):
     '''
+    Input: 
+        spark = spark
+        interactions = interactions data file
+    Returns: interactions (with users < 10 interactions filtered out)
     Notes from assignment:
         In general, users with few interactions (say, fewer than 10) 
         may not provide sufficient data for evaluation,
         especially after partitioning their observations into train/test.
         You may discard these users from the experiment.
     '''
-    return
+    
 
-def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False):
+def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobserved=True):
     '''
     Reads in interactions data (write to Parquet if not already saved)
     Downsamples fraction of user_id's
@@ -296,7 +301,57 @@ def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
         train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, pq=True)
     return
 
+def qc(fraction):
+    from getpass import getuser
+    net_id=getuser()
+
+    train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, pq=False, rm_unobserved=False)
+    full_data_path = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
+    full = spark.read.parquet(full_data_path)
+
+    train = train.cache()
+    test = test.cache()
+    val = val.cache()
+    full = full.cache()
+
+    all_users=full.select('user_id').distinct()
+    all_users_count=all_users.count()
+    print('all users count: ', all_users_count)
+
+    train_users=train.select('user_id').distinct()
+    train_users_count=train_users.count()
+    print('train users count: ', train_users_count)
+    
+    val_users=val.select('user_id').distinct()
+    val_users_count=val_users.count()
+    print('val users count: ', val_users_count)
+
+    test_users=test.select('user_id').distinct()
+    test_users_count=test_users.count()
+    print('test users count: , test_users_count)
+
+    print('train user prop: ', train_users_count/all_users_count)
+    print('val user prop: ', val_users_count/all_users_count)
+    print('test user prop: ', test_users_count/all_users_count)
+
+    print('full interactions: ', full.count())
+    print('train interactions: ', train.count())
+    print('val interactions: ', val.count())
+    print('test interactions: ', test.count())
+
+    full2=train.union(val).union(test)
+    full.createOrReplaceTempView('full')
+    full2.createOrReplaceTempView('full2')
+
+   differences1 = spark.sql('SELECT * FROM full EXCEPT SELECT * FROM full2')
+   print('full - full2: ', differences1.count())
+
+   differences2 = spark.sql('SELECT * FROM full2 EXCEPT SELECT * FROM full')
+   print('full2 - full: ', differences2.count())
+
+    return full, train, val, test
 
 
+    
 
 
