@@ -301,7 +301,7 @@ def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
         train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, pq=True)
     return
 
-def qc(fraction):
+def qc(spark, fraction):
     from getpass import getuser
     net_id=getuser()
 
