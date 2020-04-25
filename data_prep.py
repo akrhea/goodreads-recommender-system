@@ -114,11 +114,15 @@ def write_to_parquet(spark, df, filename):
     from getpass import getuser
     net_id=getuser()
 
-    # write to parquet
-    df.orderBy('user_id').write.parquet('hdfs:/user/'+net_id+'/'+filename+'.parquet')
+    try:
+        # read parquet file if exists
+        pq = spark.read.parquet('hdfs:/user/'+net_id+'/'+filename+'.parquet')
+    except:
+        # write to parquet
+        df.orderBy('user_id').write.parquet('hdfs:/user/'+net_id+'/'+filename+'.parquet')
 
-    # read parquet
-    pq = spark.read.parquet('hdfs:/user/'+net_id+'/'+filename+'.parquet')
+        # read parquet
+        pq = spark.read.parquet('hdfs:/user/'+net_id+'/'+filename+'.parquet')
 
     return pq
 
@@ -130,7 +134,7 @@ def train_val_test_split(spark, data, seed=42):
 
     60/20/20 by user_id
 
-    Takes in spark df of downsampled interactions)
+    Takes in spark df of downsampled interactions
     Returns train, val, test dfs
 
     Notes from Assignment:
@@ -148,6 +152,7 @@ def train_val_test_split(spark, data, seed=42):
         especially after partitioning their observations into train/test.
         You may discard these users from the experiment.
 
+        speed up queries with user_id & book_id indexes?
     '''
     users=data.select('user_id').distinct()
     users_train, users_val, users_test = users.randomSplit([0.6, 0.2, 0.2], seed=seed)
@@ -200,26 +205,37 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42):
     assert fraction <= 1, 'downsample fraction must be less than 1'
     assert fraction > 0, 'downsample fraction must be greater than 0'
 
-    filepath = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
-    if path_exist(filepath):
-        # if full interactions dataset already saved to parquet, read in pq df
-        df = spark.read.parquet(filepath)
-    else:
-        df_csv = read_data_from_csv(spark, 'interactions')
-        # write full interactions dataset to parquet if not already saved
-        df = write_to_parquet(spark, df_csv, 'interactions_100_full')
-        
-    if fraction!=1:
-        # downsample
-        df = downsample(spark, df, fraction=fraction, seed=seed)
+    train_path = 'hdfs:/user/'+net_id+'/interactions_{}_train.parquet'.format(int(fraction*100))
+    val_path = 'hdfs:/user/'+net_id+'/interactions_{}_val.parquet'.format(int(fraction*100))
+    test_path = 'hdfs:/user/'+net_id+'/interactions_{}_test.parquet'.format(int(fraction*100))
+    
+    try:
+        # read in dfs from parquet if they exist
+        train = spark.read.parquet(train_path)
+        val = spark.read.parquet(val_path)
+        test = spark.read.parquet(test_path)
+    
+    except:
+        full_data_path = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
+        if path_exist(full_data_path):
+            # if full interactions dataset already saved to parquet, read in pq df
+            df = spark.read.parquet(filepath)
+        else:
+            df_csv = read_data_from_csv(spark, 'interactions')
+            # write full interactions dataset to parquet if not already saved
+            df = write_to_parquet(spark, df_csv, 'interactions_100_full')
+            
+        if fraction!=1:
+            # downsample
+            df = downsample(spark, df, fraction=fraction, seed=seed)
 
-    # split into train/val/test
-    train, val, test = train_val_test_split(spark, df, seed=seed)
+        # split into train/val/test
+        train, val, test = train_val_test_split(spark, df, seed=seed)
 
-    # write splits to parquet
-    train_pq = write_to_parquet(spark, train, 'interactions_{}_train'.format(int(fraction*100)))
-    val_pq = write_to_parquet(spark, val, 'interactions_{}_val'.format(int(fraction*100)))
-    test_pq = write_to_parquet(spark, test, 'interactions_{}_test'.format(int(fraction*100)))
+        # write splits to parquet
+        train_pq = write_to_parquet(spark, train, 'interactions_{}_train'.format(int(fraction*100)))
+        val_pq = write_to_parquet(spark, val, 'interactions_{}_val'.format(int(fraction*100)))
+        test_pq = write_to_parquet(spark, test, 'interactions_{}_test'.format(int(fraction*100)))
 
     return train_pq, val_pq, test_pq
 

@@ -6,9 +6,10 @@ COMMAND LINE ARGUMENTS NOT WORKING
 '''
 
 
-def save_down_splits(spark):
-    sample_fractions = [.01, .05, 0.25]
+def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
+    
     for fraction in sample_fractions:
+        print('frac: ', fraction)
         train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42)
     return
 
