@@ -18,17 +18,20 @@ def read_data_from_csv(spark, which_csv):
 
     spark: spark
     which_csv: 'interactions', 'users', 'books'
-    
     '''
+
     if which_csv=='interactions':
+        print('Reading interactions from csv.')
         df=spark.read.csv('hdfs:/user/bm106/pub/goodreads/goodreads_interactions.csv', header = True, 
                                     schema = 'user_id INT, book_id INT, is_read INT, rating FLOAT, is_reviewed INT')
         return df
     elif which_csv=='users':
+        print('Reading users from csv.')
         df=spark.read.csv('hdfs:/user/bm106/pub/goodreads/user_id_map.csv', header = True, 
                                     schema = 'user_id_csv INT, user_id STRING')
         return df
     elif which_csv=='books':
+        print('Reading books from csv.')
         df=spark.read.csv('hdfs:/user/bm106/pub/goodreads/book_id_map.csv', header = True, 
                                     schema = 'book_id_csv INT, book_id STRING')
         return df
@@ -51,11 +54,12 @@ def downsample(spark, df, fraction=0.01, seed=42):
         and take all of their interactions to make a miniature version of the data.
     '''
 
-    assert fraction <= 1, 'downsample fraction must be less than 1'
-    assert fraction > 0, 'downsample fraction must be greater than 0'
+    assert fraction <= 1, 'Downsample fraction must be less than 1'
+    assert fraction > 0, 'Downsample fraction must be greater than 0'
 
     df.createOrReplaceTempView('df')
     unique_ids = spark.sql('SELECT distinct user_id FROM df')
+    print('Downsampling to {}%'.format(int(fraction*100)))
     downsampled_ids = unique_ids.sample(False, fraction=fraction, seed=seed)
     downsampled_ids.createOrReplaceTempView('downsampled_ids')
 
@@ -72,8 +76,6 @@ def run_cmd(args_list):
     http://www.learn4master.com/big-data/pyspark/pyspark-check-if-file-exists
     '''
     import subprocess
-    
-    print('Running system command: {0}'.format(' '.join(args_list)))
     proc = subprocess.Popen(args_list, stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
     proc.communicate()
@@ -92,8 +94,10 @@ def path_exist(path):
     cmd = ['hdfs', 'dfs', '-test', '-e', path]
     code = run_cmd(cmd)
     if code == 0:
+        print(path, ' exists')
         return True
     else:
+        print(path, ' does not exist.')
         return False
     return
 
@@ -114,15 +118,20 @@ def write_to_parquet(spark, df, filename):
     from getpass import getuser
     net_id=getuser()
 
+    path = 'hdfs:/user/'+net_id+'/'+filename+'.parquet'
+
     try:
         # read parquet file if exists
-        pq = spark.read.parquet('hdfs:/user/'+net_id+'/'+filename+'.parquet')
+        pq = spark.read.parquet(path)
+        print('Successfully read in ', filename)
     except:
         # write to parquet
-        df.orderBy('user_id').write.parquet('hdfs:/user/'+net_id+'/'+filename+'.parquet')
+        print('Begin writing ', filename)
+        df.orderBy('user_id').write.parquet(path)
+        print('Done writing ', filename)
 
         # read parquet
-        pq = spark.read.parquet('hdfs:/user/'+net_id+'/'+filename+'.parquet')
+        pq = spark.read.parquet(path)
 
     return pq
 
@@ -144,10 +153,15 @@ def train_val_test_split(spark, data, seed=42):
                 and the other half should be held out for validation.  
                 (Remember: you can't predict items for a user with no history at all!)
         - Remaining users: same process as for validation.
+        - Any items not observed during training 
+            (i.e., which have no interactions in the training set, or in the 
+            observed portion of the validation and test users), can be omitted.
 
-        could/should we speed up queries by repartitioning?
+    Could we speed up queries by repartitioning?
     '''
+    print('Get all distinct users')
     users=data.select('user_id').distinct()
+    print('Sampling users with randomSplit')
     users_train, users_val, users_test = users.randomSplit([0.6, 0.2, 0.2], seed=seed)
     
     users_train.createOrReplaceTempView('users_train')
@@ -155,50 +169,61 @@ def train_val_test_split(spark, data, seed=42):
     users_test.createOrReplaceTempView('users_test')
     data.createOrReplaceTempView('data')
     
+    print('Set training users')
     #Training Set - 60% of users
     train = spark.sql('SELECT users_train.user_id, book_id, rating FROM users_train LEFT JOIN data on users_train.user_id=data.user_id')
 
+    print('Set validation users')
     #Validation Set - 20% of users
     val_all = spark.sql('SELECT users_val.user_id, book_id, rating FROM users_val LEFT JOIN data on users_val.user_id=data.user_id')
 
-    print('before val collect as map')
     # Sample 50% of interactions from each user in val_all
+    print('Begin collecting validation users as map')
     val_dict = val_all.select(val_all.user_id).distinct().rdd.map(lambda x : (x[0], 0.5)).collectAsMap()
-    print('after val collect as map')
-    print('before val sample')
+    print('Done collecting validation users as map')
+    print('Sample interactions for validation users')
     val = val_all.sampleBy("user_id", fractions=val_dict, seed=seed)
 
     #Put other 50% of interactions back into train
     val_all.createOrReplaceTempView('val_all')
     val.createOrReplaceTempView('val')
+    print('Select remaining interactions for training')
     val_to_train = spark.sql('SELECT * FROM val_all EXCEPT SELECT * FROM val')
-    print('before val union')
+    print('Merge remaining interactions with train')
     train=train.union(val_to_train) # can add .distinct() if necessary
-    print('after val union')
 
+    print('Set test users')
     #Test Set - 20% of users
     test_all = spark.sql('SELECT users_test.user_id, book_id, rating FROM users_test LEFT JOIN data on users_test.user_id=data.user_id')
 
     # Sample 50% of interactions from each user in test_all
+    print('Begin collecting test users as map')
     test_dict = test_all.select(test_all.user_id).distinct().rdd.map(lambda x : (x[0], 0.5)).collectAsMap()
+    print('Done collecting test users as map')
+    print('Sample interactions for test users')
     test = test_all.sampleBy("user_id", fractions=test_dict, seed=seed)
 
     #Put other 50% of interactions back into train
     test_all.createOrReplaceTempView('test_all')
     test.createOrReplaceTempView('test')
+    print('Select remaining interactions for training')
     test_to_train = spark.sql('SELECT * FROM test_all EXCEPT SELECT * FROM test')
+    print('Merge remaining interactions with train')
     train=train.union(test_to_train) # can add .distinct() if necessary
 
-    return train, val, test
+    # Remove unobserved items from val and test
+    '''
+    This section has not yet been tested/run
+    '''
+    print('Get all distinct observed items')
+    observed_items=train.select('book_id').distinct()
+    observed_items.createOrReplaceTempView('observed_items')
+    print('Remove unobserved items from validation')
+    val = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items LEFT JOIN val on oberserved_items.book_id=val.book_id')
+    print('Remove unobserved items from test')
+    test = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items LEFT JOIN test on oberserved_items.book_id=test.book_id')
 
-def remove_unobserved_items(spark):
-    '''
-    Notes from assignment:
-        Any items not observed during training 
-        (i.e., which have no interactions in the training set, or in the 
-        observed portion of the validation and test users), can be omitted.
-    '''
-    return
+    return train, val, test
 
 def remove_lowitem_users(spark):
     '''
@@ -210,7 +235,7 @@ def remove_lowitem_users(spark):
     '''
     return
 
-def read_sample_split_pq(spark,  fraction=0.01, seed=42, pq=False):
+def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False):
     '''
     Reads in interactions data (write to Parquet if not already saved)
     Downsamples fraction of user_id's
@@ -222,6 +247,7 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, pq=False):
     fraction: decimal percentage of users to retrieve (i.e. 0.01, 0.05, 0.25)
                 - rounds down to the neareast 0.01
     seed: set random seed for reproducibility
+    save_pq: boolean option to save train/val/test splits to parquet
     '''
     #get netid
     from getpass import getuser
@@ -261,7 +287,7 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, pq=False):
         # split into train/val/test
         train, val, test = train_val_test_split(spark, df, seed=seed)
 
-        if pq:
+        if save_pq:
             # write splits to parquet
             train = write_to_parquet(spark, train, 'interactions_{}_train'.format(int(fraction*100)))
             val = write_to_parquet(spark, val, 'interactions_{}_val'.format(int(fraction*100)))
