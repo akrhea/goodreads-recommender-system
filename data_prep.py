@@ -348,8 +348,8 @@ def qc(fraction):
 
    differences2 = spark.sql('SELECT * FROM full2 EXCEPT SELECT * FROM full')
    print('full2 - full: ', differences2.count())
-
-    return full, train, val, test
+   
+   return full, train, val, test
 
 
     
