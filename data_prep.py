@@ -211,9 +211,9 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42):
     
     try:
         # read in dfs from parquet if they exist
-        train = spark.read.parquet(train_path)
-        val = spark.read.parquet(val_path)
-        test = spark.read.parquet(test_path)
+        train_pq = spark.read.parquet(train_path)
+        val_pq = spark.read.parquet(val_path)
+        test_pq = spark.read.parquet(test_path)
     
     except:
         full_data_path = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
