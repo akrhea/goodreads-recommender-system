@@ -11,7 +11,7 @@ def dummy_run(spark):
         (25, 122, 1.0),
         (12, 124, 2.0)
     ],
-    ['user_id', 'book_id', 'ratings'] 
+    ['user_id', 'book_id', 'rating'] 
     )
 
     val=spark.createDataFrame(
@@ -22,7 +22,7 @@ def dummy_run(spark):
         (64, 123, 2.0),
         (12, 122, 4.0)
     ],
-    ['user_id', 'book_id', 'ratings'] 
+    ['user_id', 'book_id', 'rating'] 
     )
     
     predictions=als(spark, train, val, lamb=0.01, rank=3)
