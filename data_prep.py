@@ -328,7 +328,7 @@ def qc(fraction):
 
     test_users=test.select('user_id').distinct()
     test_users_count=test_users.count()
-    print('test users count: , test_users_count)
+    print('test users count:' , test_users_count)
 
     print('train user prop: ', train_users_count/all_users_count)
     print('val user prop: ', val_users_count/all_users_count)
