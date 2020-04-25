@@ -24,8 +24,7 @@ def fit_als(train, lamb, rank):
     '''
     from pyspark.ml.recommendation import ALS
 
-    als = ALS(rank = rank, regParam=lamb, userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False,
-                nonnegative=True, coldStartStrategy="drop")
+    als = ALS(rank = rank, regParam=lamb, userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
     model = als.fit(train)
    
 
@@ -44,10 +43,11 @@ def evaluate(truth, preds):
     #reciprocal rank
 
 
+#use spark grid search -- see example code
 def hyperparam_search(train):
 
-    lambs=[0.0001, 0.001, 0.01, 0.1, 1]
-    ranks=
+    lambs=[0.0001, 0.001, 0.01, 0.1, 1, 10]
+    ranks=[5, 10, 100, 500, 1000, 10000]
 
     for i in lambs:
         for j in ranks:

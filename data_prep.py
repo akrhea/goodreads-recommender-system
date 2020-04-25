@@ -202,7 +202,7 @@ def train_val_test_split(spark, data, seed=42, rm_unobserved=True):
 
     #Put other 50% of interactions back into train
     test_all.createOrReplaceTempView('test_all')
-    
+    test.createOrReplaceTempView('test')
     
     print('Select remaining interactions for training')
     test_to_train = spark.sql('SELECT * FROM test_all EXCEPT SELECT * FROM test')
