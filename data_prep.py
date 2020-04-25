@@ -179,7 +179,7 @@ def train_val_test_split(spark, data, seed=42):
 
     # Sample 50% of interactions from each user in val_all
     print('Begin collecting validation users as map')
-    val_dict = val_all.select(val_all.user_id).distinct().rdd.map(lambda x : (x[0], 0.5)).collectAsMap()
+    val_dict = val_all.select(val_all.user_id).distinct().rdd.map(lambda x : (x[0], 0.5)).collectAsMap() #slowest step. better way?
     print('Done collecting validation users as map')
     print('Sample interactions for validation users')
     val = val_all.sampleBy("user_id", fractions=val_dict, seed=seed)
@@ -198,7 +198,7 @@ def train_val_test_split(spark, data, seed=42):
 
     # Sample 50% of interactions from each user in test_all
     print('Begin collecting test users as map')
-    test_dict = test_all.select(test_all.user_id).distinct().rdd.map(lambda x : (x[0], 0.5)).collectAsMap()
+    test_dict = test_all.select(test_all.user_id).distinct().rdd.map(lambda x : (x[0], 0.5)).collectAsMap() #slowest step. better way?
     print('Done collecting test users as map')
     print('Sample interactions for test users')
     test = test_all.sampleBy("user_id", fractions=test_dict, seed=seed)
@@ -212,16 +212,13 @@ def train_val_test_split(spark, data, seed=42):
     train=train.union(test_to_train) # can add .distinct() if necessary
 
     # Remove unobserved items from val and test
-    '''
-    This section has not yet been tested/run
-    '''
     print('Get all distinct observed items')
     observed_items=train.select('book_id').distinct()
     observed_items.createOrReplaceTempView('observed_items')
     print('Remove unobserved items from validation')
-    val = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items LEFT JOIN val on oberserved_items.book_id=val.book_id')
+    val = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items LEFT JOIN val on observed_items.book_id=val.book_id')
     print('Remove unobserved items from test')
-    test = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items LEFT JOIN test on oberserved_items.book_id=test.book_id')
+    test = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items LEFT JOIN test on observed_items.book_id=test.book_id')
 
     return train, val, test
 
