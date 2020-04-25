@@ -247,10 +247,14 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42):
             
         if fraction!=1:
             # downsample
+            print('begin downsamp')
             df = downsample(spark, df, fraction=fraction, seed=seed)
+            print('end downsamp')
 
+        print('begin split')
         # split into train/val/test
         train, val, test = train_val_test_split(spark, df, seed=seed)
+        print('end split')
 
         # write splits to parquet
         train_pq = write_to_parquet(spark, train, 'interactions_{}_train'.format(int(fraction*100)))
