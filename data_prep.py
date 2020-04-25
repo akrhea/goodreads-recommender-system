@@ -342,14 +342,11 @@ def qc(fraction):
     full2=train.union(val).union(test)
     full.createOrReplaceTempView('full')
     full2.createOrReplaceTempView('full2')
-
-   differences1 = spark.sql('SELECT * FROM full EXCEPT SELECT * FROM full2')
-   print('full - full2: ', differences1.count())
-
-   differences2 = spark.sql('SELECT * FROM full2 EXCEPT SELECT * FROM full')
-   print('full2 - full: ', differences2.count())
-   
-   return full, train, val, test
+    differences1 = spark.sql('SELECT * FROM full EXCEPT SELECT * FROM full2')
+    print('full - full2: ', differences1.count())
+    differences2 = spark.sql('SELECT * FROM full2 EXCEPT SELECT * FROM full')
+    print('full2 - full: ', differences2.count())
+    return full, train, val, test
 
 
     
