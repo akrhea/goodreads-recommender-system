@@ -176,8 +176,10 @@ def train_val_test_split(spark, data, seed=42):
     val = val_all.sampleBy("user_id", fractions=val_dict, seed=seed)
 
     #Put other 50% of interactions back into train
-    val_to_train = val_all.except(val)
-    train=train.union(val_to_train).distinct() 
+    test_all.createOrReplaceTempView('test_all')
+    test.createOrReplaceTempView('test')
+    test_to_train = spark.sql('SELECT * FROM test_all EXCEPT SELECT * FROM test')
+    train=train.union(val_to_train) # can add .distinct() if necessary
 
     #Test Set - 20% of users
     test_all = spark.sql('SELECT users_test.user_id, book_id, rating FROM users_test LEFT JOIN data on users_test.user_id=data.user_id')
@@ -187,8 +189,10 @@ def train_val_test_split(spark, data, seed=42):
     test = test_all.sampleBy("user_id", fractions=test_dict, seed=seed)
 
     #Put other 50% of interactions back into train
-    test_to_train = test_all.except(test)
-    train=train.union(test_to_train).distinct() 
+    test_all.createOrReplaceTempView('test_all')
+    test.createOrReplaceTempView('test')
+    test_to_train = spark.sql('SELECT * FROM test_all EXCEPT SELECT * FROM test')
+    train=train.union(test_to_train) # can add .distinct() if necessary
 
     return train, val, test
 
