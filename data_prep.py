@@ -334,7 +334,7 @@ def quality_check(spark, fraction, synthetic):
 
     train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=False, rm_unobserved=False, synthetic=synthetic)
 
-    down = downsample(spark, df, fraction=fraction, seed=seed)
+    down = downsample(spark, full, fraction=fraction, seed=seed)
 
     train = train.cache()
     test = test.cache()
