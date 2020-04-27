@@ -484,6 +484,9 @@ def quality_check(spark, fraction, synthetic):
 
     print('\n')
 
+    print('down:')
+    down.orderBy('user_id').show(down_inter_count, False)
+
     print('train:')
     train.orderBy('user_id').show(train_inter_count, False)
 
