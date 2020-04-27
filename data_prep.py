@@ -490,8 +490,10 @@ def quality_check(spark, fraction, synthetic):
     recombined.createOrReplaceTempView('recombined')
     differences1 = spark.sql('SELECT * FROM down EXCEPT SELECT * FROM recombined')
     print('&&& downsampled - recombined (should be 0): ', differences1.count())
+    differences1.show()
     differences2 = spark.sql('SELECT * FROM recombined EXCEPT SELECT * FROM down')
     print('&&& recombined - downsampled (should be 0): ', differences2.count())
+    differences2.show()
 
     print('\n')
 
