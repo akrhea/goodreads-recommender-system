@@ -172,7 +172,6 @@ def train_val_test_split(spark, data, seed=42, rm_unobserved=True):
     data.createOrReplaceTempView('data')
 
     # below is only for debugging
-    users.cache()
     users_train.cache()
     users_val.cache()
     users_test.cache()
