@@ -194,8 +194,8 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     #for debugging:
     train_60.cache()
     print ('\n')
-    print('train_60 distinct users count: ', train_60.select(train_60.user_id).distinct().count())
-    print('train_60 interactions count: ', train_60.count())
+    print('&&& train_60 distinct users count: ', train_60.select(train_60.user_id).distinct().count())
+    print('&&& train_60 interactions count: ', train_60.count())
     print ('\n')
 
     print('Set validation users')
@@ -205,8 +205,8 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
 
     #for debugging:
     print ('\n')
-    print('val all distinct users count: ', val_all.select(val_all.user_id).distinct().count())
-    print('val all interactions count: ', val_all.count())
+    print('&&& al all distinct users count: ', val_all.select(val_all.user_id).distinct().count())
+    print('&&& val all interactions count: ', val_all.count())
     print ('\n')
 
     # Sample 50% of interactions from each user in val_all
@@ -227,8 +227,8 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     #for debugging:
     train_80.cache()
     print ('\n')
-    print('train_80 distinct users count: ', train_80.select(train_80.user_id).distinct().count())
-    print('train_80 interactions count: ', train_80.count())
+    print('&&& train_80 distinct users count: ', train_80.select(train_80.user_id).distinct().count())
+    print('&&& train_80 interactions count: ', train_80.count())
     print ('\n')
 
     print('Set test users')
@@ -238,8 +238,8 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
 
     #for debugging:
     print ('\n')
-    print('test all distinct users count: ', test_all.select(test_all.user_id).distinct().count())
-    print('test all interactions count: ', test_all.count())
+    print('&&& test all distinct users count: ', test_all.select(test_all.user_id).distinct().count())
+    print('&&& test all interactions count: ', test_all.count())
     print ('\n')
 
     # Sample 50% of interactions from each user in test_all
