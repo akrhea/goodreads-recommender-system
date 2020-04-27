@@ -228,8 +228,8 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     val_final_users_count= val.select(val.user_id).distinct().count()
     print('&&& val final distinct users count: ', val_final_users_count)
     print('&&& val_final_users_count/val_all_users_count (should be 1): ', val_final_users_count/val_all_users_count)
-    print('&&& val final interactions count: ', val_count())
-    print('&&& val final / val all interactions count (should be .5): ', val_count()/val_all_count())
+    print('&&& val final interactions count: ', val_count)
+    print('&&& val final / val all interactions count (should be .5): ', val_count/val_all_count)
     print ('\n')
 
     #Put other 50% of interactions back into train
@@ -278,8 +278,8 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     test_final_users_count = test.select(test.user_id).distinct().count()
     print('&&& test final distinct users count: ', test_final_users_count)
     print('&&& test_final_users_count/test_all_users_count (should be 1): ', test_final_users_count/test_all_users_count)
-    print('&&& test final interactions count: ', test_count())
-    print('&&& test final / test all interactions count (should be .5): ', test_count()/test_all_count())
+    print('&&& test final interactions count: ', test_count)
+    print('&&& test final / test all interactions count (should be .5): ', test_count/test_all_count)
     print ('\n')
 
     #Put other 50% of interactions back into train
