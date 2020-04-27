@@ -67,14 +67,13 @@ def downsample(spark, full_data, fraction=0.01, seed=42):
         # can also read in is_read and/or is_reviewed if necessary
         small_df = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN full_data on downsampled_ids.user_id=full_data.user_id')
     
+        # for debugging:
         print('full_data:')
-        full_data.show()
-
+        full_data.orderBy('user_id').show(full_data.count(), False)
         print('downsampled_ids:')
-        downsampled_ids.show()
-
+        downsampled_ids.orderBy('user_id').show(downsampled_ids.count(), False)
         print('small_df:')
-        small_df.show()
+        small_df.orderBy('user_id').show(small_df.count(), False)
     return small_df
 
 
