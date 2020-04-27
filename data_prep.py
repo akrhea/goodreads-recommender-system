@@ -485,18 +485,18 @@ def quality_check(spark, fraction, synthetic):
     print('\n')
 
     print('train:')
-    train.orderBy('user_id').show(20, False)
+    train.orderBy('user_id').show(train_inter_count, False)
 
     print('val:')
-    val.orderBy('user_id').show(20, False)
+    val.orderBy('user_id').show(val_inter_count, False)
 
     print('test:')
-    val.orderBy('user_id').show(20, False)
+    test.orderBy('user_id').show(test_inter_count, False)
 
     recombined=train.union(val).union(test)
     recombined = recombined.cache()
     print('recombined:')
-    recombined.orderBy('user_id').show(20, False)
+    recombined.orderBy('user_id').show(recombined.count(), False)
     down.createOrReplaceTempView('down')
     recombined.createOrReplaceTempView('recombined')
     differences1 = spark.sql('SELECT * FROM down EXCEPT SELECT * FROM recombined')
