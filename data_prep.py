@@ -69,12 +69,12 @@ def downsample(spark, full_data, fraction=0.01, seed=42):
         down = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN full_data on downsampled_ids.user_id=full_data.user_id')
     
         # for debugging:
-        print('full_data:')
-        full_data.orderBy('user_id').show(full_data.count(), False)
-        print('downsampled_ids:')
-        downsampled_ids.orderBy('user_id').show(downsampled_ids.count(), False)
-        print('down:')
-        down.orderBy('user_id').show(down.count(), False)
+        # print('full_data:')
+        # full_data.orderBy('user_id').show(full_data.count(), False)
+        # print('downsampled_ids:')
+        # downsampled_ids.orderBy('user_id').show(downsampled_ids.count(), False)
+        # print('down:')
+        # down.orderBy('user_id').show(down.count(), False)
     return down
 
 
@@ -240,9 +240,9 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     print('&&& val final interactions count: ', val_count)
     print('&&& val final / val all interactions count (should be .5): ', val_count/val_all_count)
     print('val_all: ')
-    val_all.orderBy('user_id').show(val_all_count)
-    print('val: ')
-    val.orderBy('user_id').show(val_count)
+    # val_all.orderBy('user_id').show(val_all_count)
+    # print('val: ')
+    # val.orderBy('user_id').show(val_count)
     print ('\n')
 
     #Put other 50% of interactions back into train
@@ -294,10 +294,10 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     print('&&& test_final_users_count/test_all_users_count (should be 1): ', test_final_users_count/test_all_users_count)
     print('&&& test final interactions count: ', test_count)
     print('&&& test final / test all interactions count (should be .5): ', test_count/test_all_count)
-    print('test_all: ')
-    test_all.orderBy('user_id').show(test_all_count)
-    print('test: ')
-    test.orderBy('user_id').show(test_count)
+    #print('test_all: ')
+    #test_all.orderBy('user_id').show(test_all_count)
+    # print('test: ')
+    # test.orderBy('user_id').show(test_count)
     print ('\n')
 
     #Put other 50% of interactions back into train
@@ -494,30 +494,30 @@ def quality_check(spark, fraction, synthetic):
 
     print('\n')
 
-    print('down:')
-    down.orderBy('user_id').show(down_inter_count, False)
+    #print('down:')
+    #down.orderBy('user_id').show(down_inter_count, False)
 
-    print('train:')
-    train.orderBy('user_id').show(train_inter_count, False)
+    #print('train:')
+    #train.orderBy('user_id').show(train_inter_count, False)
 
-    print('val:')
-    val.orderBy('user_id').show(val_inter_count, False)
+    #print('val:')
+    #val.orderBy('user_id').show(val_inter_count, False)
 
-    print('test:')
-    test.orderBy('user_id').show(test_inter_count, False)
+    #print('test:')
+    #test.orderBy('user_id').show(test_inter_count, False)
 
     recombined=train.union(val).union(test)
     recombined = recombined.cache()
-    print('recombined:')
-    recombined.orderBy('user_id').show(recombined.count(), False)
+    #print('recombined:')
+    #recombined.orderBy('user_id').show(recombined.count(), False)
     down.createOrReplaceTempView('down')
     recombined.createOrReplaceTempView('recombined')
     differences1 = spark.sql('SELECT * FROM down EXCEPT SELECT * FROM recombined')
     print('&&& downsampled - recombined (should be 0): ', differences1.count())
-    differences1.show()
+    # differences1.show()
     differences2 = spark.sql('SELECT * FROM recombined EXCEPT SELECT * FROM down')
     print('&&& recombined - downsampled (should be 0): ', differences2.count())
-    differences2.show()
+    # differences2.show()
 
     print('\n')
 
