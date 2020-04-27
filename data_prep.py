@@ -266,26 +266,25 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
 
     if synthetic==False:
 
-        full_data_path = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
-        if path_exist(full_data_path):
-            # if full interactions dataset already saved to parquet, read in pq df
-            df = spark.read.parquet(full_data_path)
-        else:
-            df_csv = read_data_from_csv(spark, 'interactions')
-            # write full interactions dataset to parquet if not already saved
-            df = write_to_parquet(spark, df_csv, 'interactions_100_full')
-
-        train_path = 'hdfs:/user/'+net_id+'/interactions_{}_train.parquet'.format(int(fraction*100))
-        val_path = 'hdfs:/user/'+net_id+'/interactions_{}_val.parquet'.format(int(fraction*100))
-        test_path = 'hdfs:/user/'+net_id+'/interactions_{}_test.parquet'.format(int(fraction*100))
-        
         try:
             # read in dfs from parquet if they exist
+            train_path = 'hdfs:/user/'+net_id+'/interactions_{}_train.parquet'.format(int(fraction*100))
+            val_path = 'hdfs:/user/'+net_id+'/interactions_{}_val.parquet'.format(int(fraction*100))
+            test_path = 'hdfs:/user/'+net_id+'/interactions_{}_test.parquet'.format(int(fraction*100))
             train = spark.read.parquet(train_path)
             val = spark.read.parquet(val_path)
             test = spark.read.parquet(test_path)
         
         except:
+
+            full_data_path = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
+            if path_exist(full_data_path):
+                # if full interactions dataset already saved to parquet, read in pq df
+                df = spark.read.parquet(full_data_path)
+            else:
+                df_csv = read_data_from_csv(spark, 'interactions')
+                # write full interactions dataset to parquet if not already saved
+                df = write_to_parquet(spark, df_csv, 'interactions_100_full')
         
             if fraction!=1:
                 # downsample
@@ -311,17 +310,15 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
         # split into train/val/test
         train, val, test = train_val_test_split(spark, df, seed=seed, rm_unobserved=rm_unobserved)
 
-    return df, train, val, test
+    return train, val, test
 
 def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
     
     for fraction in sample_fractions:
-        df, train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=True)
+        train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=True)
     return
 
 def quality_check(spark, fraction, synthetic):
-
-
 
     if synthetic==False:
         from getpass import getuser
@@ -335,7 +332,9 @@ def quality_check(spark, fraction, synthetic):
     if synthetic==True:
         full = get_synth_data(spark)
 
-    down, train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=False, rm_unobserved=False, synthetic=synthetic)
+    train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=False, rm_unobserved=False, synthetic=synthetic)
+
+    down = downsample(spark, df, fraction=fraction, seed=seed)
 
     train = train.cache()
     test = test.cache()
