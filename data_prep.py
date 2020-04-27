@@ -63,6 +63,7 @@ def downsample(spark, full_data, fraction=0.01, seed=42):
         print('Downsampling to {}%'.format(int(fraction*100)))
         downsampled_ids = unique_ids.sample(False, fraction=fraction, seed=seed)
         downsampled_ids.createOrReplaceTempView('downsampled_ids')
+        downsampled_ids.cache()
 
         # can also read in is_read and/or is_reviewed if necessary
         down = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN full_data on downsampled_ids.user_id=full_data.user_id')
