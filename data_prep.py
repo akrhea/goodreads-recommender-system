@@ -158,6 +158,7 @@ def train_val_test_split(spark, data, seed=42, rm_unobserved=True):
     '''
     print('Get all distinct users')
     users=data.select('user_id').distinct()
+    users = users.cache() # necessary? may need to delete for memory reasons
     print('Sampling users with randomSplit')
     users_train, users_val, users_test = users.randomSplit([0.6, 0.2, 0.2], seed=seed)
     
@@ -173,6 +174,7 @@ def train_val_test_split(spark, data, seed=42, rm_unobserved=True):
     print('Set validation users')
     #Validation Set - 20% of users
     val_all = spark.sql('SELECT users_val.user_id, book_id, rating FROM users_val LEFT JOIN data on users_val.user_id=data.user_id')
+    val_all = val_all.cache()
 
     # Sample 50% of interactions from each user in val_all
     print('Begin collecting validation users as map')
@@ -192,6 +194,7 @@ def train_val_test_split(spark, data, seed=42, rm_unobserved=True):
     print('Set test users')
     #Test Set - 20% of users
     test_all = spark.sql('SELECT users_test.user_id, book_id, rating FROM users_test LEFT JOIN data on users_test.user_id=data.user_id')
+    test_all = test_all.cache()
 
     # Sample 50% of interactions from each user in test_all
     print('Begin collecting test users as map')
