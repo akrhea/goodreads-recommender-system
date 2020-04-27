@@ -137,7 +137,7 @@ def write_to_parquet(spark, df, filename):
     return pq
 
 
-def train_val_test_split(spark, data, seed=42, rm_unobserved=True):
+def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
 
     '''
     lhda to do
@@ -160,8 +160,8 @@ def train_val_test_split(spark, data, seed=42, rm_unobserved=True):
 
     Could we speed up queries by repartitioning?
     '''
-    print('Get all distinct users')
-    users=data.select('user_id').distinct()
+    print('Get all distinct users from downsampled data')
+    users=down.select('user_id').distinct()
     users = users.cache() # necessary? may need to delete for memory reasons
     print('Sampling users with randomSplit')
     users_train, users_val, users_test = users.randomSplit([0.6, 0.2, 0.2], seed=seed)
@@ -169,7 +169,7 @@ def train_val_test_split(spark, data, seed=42, rm_unobserved=True):
     users_train.createOrReplaceTempView('users_train')
     users_val.createOrReplaceTempView('users_val')
     users_test.createOrReplaceTempView('users_test')
-    data.createOrReplaceTempView('data')
+    down.createOrReplaceTempView('down')
 
     # below is only for debugging
     users_train.cache()
@@ -179,7 +179,7 @@ def train_val_test_split(spark, data, seed=42, rm_unobserved=True):
     users_train_count = users_train.count()
     users_val_count = users_val.count()
     users_test_count = users_test.count()
-    print('all users count: ', users_all_count)
+    print('all down users count: ', users_all_count)
     print('train users count: ', users_train_count)
     print('val users count: ', users_val_count)
     print('test users count: ', users_test_count)
@@ -187,11 +187,11 @@ def train_val_test_split(spark, data, seed=42, rm_unobserved=True):
     
     print('Set training users')
     #Training Set - 60% of users
-    train = spark.sql('SELECT users_train.user_id, book_id, rating FROM users_train LEFT JOIN data on users_train.user_id=data.user_id')
+    train = spark.sql('SELECT users_train.user_id, book_id, rating FROM users_train LEFT JOIN down on users_train.user_id=down.user_id')
 
     print('Set validation users')
     #Validation Set - 20% of users
-    val_all = spark.sql('SELECT users_val.user_id, book_id, rating FROM users_val LEFT JOIN data on users_val.user_id=data.user_id')
+    val_all = spark.sql('SELECT users_val.user_id, book_id, rating FROM users_val LEFT JOIN down on users_val.user_id=down.user_id')
     val_all = val_all.cache()
 
     # Sample 50% of interactions from each user in val_all
@@ -211,7 +211,7 @@ def train_val_test_split(spark, data, seed=42, rm_unobserved=True):
 
     print('Set test users')
     #Test Set - 20% of users
-    test_all = spark.sql('SELECT users_test.user_id, book_id, rating FROM users_test LEFT JOIN data on users_test.user_id=data.user_id')
+    test_all = spark.sql('SELECT users_test.user_id, book_id, rating FROM users_test LEFT JOIN down on users_test.user_id=down.user_id')
     test_all = test_all.cache()
 
     # Sample 50% of interactions from each user in test_all
