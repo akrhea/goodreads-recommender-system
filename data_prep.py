@@ -230,6 +230,10 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     print('&&& val_final_users_count/val_all_users_count (should be 1): ', val_final_users_count/val_all_users_count)
     print('&&& val final interactions count: ', val_count)
     print('&&& val final / val all interactions count (should be .5): ', val_count/val_all_count)
+    print('val_all: ')
+    val_all.show()
+    print('val: ')
+    val.show()
     print ('\n')
 
     #Put other 50% of interactions back into train
@@ -280,6 +284,10 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     print('&&& test_final_users_count/test_all_users_count (should be 1): ', test_final_users_count/test_all_users_count)
     print('&&& test final interactions count: ', test_count)
     print('&&& test final / test all interactions count (should be .5): ', test_count/test_all_count)
+    print('test_all: ')
+    test_all.show()
+    print('test: ')
+    test.show()
     print ('\n')
 
     #Put other 50% of interactions back into train
