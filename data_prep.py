@@ -189,7 +189,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     
     print('Set training users')
     #Training Set - 60% of users
-    train = spark.sql('SELECT users_train.user_id, book_id, rating FROM users_train LEFT JOIN down on users_train.user_id=down.user_id')
+    train_60 = spark.sql('SELECT users_train.user_id, book_id, rating FROM users_train LEFT JOIN down on users_train.user_id=down.user_id')
 
     print('Set validation users')
     #Validation Set - 20% of users
@@ -209,7 +209,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     print('Select remaining interactions for training')
     val_to_train = spark.sql('SELECT * FROM val_all EXCEPT SELECT * FROM val')
     print('Merge remaining interactions with train')
-    train=train.union(val_to_train) # can add .distinct() if necessary
+    train_80=train_60.union(val_to_train) # can add .distinct() if necessary
 
     print('Set test users')
     #Test Set - 20% of users
@@ -230,7 +230,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     print('Select remaining interactions for training')
     test_to_train = spark.sql('SELECT * FROM test_all EXCEPT SELECT * FROM test')
     print('Merge remaining interactions with train')
-    train=train.union(test_to_train) # can add .distinct() if necessary
+    train=train_80.union(test_to_train) # can add .distinct() if necessary
 
     # Remove unobserved items from val and test
     if rm_unobserved:
