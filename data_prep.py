@@ -334,7 +334,7 @@ def quality_check(spark, fraction, synthetic):
 
     train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=False, rm_unobserved=False, synthetic=synthetic)
 
-    down = downsample(spark, full, fraction=fraction, seed=seed)
+    down = downsample(spark, full, fraction=fraction, seed=42)
 
     train = train.cache()
     test = test.cache()
@@ -402,7 +402,7 @@ def quality_check(spark, fraction, synthetic):
     print('&&& downsampled duplicates count (assumed to be 0): ', dupcount)
     print('&&& recombined duplicates count (should be {}): '.format(dupcount), duplicates_rec.count())
 
-    return full, train, val, test
+    return full, down, train, val, test
 
 def get_synth_data(spark):
     return spark.createDataFrame(
