@@ -267,13 +267,13 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
     if synthetic==False:
 
         full_data_path = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
-            if path_exist(full_data_path):
-                # if full interactions dataset already saved to parquet, read in pq df
-                df = spark.read.parquet(full_data_path)
-            else:
-                df_csv = read_data_from_csv(spark, 'interactions')
-                # write full interactions dataset to parquet if not already saved
-                df = write_to_parquet(spark, df_csv, 'interactions_100_full')
+        if path_exist(full_data_path):
+            # if full interactions dataset already saved to parquet, read in pq df
+            df = spark.read.parquet(full_data_path)
+        else:
+            df_csv = read_data_from_csv(spark, 'interactions')
+            # write full interactions dataset to parquet if not already saved
+            df = write_to_parquet(spark, df_csv, 'interactions_100_full')
 
         train_path = 'hdfs:/user/'+net_id+'/interactions_{}_train.parquet'.format(int(fraction*100))
         val_path = 'hdfs:/user/'+net_id+'/interactions_{}_val.parquet'.format(int(fraction*100))
