@@ -310,12 +310,12 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
         # split into train/val/test
         train, val, test = train_val_test_split(spark, df, seed=seed, rm_unobserved=rm_unobserved)
 
-    return train, val, test
+    return df, train, val, test
 
 def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
     
     for fraction in sample_fractions:
-        train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=True)
+        df, train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=True)
     return
 
 def quality_check(spark, fraction, synthetic):
@@ -334,16 +334,21 @@ def quality_check(spark, fraction, synthetic):
     if synthetic==True:
         full = get_synth_data(spark)
 
-    train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=False, rm_unobserved=False, synthetic=synthetic)
+    down, train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=False, rm_unobserved=False, synthetic=synthetic)
 
     train = train.cache()
     test = test.cache()
     val = val.cache()
     full = full.cache()
+    down = down.cache()
 
     all_users=full.select('user_id').distinct()
     all_users_count=all_users.count()
     print('&&& all users count: ', all_users_count)
+
+    down_users=down.select('user_id').distinct()
+    down_users_count=down_users.count()
+    print('&&& downsampled users count: ', down_users_count)
 
     train_users=train.select('user_id').distinct()
     train_users_count=train_users.count()
@@ -357,31 +362,45 @@ def quality_check(spark, fraction, synthetic):
     test_users_count=test_users.count()
     print('&&& test users count: ', test_users_count)
 
-    print('&&& train user prop (should be {}): '.format(fraction), train_users_count/all_users_count)
-    print('&&& val user prop (should be {}): '.format(fraction*0.2), val_users_count/all_users_count)
-    print('&&& test user prop (should be {}): '.format(fraction*0.2), test_users_count/all_users_count)
+    print('\n')
+
+    print('&&& downsampled user prop (should be {}): '.format(fraction), down_users_count/all_users_count)
+    print('&&& train user prop (should be 1): ', train_users_count/down_users_count)
+    print('&&& val user prop (should be 0.2): '.format(fraction*0.2), val_users_count/down_users_count)
+    print('&&& test user prop (should be 0.2): '.format(fraction*0.2), test_users_count/down_users_count)
+
+    print('\n')
 
     print('&&& full interactions: ', full.count())
+    print('&&& down interactions: ', downcount())
     print('&&& train interactions: ', train.count())
     print('&&& val interactions: ', val.count())
     print('&&& test interactions: ', test.count())
 
-    full2=train.union(val).union(test)
-    full2 = full2.cache()
-    full.createOrReplaceTempView('full')
-    full2.createOrReplaceTempView('full2')
-    differences1 = spark.sql('SELECT * FROM full EXCEPT SELECT * FROM full2')
-    print('&&& full - full2 (should be 0): ', differences1.count())
-    differences2 = spark.sql('SELECT * FROM full2 EXCEPT SELECT * FROM full')
-    print('&&& full2 - full (should be 0): ', differences2.count())
+    print('\n')
 
-    duplicates = full.groupby(['user_id', 'book_id']).count().where('count > 1')
-    duplicates2 = full2.groupby(['user_id', 'book_id']).count().where('count > 1')
-    duplicates = duplicates.cache()
-    duplicates2 = duplicates2.cache()
-    dupcount = duplicates.count()
-    print('&&& full duplicates count (assumed to be 0): ', dupcount)
-    print('&&& full2 duplicates count (should be {}): '.format(dupcount), duplicates2.count())
+    recombined=train.union(val).union(test)
+    recombined = recombined.cache()
+    down.createOrReplaceTempView('down')
+    recombined.createOrReplaceTempView('recombined')
+    differences1 = spark.sql('SELECT * FROM down EXCEPT SELECT * FROM recombined')
+    print('&&& downsampled - recombined (should be 0): ', differences1.count())
+    differences2 = spark.sql('SELECT * FROM recombined EXCEPT SELECT * FROM down')
+    print('&&& recombined - downsampled (should be 0): ', differences2.count())
+
+    print('\n')
+
+    duplicates_full = full.groupby(['user_id', 'book_id']).count().where('count > 1')
+    duplicates_down = down.groupby(['user_id', 'book_id']).count().where('count > 1')
+    duplicates_rec = recombined.groupby(['user_id', 'book_id']).count().where('count > 1')
+    duplicates_full = duplicates_full.cache()
+    duplicates_down = duplicates_down.cache()
+    duplicates_rec = duplicates_rec.cache()
+
+    dupcount = duplicates_down.count()
+    print('&&& full duplicates count (assumed to be 0): ', duplicates_full.count())
+    print('&&& downsampled duplicates count (assumed to be 0): ', dupcount)
+    print('&&& recombined duplicates count (should be {}): '.format(dupcount), duplicates_rec.count())
 
     return full, train, val, test
 
