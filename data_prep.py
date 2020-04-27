@@ -172,6 +172,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     down.createOrReplaceTempView('down')
 
     # below is only for debugging
+    print ('\n')
     users_train.cache()
     users_val.cache()
     users_test.cache()
@@ -184,6 +185,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     print('val users count: ', users_val_count)
     print('test users count: ', users_test_count)
     print('(train+val+test)/all (should be 1): ', (users_train_count + users_val_count + users_test_count)/users_all_count)
+    print ('\n')
     
     print('Set training users')
     #Training Set - 60% of users
