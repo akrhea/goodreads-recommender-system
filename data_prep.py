@@ -191,10 +191,23 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     #Training Set - 60% of users
     train_60 = spark.sql('SELECT users_train.user_id, book_id, rating FROM users_train LEFT JOIN down on users_train.user_id=down.user_id')
 
+    #for debugging:
+    train_60.cache()
+    print ('\n')
+    print('train_60 distinct users count: ', train_60.select(train_60.user_id).distinct().count())
+    print('train_60 interactions count: ', train_60.count())
+    print ('\n')
+
     print('Set validation users')
     #Validation Set - 20% of users
     val_all = spark.sql('SELECT users_val.user_id, book_id, rating FROM users_val LEFT JOIN down on users_val.user_id=down.user_id')
     val_all = val_all.cache()
+
+    #for debugging:
+    print ('\n')
+    print('val all distinct users count: ', val_all.select(val_all.user_id).distinct().count())
+    print('val all interactions count: ', val_all.count())
+    print ('\n')
 
     # Sample 50% of interactions from each user in val_all
     print('Begin collecting validation users as map')
@@ -211,10 +224,23 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     print('Merge remaining interactions with train')
     train_80=train_60.union(val_to_train) # can add .distinct() if necessary
 
+    #for debugging:
+    train_80.cache()
+    print ('\n')
+    print('train_80 distinct users count: ', train_80.select(train_80.user_id).distinct().count())
+    print('train_80 interactions count: ', train_80.count())
+    print ('\n')
+
     print('Set test users')
     #Test Set - 20% of users
     test_all = spark.sql('SELECT users_test.user_id, book_id, rating FROM users_test LEFT JOIN down on users_test.user_id=down.user_id')
     test_all = test_all.cache()
+
+    #for debugging:
+    print ('\n')
+    print('test all distinct users count: ', test_all.select(test_all.user_id).distinct().count())
+    print('test all interactions count: ', test_all.count())
+    print ('\n')
 
     # Sample 50% of interactions from each user in test_all
     print('Begin collecting test users as map')
