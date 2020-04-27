@@ -235,7 +235,7 @@ def remove_lowitem_users(spark, interactions):
     '''
     
 
-def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobserved=True):
+def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobserved=True, synthetic=False):
     '''
     Reads in interactions data (write to Parquet if not already saved)
     Downsamples fraction of user_id's
@@ -260,38 +260,52 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
     assert fraction <= 1, 'downsample fraction must be less than 1'
     assert fraction > 0, 'downsample fraction must be greater than 0'
 
-    train_path = 'hdfs:/user/'+net_id+'/interactions_{}_train.parquet'.format(int(fraction*100))
-    val_path = 'hdfs:/user/'+net_id+'/interactions_{}_val.parquet'.format(int(fraction*100))
-    test_path = 'hdfs:/user/'+net_id+'/interactions_{}_test.parquet'.format(int(fraction*100))
-    
-    try:
-        # read in dfs from parquet if they exist
-        train_pq = spark.read.parquet(train_path)
-        val_pq = spark.read.parquet(val_path)
-        test_pq = spark.read.parquet(test_path)
-    
-    except:
-        full_data_path = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
-        if path_exist(full_data_path):
-            # if full interactions dataset already saved to parquet, read in pq df
-            df = spark.read.parquet(full_data_path)
-        else:
-            df_csv = read_data_from_csv(spark, 'interactions')
-            # write full interactions dataset to parquet if not already saved
-            df = write_to_parquet(spark, df_csv, 'interactions_100_full')
-            
+
+    if synthetic==False:
+
+        train_path = 'hdfs:/user/'+net_id+'/interactions_{}_train.parquet'.format(int(fraction*100))
+        val_path = 'hdfs:/user/'+net_id+'/interactions_{}_val.parquet'.format(int(fraction*100))
+        test_path = 'hdfs:/user/'+net_id+'/interactions_{}_test.parquet'.format(int(fraction*100))
+        
+        try:
+            # read in dfs from parquet if they exist
+            train_pq = spark.read.parquet(train_path)
+            val_pq = spark.read.parquet(val_path)
+            test_pq = spark.read.parquet(test_path)
+        
+        except:
+            full_data_path = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
+            if path_exist(full_data_path):
+                # if full interactions dataset already saved to parquet, read in pq df
+                df = spark.read.parquet(full_data_path)
+            else:
+                df_csv = read_data_from_csv(spark, 'interactions')
+                # write full interactions dataset to parquet if not already saved
+                df = write_to_parquet(spark, df_csv, 'interactions_100_full')
+
+            if fraction!=1:
+            # downsample
+            df = downsample(spark, df, fraction=fraction, seed=seed)
+
+            # split into train/val/test
+            train, val, test = train_val_test_split(spark, df, seed=seed, rm_unobserved=rm_unobserved)
+
+            if save_pq:
+                # write splits to parquet
+                train = write_to_parquet(spark, train, 'interactions_{}_train'.format(int(fraction*100)))
+                val = write_to_parquet(spark, val, 'interactions_{}_val'.format(int(fraction*100)))
+                test = write_to_parquet(spark, test, 'interactions_{}_test'.format(int(fraction*100)))
+
+    if synthetic==True:
+
+        df = get_synth_data()
+                
         if fraction!=1:
             # downsample
             df = downsample(spark, df, fraction=fraction, seed=seed)
 
         # split into train/val/test
         train, val, test = train_val_test_split(spark, df, seed=seed, rm_unobserved=rm_unobserved)
-
-        if save_pq:
-            # write splits to parquet
-            train = write_to_parquet(spark, train, 'interactions_{}_train'.format(int(fraction*100)))
-            val = write_to_parquet(spark, val, 'interactions_{}_val'.format(int(fraction*100)))
-            test = write_to_parquet(spark, test, 'interactions_{}_test'.format(int(fraction*100)))
 
     return train, val, test
 
@@ -301,16 +315,23 @@ def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
         train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=True)
     return
 
-def qc(spark, fraction):
-    from getpass import getuser
-    net_id=getuser()
+def quality_check(spark, fraction, synthetic):
 
-    train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=False, rm_unobserved=False)
-    full_data_path = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
-    full = spark.read.parquet(full_data_path)
 
-    columns_to_drop = ['is_read', 'is_reviewed']
-    full = full.drop(*columns_to_drop)  
+
+    if synthetic==False:
+        from getpass import getuser
+        net_id=getuser()
+        full_data_path = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
+        full = spark.read.parquet(full_data_path)
+
+        columns_to_drop = ['is_read', 'is_reviewed']
+        full = full.drop(columns_to_drop)  
+
+    if synthetic==True:
+        full = get_synth_data()
+
+    train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=False, rm_unobserved=False, synthetic=synthetic)
 
     train = train.cache()
     test = test.cache()
@@ -319,41 +340,93 @@ def qc(spark, fraction):
 
     all_users=full.select('user_id').distinct()
     all_users_count=all_users.count()
-    print('&&&all users count: ', all_users_count)
+    print('&&& all users count: ', all_users_count)
 
     train_users=train.select('user_id').distinct()
     train_users_count=train_users.count()
-    print('&&&train users count: ', train_users_count)
+    print('&&& train users count: ', train_users_count)
     
     val_users=val.select('user_id').distinct()
     val_users_count=val_users.count()
-    print('&&&val users count: ', val_users_count)
+    print('&&& val users count: ', val_users_count)
 
     test_users=test.select('user_id').distinct()
     test_users_count=test_users.count()
-    print('&&&test users count:' , test_users_count)
+    print('&&& test users count: ', test_users_count)
 
-    print('&&&train user prop: ', train_users_count/all_users_count)
-    print('&&&val user prop: ', val_users_count/all_users_count)
-    print('&&&test user prop: ', test_users_count/all_users_count)
+    print('&&& train user prop (should be {}): '.format(fraction), train_users_count/all_users_count)
+    print('&&& val user prop (should be {}): '.format(fraction*0.2), val_users_count/all_users_count)
+    print('&&& test user prop (should be {}): '.format(fraction*0.2), test_users_count/all_users_count)
 
-    print('&&&full interactions: ', full.count())
-    print('&&&train interactions: ', train.count())
-    print('&&&val interactions: ', val.count())
-    print('&&&test interactions: ', test.count())
+    print('&&& full interactions: ', full.count())
+    print('&&& train interactions: ', train.count())
+    print('&&& val interactions: ', val.count())
+    print('&&& test interactions: ', test.count())
 
     full2=train.union(val).union(test)
+    full2 = full2.cache()
     full.createOrReplaceTempView('full')
     full2.createOrReplaceTempView('full2')
     differences1 = spark.sql('SELECT * FROM full EXCEPT SELECT * FROM full2')
-    print('full - full2: ', differences1.count())
+    print('&&& full - full2 (should be 0): ', differences1.count())
     differences2 = spark.sql('SELECT * FROM full2 EXCEPT SELECT * FROM full')
-    print('full2 - full: ', differences2.count())
+    print('&&& full2 - full (should be 0): ', differences2.count())
 
-    print('&&&duplicates: ')
-    full2.groupby(['user_id', 'book_id']).count().where('count > 1').sort('count', ascending=False).show()
+    duplicates = full.groupby(['user_id', 'book_id']).count().where('count > 1')
+    duplicates2 = full2.groupby(['user_id', 'book_id']).count().where('count > 1')
+    duplicates = duplicates.cache()
+    duplicates2 = duplicates2.cache()
+    dupcount = duplicates.count()
+    print('&&& full duplicates count (assumed to be 0): ', dupcount)
+    print('&&& full2 duplicates count (should be {}): '.format(dupcount), duplicates2.count())
 
     return full, train, val, test
+
+def get_synth_data()
+    return spark.createDataFrame(
+                [
+                (1, 101, 5.0),
+                (1, 102, 5.0),
+                (1, 103, 5.0),
+                (1, 104, 5.0),
+                (2, 102, 4.0),
+                (2, 103, 4.0),
+                (2, 104, 4.0),
+                (2, 105, 4.0),
+                (3, 103, 3.0),
+                (3, 104, 3.0),
+                (3, 105, 3.0),
+                (3, 106, 3.0),
+                (4, 104, 1.0),
+                (4, 105, 1.0),
+                (4, 106, 1.0),
+                (4, 107, 1.0),
+                (5, 105, 2.0), 
+                (5, 106, 2.0),
+                (5, 107, 2.0), 
+                (5, 108, 2.0), 
+                (6, 106, 2.0), 
+                (6, 107, 2.0),
+                (6, 108, 2.0), 
+                (6, 109, 2.0), 
+                (7, 107, 2.0), 
+                (7, 108, 2.0),
+                (7, 109, 2.0), 
+                (7, 110, 2.0), 
+                (8, 108, 2.0), 
+                (8, 109, 2.0),
+                (8, 110, 2.0), 
+                (8, 111, 2.0), 
+                (9, 109, 2.0), 
+                (9, 110, 2.0),
+                (9, 111, 2.0), 
+                (9, 112, 2.0), 
+                (10, 110, 2.0), 
+                (10, 111, 2.0),
+                (10, 112, 2.0), 
+                (10, 113, 2.0), 
+                ],
+                ['user_id', 'book_id', 'rating'] )
 
 
     
