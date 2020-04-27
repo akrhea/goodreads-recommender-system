@@ -539,6 +539,11 @@ def quality_check(spark, fraction, synthetic):
     return full, down, train, val, test
 
 def get_synth_data(spark):
+    '''
+    Returns synethetic dataframe
+    There are 60 distinct user_ids, 1-60
+    Each user_id has a rating for 4 books
+    '''
     return spark.createDataFrame(
                 [
                 (1, 101, 5.0),
