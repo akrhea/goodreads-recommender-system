@@ -297,7 +297,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     train_final_users = train.select(train.user_id).distinct().count()
     print ('\n')
     print('&&& train_final distinct users count: ', train_final_users)
-    print('&&& train_final distinct users count / (train_80 distinct users count + test_final_users_count) (should be 1): ', train_final_users/(train_80_users_count+test_final_users_count))
+    print('&&& train_final distinct users count / (train_80 distinct users count + test_final_users_count) (should be 1): ', train_final_users/(train_80_users+test_final_users_count))
     print('&&& train_final interactions count: ', train_final_count)
     print('&&& train_final interactions /(train_80_count + test_all_count - test_count) (should be 1): ', train_final_count/(train_80_count + test_all_count - test_count))
     print ('\n')
