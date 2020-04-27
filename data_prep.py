@@ -351,17 +351,19 @@ def remove_lowitem_users(spark, interactions):
 
 def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobserved=True, synthetic=False):
     '''
-    Reads in interactions data (write to Parquet if not already saved)
+    Optionally reads in interactions data (and writes to Parquet if not already saved)
     Downsamples fraction of user_id's
     Splits into training/validation/test sets
-    Writes splits to parquet
-    Returns train, val, test dfs (from parquet)
+    Optionally writes splits to parquet
+    Returns down, train, val, test dfs
 
     spark: spark
     fraction: decimal percentage of users to retrieve (i.e. 0.01, 0.05, 0.25)
                 - rounds down to the neareast 0.01
     seed: set random seed for reproducibility
     save_pq: boolean option to save train/val/test splits to parquet
+    rm_unovserved: boolean option to remove unobserved items from val/test
+    synthetic: boolean option to use synthetic data (will use goodreads data if False)
     '''
     #get netid
     from getpass import getuser
