@@ -174,7 +174,9 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     users = users.cache() # necessary? may need to delete for memory reasons
     print('Sampling users with randomSplit')
     users_train, users_val, users_test = users.randomSplit([0.6, 0.2, 0.2], seed=seed)
-    
+    users_train.cache()
+    users_val.cache()
+    users_test.cache()
     users_train.createOrReplaceTempView('users_train')
     users_val.createOrReplaceTempView('users_val')
     users_test.createOrReplaceTempView('users_test')
@@ -182,9 +184,6 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
 
     # below is only for debugging
     print ('\n')
-    users_train.cache()
-    users_val.cache()
-    users_test.cache()
     users_all_count = users.count()
     users_train_count = users_train.count()
     users_val_count = users_val.count()
@@ -230,6 +229,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     print('Done collecting validation users as map')
     print('Sample interactions for validation users')
     val = val_all.sampleBy("user_id", fractions=val_dict, seed=seed)
+    val.cache()
 
     #for debugging:
     print ('\n')
@@ -284,6 +284,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     print('Done collecting test users as map')
     print('Sample interactions for test users')
     test = test_all.sampleBy("user_id", fractions=test_dict, seed=seed)
+    test.cache()
 
     #for debugging:
     print ('\n')
