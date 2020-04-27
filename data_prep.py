@@ -426,7 +426,12 @@ def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
 
 def quality_check(spark, fraction, synthetic):
     '''
-    Only works if splits not saved to pq
+    Check downsample and split functions.
+    Only works properly if splits not saved to pq.
+
+    spark: spark
+    fraction: downsample fraction
+    synthetic: boolean, whether or not to use synthetic data. Will use goodreads data if False.
     '''
     if synthetic==False:
         from getpass import getuser
