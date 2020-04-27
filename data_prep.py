@@ -418,10 +418,14 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
 
     return down, train, val, test
 
-def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
-    
+def save_down_splits(spark, sample_fractions = [.01, .05, 0.25, 1]):
+    '''
+    Used to save splits to parquet.
+    May not work because pyspark won't be restarted.
+    Need to test.
+    '''
     for fraction in sample_fractions:
-        train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=True)
+        down, train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=True)
     return
 
 def quality_check(spark, fraction, synthetic):
