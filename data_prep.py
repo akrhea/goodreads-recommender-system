@@ -382,7 +382,7 @@ def quality_check(spark, fraction, synthetic):
 
     return full, train, val, test
 
-def get_synth_data()
+def get_synth_data():
     return spark.createDataFrame(
                 [
                 (1, 101, 5.0),
