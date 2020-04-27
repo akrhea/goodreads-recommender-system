@@ -193,9 +193,12 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
 
     #for debugging:
     train_60.cache()
+    train_60_users_count = train_60.select(train_60.user_id).distinct().count()
+    train_60_count = train_60.count()
     print ('\n')
-    print('&&& train_60 distinct users count: ', train_60.select(train_60.user_id).distinct().count())
-    print('&&& train_60 interactions count: ', train_60.count())
+    print('&&& train_60 interactions count: ', train_60_count)
+    print('&&& train_60 distinct users count: ', train_60_users_count)
+    print('&&& train_60_users_count/users_train_count (should be 1): ' train_60_users_count/users_train_count)
     print ('\n')
 
     print('Set validation users')
@@ -205,8 +208,11 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
 
     #for debugging:
     print ('\n')
-    print('&&& al all distinct users count: ', val_all.select(val_all.user_id).distinct().count())
-    print('&&& val all interactions count: ', val_all.count())
+    val_all_count = val_all.count()
+    val_all_users_count = val_all.select(val_all.user_id).distinct().count()
+    print('&&& val all interactions count: ', val_all_count)
+    print('&&& val all distinct users count: ', val_all_users_count)
+    print('&&& val_all_users_count/users_val_count (should be 1): ' val_all_users_count/users_val_count)
     print ('\n')
 
     # Sample 50% of interactions from each user in val_all
@@ -215,6 +221,16 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     print('Done collecting validation users as map')
     print('Sample interactions for validation users')
     val = val_all.sampleBy("user_id", fractions=val_dict, seed=seed)
+
+    #for debugging:
+    print ('\n')
+    val_count = val.count()
+    val_final_users_count= val.select(val.user_id).distinct().count()
+    print('&&& val final distinct users count: ', val_final_users_count)
+    print('&&& val_final_users_count/val_all_users_count (should be 1): ' val_final_users_count/val_all_users_count)
+    print('&&& val final interactions count: ', val_count())
+    print('&&& val final / val all interactions count (should be .5): ', val_count()/val_all_count())
+    print ('\n')
 
     #Put other 50% of interactions back into train
     val_all.createOrReplaceTempView('val_all')
@@ -226,9 +242,13 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
 
     #for debugging:
     train_80.cache()
+    train_80_count = train_80.count()
+    train_80_users = train_80.select(train_80.user_id).distinct().count()
     print ('\n')
-    print('&&& train_80 distinct users count: ', train_80.select(train_80.user_id).distinct().count())
-    print('&&& train_80 interactions count: ', train_80.count())
+    print('&&& train_80 distinct users count: ', train_80_users)
+    print('&&& train_80 distinct users count / (train_60 distinct users count + val_final_users_count) (should be 1): ', train_80_users/(train_60_users_count+val_final_users_count))
+    print('&&& train_80 interactions count: ', train_80_count)
+    print('&&& train_80 interactions / (train_60_count + val_all_count - val_count) (should be 1): ', train_80_count/(train_60_count + val_all_count - val_count))
     print ('\n')
 
     print('Set test users')
@@ -238,8 +258,11 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
 
     #for debugging:
     print ('\n')
-    print('&&& test all distinct users count: ', test_all.select(test_all.user_id).distinct().count())
-    print('&&& test all interactions count: ', test_all.count())
+    test_all_count = test_all.count()
+    test_all_users_count = test_all.select(test_all.user_id).distinct().count()
+    print('&&& test all interactions count: ', test_all_count)
+    print('&&& test all distinct users count: ', test_all_users_count)
+    print('&&& test_all_users_count/users_test_count (should be 1): ' test_all_users_count/users_test_count)
     print ('\n')
 
     # Sample 50% of interactions from each user in test_all
@@ -249,6 +272,16 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     print('Sample interactions for test users')
     test = test_all.sampleBy("user_id", fractions=test_dict, seed=seed)
 
+    #for debugging:
+    print ('\n')
+    test_count = test.count()
+    test_final_users_count = test.select(test.user_id).distinct().count()
+    print('&&& test final distinct users count: ', test_final_users_count)
+    print('&&& test_final_users_count/test_all_users_count (should be 1): ' test_final_users_count/test_all_users_count)
+    print('&&& test final interactions count: ', test_count())
+    print('&&& test final / test all interactions count (should be .5): ', test_count()/test_all_count())
+    print ('\n')
+
     #Put other 50% of interactions back into train
     test_all.createOrReplaceTempView('test_all')
     test.createOrReplaceTempView('test')
@@ -257,6 +290,17 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
     test_to_train = spark.sql('SELECT * FROM test_all EXCEPT SELECT * FROM test')
     print('Merge remaining interactions with train')
     train=train_80.union(test_to_train) # can add .distinct() if necessary
+
+    #for debugging:
+    train.cache()
+    train_final_count = train.count()
+    train_final_users = train.select(train.user_id).distinct().count()
+    print ('\n')
+    print('&&& train_final distinct users count: ', train_final_users)
+    print('&&& train_final distinct users count / (train_80 distinct users count + test_final_users_count) (should be 1): ', train_final_users/(train_80_users_count+test_final_users_count))
+    print('&&& train_final interactions count: ', train_final_count)
+    print('&&& train_final interactions /(train_80_count + test_all_count - test_count) (should be 1): ', train_final_count/(train_80_count + test_all_count - test_count))
+    print ('\n')
 
     # Remove unobserved items from val and test
     if rm_unobserved:
