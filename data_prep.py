@@ -336,9 +336,10 @@ def quality_check(spark, fraction, synthetic):
     if synthetic==True:
         full = get_synth_data(spark)
 
-    train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=False, rm_unobserved=False, synthetic=synthetic)
+    down, train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=False, rm_unobserved=False, synthetic=synthetic)
 
-    down = downsample(spark, full, fraction=fraction, seed=42)
+    if down==None:
+        print('Splits already saved to Parquet. No access to downsampled df used to create them.'
 
     train = train.cache()
     test = test.cache()
