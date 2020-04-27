@@ -329,7 +329,7 @@ def quality_check(spark, fraction, synthetic):
         full = spark.read.parquet(full_data_path)
 
         columns_to_drop = ['is_read', 'is_reviewed']
-        full = full.drop(columns_to_drop)  
+        full = full.drop(*columns_to_drop)  
 
     if synthetic==True:
         full = get_synth_data(spark)
