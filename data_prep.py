@@ -183,7 +183,7 @@ def train_val_test_split(spark, data, seed=42, rm_unobserved=True):
     print('train users count: ', users_train_count)
     print('val users count: ', users_val_count)
     print('test users count: ', users_test_count)
-    print('(train+val+test)/all (should be 1): ', (users_train_count + users_val_count + users_test_count)/users_al_count)
+    print('(train+val+test)/all (should be 1): ', (users_train_count + users_val_count + users_test_count)/users_all_count)
     
     print('Set training users')
     #Training Set - 60% of users
