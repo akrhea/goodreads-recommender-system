@@ -274,6 +274,8 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
             train = spark.read.parquet(train_path)
             val = spark.read.parquet(val_path)
             test = spark.read.parquet(test_path)
+
+            df = None
         
         except:
 
@@ -310,7 +312,7 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
         # split into train/val/test
         train, val, test = train_val_test_split(spark, df, seed=seed, rm_unobserved=rm_unobserved)
 
-    return train, val, test
+    return df, train, val, test
 
 def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
     
@@ -319,7 +321,9 @@ def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
     return
 
 def quality_check(spark, fraction, synthetic):
-
+    '''
+    Only works if splits not saved to pq
+    '''
     if synthetic==False:
         from getpass import getuser
         net_id=getuser()
@@ -341,6 +345,8 @@ def quality_check(spark, fraction, synthetic):
     val = val.cache()
     full = full.cache()
     down = down.cache()
+
+    print('\n')
 
     all_users=full.select('user_id').distinct()
     all_users_count=all_users.count()
