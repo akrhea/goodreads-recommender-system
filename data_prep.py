@@ -34,7 +34,7 @@ def read_data_from_csv(spark, which_csv):
                                     schema = 'book_id_csv INT, book_id STRING')
         return df
     
-def downsample(spark, df, fraction=0.01, seed=42):
+def downsample(spark, full_data, fraction=0.01, seed=42):
     ''' 
     Takes in spark df
     Returns downsampled df
@@ -51,17 +51,21 @@ def downsample(spark, df, fraction=0.01, seed=42):
         and take all of their interactions to make a miniature version of the data.
     '''
 
-    assert fraction <= 1, 'Downsample fraction must be less than 1'
+    assert fraction <= 1, 'Downsample fraction must not be greater than 1'
     assert fraction > 0, 'Downsample fraction must be greater than 0'
 
-    df.createOrReplaceTempView('df')
-    unique_ids = spark.sql('SELECT distinct user_id FROM df')
-    print('Downsampling to {}%'.format(int(fraction*100)))
-    downsampled_ids = unique_ids.sample(False, fraction=fraction, seed=seed)
-    downsampled_ids.createOrReplaceTempView('downsampled_ids')
+    if fraction==1:
+        small_df = full_data
 
-    # can also read in is_read and/or is_reviewed if necessary
-    small_df = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN df on downsampled_ids.user_id=df.user_id')
+    else:
+        full_data.createOrReplaceTempView('full_data')
+        unique_ids = spark.sql('SELECT distinct user_id FROM full_data')
+        print('Downsampling to {}%'.format(int(fraction*100)))
+        downsampled_ids = unique_ids.sample(False, fraction=fraction, seed=seed)
+        downsampled_ids.createOrReplaceTempView('downsampled_ids')
+
+        # can also read in is_read and/or is_reviewed if necessary
+        small_df = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN full_data on downsampled_ids.user_id=full_data.user_id')
     return small_df
 
 
@@ -259,11 +263,6 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
     # retain only 2 decimal places (round down to nearest 0.01)
     fraction = int(fraction*100)/100
 
-    # check that 0 < fraction <= 1
-    assert fraction <= 1, 'downsample fraction must be less than 1'
-    assert fraction > 0, 'downsample fraction must be greater than 0'
-
-
     if synthetic==False:
 
         try:
@@ -275,7 +274,7 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
             val = spark.read.parquet(val_path)
             test = spark.read.parquet(test_path)
 
-            df = None
+            down = None
         
         except:
 
@@ -288,12 +287,11 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
                 # write full interactions dataset to parquet if not already saved
                 df = write_to_parquet(spark, df_csv, 'interactions_100_full')
         
-            if fraction!=1:
-                # downsample
-                df = downsample(spark, df, fraction=fraction, seed=seed)
+            #downsample 
+            down = downsample(spark, df, fraction=fraction, seed=seed)
 
             # split into train/val/test
-            train, val, test = train_val_test_split(spark, df, seed=seed, rm_unobserved=rm_unobserved)
+            train, val, test = train_val_test_split(spark, down, seed=seed, rm_unobserved=rm_unobserved)
 
             if save_pq:
                 # write splits to parquet
@@ -304,15 +302,14 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
     if synthetic==True:
 
         df = get_synth_data(spark)
-                
-        if fraction!=1:
-            # downsample
-            df = downsample(spark, df, fraction=fraction, seed=seed)
+
+        # downsample     
+        down = downsample(spark, df, fraction=fraction, seed=seed)
 
         # split into train/val/test
-        train, val, test = train_val_test_split(spark, df, seed=seed, rm_unobserved=rm_unobserved)
+        train, val, test = train_val_test_split(spark, down, seed=seed, rm_unobserved=rm_unobserved)
 
-    return df, train, val, test
+    return down, train, val, test
 
 def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
     
