@@ -373,7 +373,7 @@ def quality_check(spark, fraction, synthetic):
     print('\n')
 
     print('&&& full interactions: ', full.count())
-    print('&&& down interactions: ', downcount())
+    print('&&& down interactions: ', down.count())
     print('&&& train interactions: ', train.count())
     print('&&& val interactions: ', val.count())
     print('&&& test interactions: ', test.count())
