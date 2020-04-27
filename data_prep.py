@@ -298,7 +298,7 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
 
     if synthetic==True:
 
-        df = get_synth_data()
+        df = get_synth_data(spark)
                 
         if fraction!=1:
             # downsample
@@ -329,7 +329,7 @@ def quality_check(spark, fraction, synthetic):
         full = full.drop(columns_to_drop)  
 
     if synthetic==True:
-        full = get_synth_data()
+        full = get_synth_data(spark)
 
     train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=False, rm_unobserved=False, synthetic=synthetic)
 
@@ -382,7 +382,7 @@ def quality_check(spark, fraction, synthetic):
 
     return full, train, val, test
 
-def get_synth_data():
+def get_synth_data(spark):
     return spark.createDataFrame(
                 [
                 (1, 101, 5.0),
