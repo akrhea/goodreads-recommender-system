@@ -149,10 +149,6 @@ def write_to_parquet(spark, df, filename):
 def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
 
     '''
-    lhda to do
-
-    60/20/20 by user_id
-
     Takes in spark df of downsampled interactions
     Returns train, val, test dfs
 
@@ -167,7 +163,11 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
             (i.e., which have no interactions in the training set, or in the 
             observed portion of the validation and test users), can be omitted.
 
-    Could we speed up queries by repartitioning?
+    To-do:
+     - Speed up queries by repartitioning?
+     - Remove unobserved user_id's
+     - Unify variable names
+     - Remove debugging statements
     '''
     print('Get all distinct users from downsampled data')
     users=down.select('user_id').distinct()
@@ -329,6 +329,9 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True):
         val = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items LEFT JOIN val on observed_items.book_id=val.book_id')
         print('Remove unobserved items from test')
         test = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items LEFT JOIN test on observed_items.book_id=test.book_id')
+
+        # also remove unobserved user_id's
+        # unify variable names
 
     return train, val, test
 
