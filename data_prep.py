@@ -170,6 +170,16 @@ def train_val_test_split(spark, data, seed=42, rm_unobserved=True):
     users_val.createOrReplaceTempView('users_val')
     users_test.createOrReplaceTempView('users_test')
     data.createOrReplaceTempView('data')
+
+    # below is only for debugging
+    users.cache()
+    users_train.cache()
+    users_val.cache()
+    users_test.cache()
+    print(users.count())
+    print(users_train.count())
+    print(users_val.count())
+    print(users_test.count())
     
     print('Set training users')
     #Training Set - 60% of users
@@ -375,11 +385,18 @@ def quality_check(spark, fraction, synthetic):
 
     print('\n')
 
+    down_inter_count = down.count()
+    train_inter_count = train.count()
+    val_inter_count = val.count()
+    test_inter_count = test.count()
+
     print('&&& full interactions: ', full.count())
-    print('&&& down interactions: ', down.count())
-    print('&&& train interactions: ', train.count())
-    print('&&& val interactions: ', val.count())
-    print('&&& test interactions: ', test.count())
+    print('&&& down interactions: ', down_inter_count)
+    print('&&& train interactions: ', train_inter_count)
+    print('&&& val interactions: ', val_inter_count)
+    print('&&& test interactions: ', test_inter_count)
+
+    print('&&& summed splits interactions prop (should be 1): ', (train_inter_count + val_inter_count + test_inter_count)/down_inter_count)
 
     print('\n')
 
