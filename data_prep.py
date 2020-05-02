@@ -1,13 +1,5 @@
 #!/usr/bin/env python
 
-'''
-Use argv for command line arguments?
-Or argparse?
-'''
-#if len(sys.argv) > 0:
-    # arg1 = sys.argv[1]
-    # arg2 = sys.argv[2]
-    # etc.
 
 def read_data_from_csv(spark, which_csv):
     '''
