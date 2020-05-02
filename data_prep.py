@@ -146,7 +146,7 @@ def write_to_parquet(spark, df, filename):
     return pq
 
 
-def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False):
+def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, debug_show=False):
 
     '''
     Takes in spark df of downsampled interactions
@@ -239,10 +239,11 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False):
         print('&&& val_final_users_count/val_all_users_count (should be 1): ', val_final_users_count/val_all_users_count)
         print('&&& val final interactions count: ', val_count)
         print('&&& val final / val all interactions count (should be .5): ', val_count/val_all_count)
-        print('val_all: ')
-        val_all.orderBy('user_id').show(val_all_count)
-        print('val_50: ')
-        val_50.orderBy('user_id').show(val_count)
+        if debug_show:
+            print('val_all: ')
+            val_all.orderBy('user_id').show(val_all_count)
+            print('val_50: ')
+            val_50.orderBy('user_id').show(val_count)
         print ('\n')
 
     #Put other 50% of interactions back into train
@@ -294,10 +295,11 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False):
         print('&&& test_final_users_count/test_all_users_count (should be 1): ', test_final_users_count/test_all_users_count)
         print('&&& test final interactions count: ', test_count)
         print('&&& test final / test all interactions count (should be .5): ', test_count/test_all_count)
-        print('test_all: ')
-        test_all.orderBy('user_id').show(test_all_count)
-        print('test_50: ')
-        test_50.orderBy('user_id').show(test_count)
+        if debug_show:
+            print('test_all: ')
+            test_all.orderBy('user_id').show(test_all_count)
+            print('test_50: ')
+            test_50.orderBy('user_id').show(test_count)
         print ('\n')
 
     #Put other 50% of interactions back into train
@@ -348,9 +350,9 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False):
         train = train_observes_val.union(test_inters_unob_users) # can add .distinct() if necessary
 
         if debug:
-            tr_users_count = train.select('user_id').distinct().count
-            va_users_count = val_inters_ob_users.select('user_id').distinct().count
-            te_users_count = test_inters_ob_users.select('user_id').distinct().count
+            tr_users_count = train.select('user_id').distinct().count()
+            va_users_count = val_inters_ob_users.select('user_id').distinct().count()
+            te_users_count = test_inters_ob_users.select('user_id').distinct().count()
             print('After dealing with unobserved users, train has {} users, val has {} users, and test has {} users'.format(tr_users_count, va_users_count, te_users_count))
             print('Train - val - test (should be 0): ', tr_users_count - va_users_count - te_users_count)
 
@@ -364,9 +366,9 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False):
         test = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items INNER JOIN test_inters_ob_users on observed_items.book_id=test_inters_ob_users.book_id')
 
         if debug:
-            tr_items_count = train.select('book_id').distinct().count
-            va_items_count = val.select('book_id').distinct().count
-            te_items_count = test.select('book_id').distinct().count
+            tr_items_count = train.select('book_id').distinct().count()
+            va_items_count = val.select('book_id').distinct().count()
+            te_items_count = test.select('book_id').distinct().count()
             print('After dealing with unobserved books, train has {} items, val has {} items, and test has {} items'.format(tr_items_count, va_items_count, te_items_count))
             print('Train - val - test (should be 0): ', tr_items_count - va_items_count - te_items_count)
 
