@@ -286,7 +286,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False):
     test_50 = test_all.sampleBy("user_id", fractions=test_dict, seed=seed)
     test_50.cache() # consider persist
 
-    if debug
+    if debug:
         print ('\n')
         test_count = test_50.count()
         test_final_users_count = test_50.select(test_50.user_id).distinct().count()
