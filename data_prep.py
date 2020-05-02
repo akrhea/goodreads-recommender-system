@@ -169,8 +169,6 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False):
      - Unify variable names
      - Remove debugging statements
     '''
-    print('debug: ', debug)
-
     print('Get all distinct users from downsampled data')
     users=down.select('user_id').distinct()
     # users = users.cache() # necessary? may need to delete for memory reasons persist instead?
@@ -460,7 +458,7 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
         down = downsample(spark, df, fraction=fraction, seed=seed)
 
         # split into train/val/test
-        train, val, test = train_val_test_split(spark, down, seed=seed, rm_unobserved=rm_unobserved)
+        train, val, test = train_val_test_split(spark, down, seed=seed, rm_unobserved=rm_unobserved, debug=debug)
 
     return down, train, val, test
 
