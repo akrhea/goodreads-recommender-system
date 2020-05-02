@@ -33,8 +33,8 @@ def dummy_run(spark):
 
     als = ALS(rank = 3 , regParam=0.1, userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
     model = als.fit(train)
-    
-    recs = model.recommendForUserSubset(user_id, 2)
+
+    recs = model.recommendForUserSubset('user_id', 2)
     print(recs)
     pred_label = recs.select('user_id','recommendations.book_id')
 
