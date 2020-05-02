@@ -117,14 +117,13 @@ def hyperparam_search(spark, train, val, k=500):
         .addGrid(als.rank, [5, 10, 20, 100, 500]) \
         .build()
 
-    crossval = CrossValidator(estimator=lr,
+    crossval = CrossValidator(estimator=als,
                             estimatorParamMaps=paramGrid,
-                            evaluator=MulticlassClassificationEvaluator(),
+                            evaluator=RankingMetrics(),
                             numFolds=5)
 
     pipeline = Pipeline(stages=[assembler, scaler, indexer, crossval])
 
-        
     # Train the model
     pipelineModel = pipeline.fit(data)
 
