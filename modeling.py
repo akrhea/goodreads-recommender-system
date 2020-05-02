@@ -137,6 +137,7 @@ def hyperparam_search(spark, train, val, k=500):
     model = pipelineModel.stages[-1].bestModel
     print('Best Param (regParam): ', model.getOrDefault('regParam'))
     print('Best Param (rank): ', model.getOrDefault('rank'))
+    return 
 
 def other_func():
 
@@ -167,7 +168,7 @@ def other_func():
         p_at_k= metrics.precisionAt(k)
         print('Lambda ', i[0], 'and Rank ', i[1] , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
 
-return
+    return
 
 
 
