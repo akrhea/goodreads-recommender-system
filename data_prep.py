@@ -659,18 +659,18 @@ def test_caching_and_persisting(spark):
 
     for i in range(len(df_list)):
         this_df = df_list[i]
-        print('i={}, this_df before caching: ')
+        print('i={}, this_df before caching: '.format(i))
         this_df.show()
         this_df.cache()
-        print('i={}, this_df after caching: ')
+        print('i={}, this_df after caching: '.format(i))
         this_df.show()
 
     for i in range(len(df_list)):
         that_df = df_list[i]
-        print('i={}, that_df before persisting: ')
+        print('i={}, that_df before persisting: '.format(i))
         that_df.show()
         that_df.persist()
-        print('i={}, that_df after persisting: ')
+        print('i={}, that_df after persisting: '.format(i))
         that_df.show()
     return
     
