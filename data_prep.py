@@ -645,7 +645,7 @@ def test_caching_and_persisting(spark):
                 (666, 3, 3.0),
                 (666, 4, 3.0),
                 (666, 5, 3.0),
-                (666, 6, 3.0),],
+                (666, 6, 3.0)],
                 ['user_id', 'book_id', 'rating'])
     df2 = spark.createDataFrame(
                 [(666, 1, 3.0),
@@ -659,7 +659,7 @@ def test_caching_and_persisting(spark):
                 (42, 3, 3.0),
                 (42, 4, 3.0),
                 (42, 5, 3.0),
-                (42, 6, 3.0),],
+                (42, 6, 3.0)],
                 ['user_id', 'book_id', 'rating'])
     df_list = [df1, df2]
 
