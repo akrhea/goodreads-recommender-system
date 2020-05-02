@@ -359,9 +359,13 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
             va_users_count = val_inters_ob_users.select('user_id').distinct().count()
             te_users_count = test_inters_ob_users.select('user_id').distinct().count()
             print('\n')
-            # Can't figure out why this debug statement isn't working
             print('&&& After dealing with unobserved users, train has {} users, val has {} users, and test has {} users'.format(tr_users_count, va_users_count, te_users_count))
-            print('&&& Train - val - test (should be 0): ', tr_users_count - va_users_count - te_users_count)
+            test_and_val_users = val_inters_ob_users.select('user_id').distinct().union(test_inters_ob_users.select('user_id').distinct())
+            train_users_putback = train.select('user_id').distinct()
+            test_and_val_users.createOrReplaceTempView('test_and_val_users')
+            train_users_putback.createOrReplaceTempView('train_users_putback')
+            unobserved_users = spark.sql('SELECT * FROM test_and_val_users EXCEPT SELECT * FROM train_users_putback')
+            print('&&& Number of unobserved users: (should be 0)', unobserved_users.count())
             print('\n')
 
         # Remove unobserved items from val and test
@@ -379,6 +383,12 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
             te_items_count = test.select('book_id').distinct().count()
             print('\n')
             print('&&& After dealing with unobserved books, train has {} items, val has {} items, and test has {} items'.format(tr_items_count, va_items_count, te_items_count))
+            test_and_val_items = val.select('book_id').distinct().union(test.select('book_id').distinct())
+            train_items = train.select('book_id').distinct()
+            test_and_val_items.createOrReplaceTempView('test_and_val_items')
+            train_items.createOrReplaceTempView('train_items')
+            unobserved_items = spark.sql('SELECT * FROM test_and_val_items EXCEPT SELECT * FROM train_items')
+            print('&&& Number of unobserved items: (should be 0)', unobserved_items.count())
             print('\n')
 
     if rm_unobserved==False:
