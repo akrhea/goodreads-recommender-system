@@ -116,7 +116,7 @@ def hyperparam_search(spark, train, val, k=500):
     # Tune hyper-parameters with cross-validation
     paramGrid = ParamGridBuilder() \
         .addGrid(als.regParam, [0.0001, 0.001, 0.01, 0.1, 1, 10]) \
-        .addGrid(als).rank, [5, 10, 20, 100, 500]) \
+        .addGrid(als.rank, [5, 10, 20, 100, 500]) \
         .build()
 
     crossval = CrossValidator(estimator=lr,
