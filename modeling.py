@@ -3,6 +3,11 @@
 #starting point: train, val, test in memory from data_prep
 
 def dummy_run(spark):
+    from pyspark.ml.recommendation import ALS
+    from pyspark.mllib.evaluation import RankingMetrics
+    import pyspark.sql.functions as F
+    from pyspark.sql.functions import expr
+
     train=spark.createDataFrame(
     [
         (82, 124, 5.0),
