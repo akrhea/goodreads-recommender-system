@@ -393,7 +393,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
             train_items.createOrReplaceTempView('train_items')
             unobserved_items = spark.sql('SELECT * FROM test_and_val_items EXCEPT SELECT * FROM train_items')
             print('&&& Number of removed items:', val_inters_ob_users.union(test_inters_ob_users).select('book_id').distinct.count() - val.union(test).select('book_id').distinct.count())
-            print('&&& Number of removed interactions:', val.union(test).count() - val_inters_ob_users.union(test_inters_ob_users).count())
+            print('&&& Number of removed interactions:', val_inters_ob_users.union(test_inters_ob_users).count() - val.union(test).count())
             print('&&& Number of currently unobserved items (should be 0):', unobserved_items.count())
             print('\n')
 
@@ -536,8 +536,7 @@ def quality_check(spark, fraction, synthetic, rm_unobserved=False):
 
     down, train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=False, rm_unobserved=rm_unobserved, synthetic=synthetic, debug=True)
 
-    if down==None:
-        print('Splits already saved to Parquet. No access to downsampled df used to create them.')
+    assert down!=None, 'Splits already saved to Parquet. No access to downsampled df used to create them.'
 
     train = train.cache()
     test = test.cache()
