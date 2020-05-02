@@ -359,9 +359,9 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False):
         observed_items = train.select('book_id').distinct()
         observed_items.createOrReplaceTempView('observed_items')
         print('Remove unobserved items from validation')
-        val = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items LEFT JOIN val_inters_ob_users on observed_items.book_id=val_inters_ob_users.book_id')
+        val = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items INNER JOIN val_inters_ob_users on observed_items.book_id=val_inters_ob_users.book_id')
         print('Remove unobserved items from test')
-        test = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items LEFT JOIN test_inters_ob_users on observed_items.book_id=test_inters_ob_users.book_id')
+        test = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items INNER JOIN test_inters_ob_users on observed_items.book_id=test_inters_ob_users.book_id')
 
         if debug:
             tr_items_count = train.select('book_id').distinct().count
