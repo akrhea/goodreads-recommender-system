@@ -110,7 +110,7 @@ def hyperparam_search(spark, train, val, k=500):
         mean_ap = metrics.meanAveragePrecision
         ndcg_at_k = metrics.ndcgAt(k)
         p_at_k= metrics.precisionAt(k)
-        print('Lambda ' i[0] 'and Rank ', i[1] , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
+        print('Lambda ', i[0], 'and Rank ', i[1] , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
 
 
 
