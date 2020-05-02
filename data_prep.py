@@ -168,7 +168,6 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     '''
     print('Get all distinct users from downsampled data')
     users=down.select('user_id').distinct()
-    # users = users.cache() # removed for memory reasons
     print('Sampling users with randomSplit')
     users_train, users_val, users_test = users.randomSplit([0.6, 0.2, 0.2], seed=seed)
     users_train.persist()
@@ -497,8 +496,6 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
 def save_down_splits(spark, sample_fractions = [.01, .05, 0.25, 1]):
     '''
     Used to save splits to parquet.
-    May not work because pyspark won't be restarted.
-    Need to test.
     '''
     for fraction in sample_fractions:
         down, train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=True, rm_unobserved=True, debug=False)
