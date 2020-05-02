@@ -66,7 +66,7 @@ def downsample(spark, full_data, fraction=0.01, seed=42):
         downsampled_ids.cache()
 
         # can also read in is_read and/or is_reviewed if necessary
-        down = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN full_data on downsampled_ids.user_id=full_data.user_id')
+        down = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids INNER JOIN full_data on downsampled_ids.user_id=full_data.user_id')
     
         # for debugging:
         # print('full_data:')
@@ -152,6 +152,14 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     Takes in spark df of downsampled interactions
     Returns train, val, test dfs
 
+    Arguments:
+        spark - spark
+        down - downsampled dataframe to be split into test, val, and train
+        seed - random seed to use for splitting and sampling
+        rm_unobserved - boolean option to remove all unobserved items and move unobserved users to train
+        debug: boolean option to print debug statements
+        debug_show: boolean option to show tables for debugging (used with synthetic data)
+
     Notes from Assignment:
         - Select 60% of users (and all of their interactions) to form the *training set*.
         - Select 20% of users to form the *validation set*.  For each validation user, 
@@ -165,9 +173,6 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
 
     To-do:
      - Speed up queries by repartitioning?
-     - Remove unobserved user_id's
-     - Unify variable names
-     - Remove debugging statements
     '''
     print('Get all distinct users from downsampled data')
     users=down.select('user_id').distinct()
@@ -197,7 +202,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     
     print('Set training users')
     #Training Set - 60% of users
-    train_60 = spark.sql('SELECT users_train.user_id, book_id, rating FROM users_train LEFT JOIN down on users_train.user_id=down.user_id')
+    train_60 = spark.sql('SELECT users_train.user_id, book_id, rating FROM users_train INNER JOIN down on users_train.user_id=down.user_id')
 
     if debug:
         #train_60.cache()
@@ -211,8 +216,8 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
 
     print('Set validation users')
     #Validation Set - 20% of users
-    val_all = spark.sql('SELECT users_val.user_id, book_id, rating FROM users_val LEFT JOIN down on users_val.user_id=down.user_id')
-    val_all = val_all.cache()
+    val_all = spark.sql('SELECT users_val.user_id, book_id, rating FROM users_val INNER JOIN down on users_val.user_id=down.user_id')
+    val_all = val_all.cache() # consider persist
 
     if debug:
         print ('\n')
@@ -267,7 +272,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
 
     print('Set test users')
     #Test Set - 20% of users
-    test_all = spark.sql('SELECT users_test.user_id, book_id, rating FROM users_test LEFT JOIN down on users_test.user_id=down.user_id')
+    test_all = spark.sql('SELECT users_test.user_id, book_id, rating FROM users_test INNER JOIN down on users_test.user_id=down.user_id')
     test_all = test_all.cache()
 
     if debug:
@@ -315,10 +320,10 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
         train_final_count = train_100.count()
         train_final_users = train_100.select(train_100.user_id).distinct().count()
         print ('\n')
-        print('&&& train_final distinct users count: ', train_final_users)
-        print('&&& train_final distinct users count / (train_80 distinct users count + test_final_users_count) (should be 1): ', train_final_users/(train_80_users+test_final_users_count))
-        print('&&& train_final interactions count: ', train_final_count)
-        print('&&& train_final interactions /(train_80_count + test_all_count - test_count) (should be 1): ', train_final_count/(train_80_count + test_all_count - test_count))
+        print('&&& train_100 distinct users count: ', train_final_users)
+        print('&&& train_100 distinct users count / (train_80 distinct users count + test_final_users_count) (should be 1): ', train_final_users/(train_80_users+test_final_users_count))
+        print('&&& train_100 interactions count: ', train_final_count)
+        print('&&& train_100 interactions /(train_80_count + test_all_count - test_count) (should be 1): ', train_final_count/(train_80_count + test_all_count - test_count))
         print ('\n')
 
     if rm_unobserved:
@@ -334,7 +339,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
         train_100_users = train_100.select('user_id').distinct()
         train_100_users.createOrReplaceTempView('train_100_users')
         print('Select val interactions with observed users')
-        val_inters_ob_users = spark.sql('SELECT train_100_users.user_id, book_id, rating FROM val_50 RIGHT JOIN train_100_users ON val_50.user_id = train_100_users.user_id')
+        val_inters_ob_users = spark.sql('SELECT train_100_users.user_id, book_id, rating FROM val_50 INNER JOIN train_100_users ON val_50.user_id = train_100_users.user_id')
         val_inters_ob_users.createOrReplaceTempView('val_inters_ob_users')
         print('Select val interactions with unobserved users')
         val_inters_unob_users = spark.sql('SELECT * FROM val_50 EXCEPT SELECT * FROM val_inters_ob_users')
@@ -342,7 +347,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
         train_observes_val=train_100.union(val_inters_unob_users) # can add .distinct() if necessary
 
         print('Select test interactions with observed users')
-        test_inters_ob_users = spark.sql('SELECT train_100_users.user_id, book_id, rating FROM test_50 RIGHT JOIN train_100_users ON test_50.user_id = train_100_users.user_id')
+        test_inters_ob_users = spark.sql('SELECT train_100_users.user_id, book_id, rating FROM test_50 INNER JOIN train_100_users ON test_50.user_id = train_100_users.user_id')
         test_inters_ob_users.createOrReplaceTempView('test_inters_ob_users')
         print('Select test interactions with unobserved users')
         test_inters_unob_users = spark.sql('SELECT * FROM test_50 EXCEPT SELECT * FROM test_inters_ob_users')
@@ -353,8 +358,11 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
             tr_users_count = train.select('user_id').distinct().count()
             va_users_count = val_inters_ob_users.select('user_id').distinct().count()
             te_users_count = test_inters_ob_users.select('user_id').distinct().count()
-            print('After dealing with unobserved users, train has {} users, val has {} users, and test has {} users'.format(tr_users_count, va_users_count, te_users_count))
-            print('Train - val - test (should be 0): ', tr_users_count - va_users_count - te_users_count)
+            print('\n')
+            # Can't figure out why this debug statement isn't working
+            print('&&& After dealing with unobserved users, train has {} users, val has {} users, and test has {} users'.format(tr_users_count, va_users_count, te_users_count))
+            print('&&& Train - val - test (should be 0): ', tr_users_count - va_users_count - te_users_count)
+            print('\n')
 
         # Remove unobserved items from val and test
         print('Get all distinct observed items')
@@ -369,8 +377,9 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
             tr_items_count = train.select('book_id').distinct().count()
             va_items_count = val.select('book_id').distinct().count()
             te_items_count = test.select('book_id').distinct().count()
-            print('After dealing with unobserved books, train has {} items, val has {} items, and test has {} items'.format(tr_items_count, va_items_count, te_items_count))
-            print('Train - val - test (should be 0): ', tr_items_count - va_items_count - te_items_count)
+            print('\n')
+            print('&&& After dealing with unobserved books, train has {} items, val has {} items, and test has {} items'.format(tr_items_count, va_items_count, te_items_count))
+            print('\n')
 
     if rm_unobserved==False:
         train = train_100
@@ -406,8 +415,9 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
                 - rounds down to the neareast 0.01
     seed: set random seed for reproducibility
     save_pq: boolean option to save train/val/test splits to parquet
-    rm_unovserved: boolean option to remove unobserved items from val/test
+    rm_unobserved: boolean option to remove all unobserved items and move unobserved users to train
     synthetic: boolean option to use synthetic data (will use goodreads data if False)
+    debug: boolean option to debug train_val_test_split
     '''
     #get netid
     from getpass import getuser
@@ -481,7 +491,8 @@ def quality_check(spark, fraction, synthetic, rm_unobserved=False):
 
     spark: spark
     fraction: downsample fraction
-    synthetic: boolean, whether or not to use synthetic data. Will use goodreads data if False.
+    synthetic: boolean option to use synthetic data. Will use goodreads data if False.
+    rm_unobserved: boolean option to remove all unobserved items and move unobserved users to train
     '''
     if synthetic==False:
         from getpass import getuser
@@ -601,7 +612,9 @@ def get_synth_data(spark):
     '''
     Returns synethetic dataframe
     There are 60 distinct user_ids, 1-60
-    Each user_id has a rating for 4 books
+    There are 39 distinct book_ids, 101-139
+    Users 1-30 have ratings for 10 books each
+    Users 31-60 have ratings for 4 books each
     '''
     return spark.createDataFrame(
                 [
@@ -844,7 +857,133 @@ def get_synth_data(spark):
                 (60, 130, 2.0), 
                 (60, 131, 2.0),
                 (60, 132, 2.0), 
-                (60, 133, 2.0),        
+                (60, 133, 2.0),
+                (10, 134, 3.0),
+                (10, 135, 3.0),
+                (10, 136, 3.0),
+                (10, 137, 3.0),
+                (10, 138, 3.0),
+                (10, 139, 3.0),
+                (11, 134, 3.0),
+                (11, 135, 3.0),
+                (11, 136, 3.0),
+                (11, 137, 3.0),
+                (11, 138, 3.0),
+                (11, 139, 3.0),
+                (12, 134, 3.0),
+                (12, 135, 3.0),
+                (12, 136, 3.0),
+                (12, 137, 3.0),
+                (12, 138, 3.0),
+                (12, 139, 3.0),
+                (13, 134, 3.0),
+                (13, 135, 3.0),
+                (13, 136, 3.0),
+                (13, 137, 3.0),
+                (13, 138, 3.0),
+                (13, 139, 3.0),
+                (14, 134, 3.0),
+                (14, 135, 3.0),
+                (14, 136, 3.0),
+                (14, 137, 3.0),
+                (14, 138, 3.0),
+                (14, 139, 3.0),
+                (15, 134, 3.0),
+                (15, 135, 3.0),
+                (15, 136, 3.0),
+                (15, 137, 3.0),
+                (15, 138, 3.0),
+                (15, 139, 3.0),
+                (16, 134, 3.0),
+                (16, 135, 3.0),
+                (16, 136, 3.0),
+                (16, 137, 3.0),
+                (16, 138, 3.0),
+                (16, 139, 3.0),
+                (17, 134, 3.0),
+                (17, 135, 3.0),
+                (17, 136, 3.0),
+                (17, 137, 3.0),
+                (17, 138, 3.0),
+                (17, 139, 3.0),
+                (18, 134, 3.0),
+                (18, 135, 3.0),
+                (18, 136, 3.0),
+                (18, 137, 3.0),
+                (18, 138, 3.0),
+                (18, 139, 3.0),
+                (19, 134, 3.0),
+                (19, 135, 3.0),
+                (19, 136, 3.0),
+                (19, 137, 3.0),
+                (19, 138, 3.0),
+                (19, 139, 3.0),
+                (20, 134, 3.0),
+                (10, 135, 3.0),
+                (20, 136, 3.0),
+                (20, 137, 3.0),
+                (20, 138, 3.0),
+                (20, 139, 3.0),
+                (21, 134, 3.0),
+                (21, 135, 3.0),
+                (21, 136, 3.0),
+                (21, 137, 3.0),
+                (21, 138, 3.0),
+                (21, 139, 3.0),
+                (22, 134, 3.0),
+                (22, 135, 3.0),
+                (22, 136, 3.0),
+                (22, 137, 3.0),
+                (22, 138, 3.0),
+                (22, 139, 3.0),
+                (23, 134, 3.0),
+                (23, 135, 3.0),
+                (23, 136, 3.0),
+                (23, 137, 3.0),
+                (23, 138, 3.0),
+                (23, 139, 3.0),
+                (24, 134, 3.0),
+                (24, 135, 3.0),
+                (24, 136, 3.0),
+                (24, 137, 3.0),
+                (24, 138, 3.0),
+                (24, 139, 3.0),
+                (25, 134, 3.0),
+                (25, 135, 3.0),
+                (25, 136, 3.0),
+                (25, 137, 3.0),
+                (25, 138, 3.0),
+                (25, 139, 3.0),
+                (26, 134, 3.0),
+                (26, 135, 3.0),
+                (26, 136, 3.0),
+                (26, 137, 3.0),
+                (26, 138, 3.0),
+                (26, 139, 3.0),
+                (27, 134, 3.0),
+                (27, 135, 3.0),
+                (27, 136, 3.0),
+                (27, 137, 3.0),
+                (27, 138, 3.0),
+                (27, 139, 3.0),
+                (28, 134, 3.0),
+                (28, 135, 3.0),
+                (28, 136, 3.0),
+                (28, 137, 3.0),
+                (28, 138, 3.0),
+                (28, 139, 3.0),
+                (29, 134, 3.0),
+                (29, 135, 3.0),
+                (29, 136, 3.0),
+                (29, 137, 3.0),
+                (29, 138, 3.0),
+                (29, 139, 3.0),
+                (30, 134, 3.0),
+                (30, 135, 3.0),
+                (30, 136, 3.0),
+                (30, 137, 3.0),
+                (30, 138, 3.0),
+                (30, 139, 3.0),
                 ],
                 ['user_id', 'book_id', 'rating'] )
 
