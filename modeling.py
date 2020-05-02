@@ -59,11 +59,21 @@ def als(spark, train, val, lamb, rank):
     predictions = model.transform(val)
     return predictions
 
-def hyperparam_search(train, val, k):
-
+def hyperparam_search(spark, train, val, k=500):
+    ''' 
+        Fits ALS model from train, ranks k top items, and evaluates with MAP, P, NDCG across combos of rank/lambda hyperparameter
+        Imput: training file
+        arguments:
+            spark - spark
+            train - training set
+            val - validation set 
+            k - how many top items to predict (default = 500)
+        Returns: MAP, P, NDCG for each model
+    '''
      from pyspark.ml.recommendation import ALS
      from pyspark.mllib.evaluation import RankingMetrics
      import pyspark.sql.functions as F
+     from pyspark.sql.functions import expr
 
     # Tune hyper-parameters with cross-validation 
     # references https://spark.apache.org/docs/latest/api/python/pyspark.ml.html#pyspark.ml.tuning.CrossValidator
@@ -71,32 +81,35 @@ def hyperparam_search(train, val, k):
     # https://github.com/nyu-big-data/lab-mllib-not-assignment-ldarinzo/blob/master/supervised_train.py
     #https://vinta.ws/code/spark-ml-cookbook-pyspark.html
 
+    #for all users in val set, get list of books they actually read
     user_id = val.select('user_id').distinct()
     true_label = val.select('user_id', 'book_id')\
                 .groupBy('user_id')\
                 .agg(expr('collect_list(book_id) as true_item'))
 
+    #build paramGrid lambda/rank combos
     paramGrid = ParamGridBuilder() \
         .addGrid(als.regParam, [0.0001, 0.001, 0.01, 0.1, 1, 10]) \
-        .addGrid(als.rank, [5, 10, 20 , 100, 500]) \
+        .addGrid(als.rank, [5, 10, 20, 100, 500]) \
         .build()
 
+    #fit and evaluate for all combos
     for i in param_grid:
         als = ALS(rank = i[1], regParam=i[0], userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
         model = als.fit(train)
 
-        recs = model.recommendForUserSubset(user_id, 500)
-        pred_label = recs.select('user_id','recommendations.book_id)
+        recs = model.recommendForUserSubset(user_id, k)
+        pred_label = recs.select('user_id','recommendations.book_id')
 
         pred_true_rdd = pred_label.join(F.broadcast(true_label), 'user_id', 'inner') \
                     .rdd \
                     .map(lambda row: (row[1], row[2]))
 
         metrics = RankingMetrics(pred_true_rdd)
-        map_ = metrics.meanAveragePrecision
-        ndcg = metrics.ndcgAt(500)
-        mpa = metrics.precisionAt(500)
-        print(i, 'map score: ', map_, 'ndcg score: ', ndcg, 'map score: ', mpa)
+        mean_ap = metrics.meanAveragePrecision
+        ndcg_at_k = metrics.ndcgAt(k)
+        p_at_k= metrics.precisionAt(k)
+        print(i, 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
 
 
 
