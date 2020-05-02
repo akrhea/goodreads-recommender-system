@@ -383,15 +383,12 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
             te_items_count = test.select('book_id').distinct().count()
             print('\n')
             print('&&& After dealing with unobserved books, train has {} items, val has {} items, and test has {} items'.format(tr_items_count, va_items_count, te_items_count))
-            
             test_and_val_items = val.select('book_id').distinct().union(test.select('book_id').distinct())
             train_items = train.select('book_id').distinct()
             test_and_val_items.createOrReplaceTempView('test_and_val_items')
             train_items.createOrReplaceTempView('train_items')
             unobserved_items = spark.sql('SELECT * FROM test_and_val_items EXCEPT SELECT * FROM train_items')
             print('&&& Number of unobserved items: (should be 0)', unobserved_items.count())
-            
-            
             print('\n')
 
     if rm_unobserved==False:
