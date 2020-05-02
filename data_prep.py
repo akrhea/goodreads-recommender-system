@@ -584,7 +584,7 @@ def quality_check(spark, fraction, synthetic, rm_unobserved=False):
     down.createOrReplaceTempView('down')
     recombined.createOrReplaceTempView('recombined')
     differences1 = spark.sql('SELECT * FROM down EXCEPT SELECT * FROM recombined')
-    print('&&& downsampled - recombined (should be 0): ', differences1.count())
+    print('&&& downsampled - recombined (should be the number removed due to unobserved items): ', differences1.count())
     if synthetic:
         differences1.show()
     differences2 = spark.sql('SELECT * FROM recombined EXCEPT SELECT * FROM down')
