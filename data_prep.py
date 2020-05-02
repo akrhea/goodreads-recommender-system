@@ -472,7 +472,7 @@ def save_down_splits(spark, sample_fractions = [.01, .05, 0.25, 1]):
         down, train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=True, rm_unobserved=True, debug=False)
     return
 
-def quality_check(spark, fraction, synthetic):
+def quality_check(spark, fraction, synthetic, rm_unobserved=False):
     '''
     Check downsample and split functions.
     Only works properly if splits not saved to pq.
@@ -493,7 +493,7 @@ def quality_check(spark, fraction, synthetic):
     if synthetic==True:
         full = get_synth_data(spark)
 
-    down, train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=False, rm_unobserved=False, synthetic=synthetic, debug=True)
+    down, train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, save_pq=False, rm_unobserved=rm_unobserved, synthetic=synthetic, debug=True)
 
     if down==None:
         print('Splits already saved to Parquet. No access to downsampled df used to create them.')
