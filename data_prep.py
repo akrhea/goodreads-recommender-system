@@ -152,6 +152,14 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     Takes in spark df of downsampled interactions
     Returns train, val, test dfs
 
+    Arguments:
+        spark - spark
+        down - downsampled dataframe to be split into test, val, and train
+        seed - random seed to use for splitting and sampling
+        rm_unobserved - boolean option to remove all unobserved items and move unobserved users to train
+        debug: boolean option to print debug statements
+        debug_show: boolean option to show tables for debugging (used with synthetic data)
+
     Notes from Assignment:
         - Select 60% of users (and all of their interactions) to form the *training set*.
         - Select 20% of users to form the *validation set*.  For each validation user, 
@@ -165,9 +173,6 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
 
     To-do:
      - Speed up queries by repartitioning?
-     - Remove unobserved user_id's
-     - Unify variable names
-     - Remove debugging statements
     '''
     print('Get all distinct users from downsampled data')
     users=down.select('user_id').distinct()
@@ -212,7 +217,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     print('Set validation users')
     #Validation Set - 20% of users
     val_all = spark.sql('SELECT users_val.user_id, book_id, rating FROM users_val LEFT JOIN down on users_val.user_id=down.user_id')
-    val_all = val_all.cache()
+    val_all = val_all.cache() # consider persist
 
     if debug:
         print ('\n')
@@ -315,10 +320,10 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
         train_final_count = train_100.count()
         train_final_users = train_100.select(train_100.user_id).distinct().count()
         print ('\n')
-        print('&&& train_final distinct users count: ', train_final_users)
-        print('&&& train_final distinct users count / (train_80 distinct users count + test_final_users_count) (should be 1): ', train_final_users/(train_80_users+test_final_users_count))
-        print('&&& train_final interactions count: ', train_final_count)
-        print('&&& train_final interactions /(train_80_count + test_all_count - test_count) (should be 1): ', train_final_count/(train_80_count + test_all_count - test_count))
+        print('&&& train_100 distinct users count: ', train_final_users)
+        print('&&& train_100 distinct users count / (train_80 distinct users count + test_final_users_count) (should be 1): ', train_final_users/(train_80_users+test_final_users_count))
+        print('&&& train_100 interactions count: ', train_final_count)
+        print('&&& train_100 interactions /(train_80_count + test_all_count - test_count) (should be 1): ', train_final_count/(train_80_count + test_all_count - test_count))
         print ('\n')
 
     if rm_unobserved:
@@ -334,7 +339,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
         train_100_users = train_100.select('user_id').distinct()
         train_100_users.createOrReplaceTempView('train_100_users')
         print('Select val interactions with observed users')
-        val_inters_ob_users = spark.sql('SELECT train_100_users.user_id, book_id, rating FROM val_50 RIGHT JOIN train_100_users ON val_50.user_id = train_100_users.user_id')
+        val_inters_ob_users = spark.sql('SELECT train_100_users.user_id, book_id, rating FROM val_50 INNER JOIN train_100_users ON val_50.user_id = train_100_users.user_id')
         val_inters_ob_users.createOrReplaceTempView('val_inters_ob_users')
         print('Select val interactions with unobserved users')
         val_inters_unob_users = spark.sql('SELECT * FROM val_50 EXCEPT SELECT * FROM val_inters_ob_users')
@@ -342,7 +347,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
         train_observes_val=train_100.union(val_inters_unob_users) # can add .distinct() if necessary
 
         print('Select test interactions with observed users')
-        test_inters_ob_users = spark.sql('SELECT train_100_users.user_id, book_id, rating FROM test_50 RIGHT JOIN train_100_users ON test_50.user_id = train_100_users.user_id')
+        test_inters_ob_users = spark.sql('SELECT train_100_users.user_id, book_id, rating FROM test_50 INNER JOIN train_100_users ON test_50.user_id = train_100_users.user_id')
         test_inters_ob_users.createOrReplaceTempView('test_inters_ob_users')
         print('Select test interactions with unobserved users')
         test_inters_unob_users = spark.sql('SELECT * FROM test_50 EXCEPT SELECT * FROM test_inters_ob_users')
@@ -353,8 +358,11 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
             tr_users_count = train.select('user_id').distinct().count()
             va_users_count = val_inters_ob_users.select('user_id').distinct().count()
             te_users_count = test_inters_ob_users.select('user_id').distinct().count()
+            print('\n')
+            # Can't figure out why this debug statement isn't working
             print('&&& After dealing with unobserved users, train has {} users, val has {} users, and test has {} users'.format(tr_users_count, va_users_count, te_users_count))
             print('&&& Train - val - test (should be 0): ', tr_users_count - va_users_count - te_users_count)
+            print('\n')
 
         # Remove unobserved items from val and test
         print('Get all distinct observed items')
@@ -369,7 +377,9 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
             tr_items_count = train.select('book_id').distinct().count()
             va_items_count = val.select('book_id').distinct().count()
             te_items_count = test.select('book_id').distinct().count()
-            print('After dealing with unobserved books, train has {} items, val has {} items, and test has {} items'.format(tr_items_count, va_items_count, te_items_count))
+            print('\n')
+            print('&&& After dealing with unobserved books, train has {} items, val has {} items, and test has {} items'.format(tr_items_count, va_items_count, te_items_count))
+            print('\n')
 
     if rm_unobserved==False:
         train = train_100
@@ -405,8 +415,9 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
                 - rounds down to the neareast 0.01
     seed: set random seed for reproducibility
     save_pq: boolean option to save train/val/test splits to parquet
-    rm_unovserved: boolean option to remove unobserved items from val/test
+    rm_unobserved: boolean option to remove all unobserved items and move unobserved users to train
     synthetic: boolean option to use synthetic data (will use goodreads data if False)
+    debug: boolean option to debug train_val_test_split
     '''
     #get netid
     from getpass import getuser
@@ -480,7 +491,8 @@ def quality_check(spark, fraction, synthetic, rm_unobserved=False):
 
     spark: spark
     fraction: downsample fraction
-    synthetic: boolean, whether or not to use synthetic data. Will use goodreads data if False.
+    synthetic: boolean option to use synthetic data. Will use goodreads data if False.
+    rm_unobserved: boolean option to remove all unobserved items and move unobserved users to train
     '''
     if synthetic==False:
         from getpass import getuser
