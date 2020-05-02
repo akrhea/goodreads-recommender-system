@@ -624,9 +624,6 @@ def quality_check(spark, fraction, synthetic, rm_unobserved=False):
     duplicates_full = full.groupby(['user_id', 'book_id']).count().where('count > 1')
     duplicates_down = down.groupby(['user_id', 'book_id']).count().where('count > 1')
     duplicates_rec = recombined.groupby(['user_id', 'book_id']).count().where('count > 1')
-    duplicates_full = duplicates_full.cache()
-    duplicates_down = duplicates_down.cache()
-    duplicates_rec = duplicates_rec.cache()
 
     dupcount = duplicates_down.count()
     print('&&& full duplicates count (assumed to be 0): ', duplicates_full.count())
