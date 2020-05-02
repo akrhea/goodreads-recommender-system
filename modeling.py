@@ -95,6 +95,7 @@ def hyperparam_search(spark, train, val, k=500):
     from pyspark.mllib.evaluation import RankingMetrics
     import pyspark.sql.functions as F
     from pyspark.sql.functions import expr
+    from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
 
     # Tune hyper-parameters with cross-validation 
     # references https://spark.apache.org/docs/latest/api/python/pyspark.ml.html#pyspark.ml.tuning.CrossValidator
