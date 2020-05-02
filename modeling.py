@@ -31,7 +31,7 @@ def dummy_run(spark):
     ['user_id', 'book_id', 'rating'] 
     )
 
-    als=ALS(spark, train, val, lamb=0.01, rank=3)
+    als = ALS(rank = 3 , regParam=0.1, userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
     model = als.fit(train)
     
     recs = model.recommendForUserSubset(user_id, 2)
