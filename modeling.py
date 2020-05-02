@@ -134,10 +134,9 @@ def search(spark, train, val, k=500):
 
     return
   
-
 def search_w_crossval():
-
-  als = ALS(userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
+    
+    als = ALS(userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
 
     # Tune hyper-parameters with cross-validation
     paramGrid = ParamGridBuilder() \
@@ -164,9 +163,9 @@ def search_w_crossval():
     print('Best Param (rank): ', model.getOrDefault('rank'))
     return 
 
- 
 
-  
+
+
 
 
 
