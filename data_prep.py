@@ -444,7 +444,7 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
             down = downsample(spark, df, fraction=fraction, seed=seed)
 
             # split into train/val/test
-            train, val, test = train_val_test_split(spark, down, seed=seed, rm_unobserved=rm_unobserved, debug=debug)
+            train, val, test = train_val_test_split(spark, down, seed=seed, rm_unobserved=rm_unobserved, debug=debug, debug_show=False)
 
             if save_pq:
                 # write splits to parquet
@@ -460,7 +460,7 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
         down = downsample(spark, df, fraction=fraction, seed=seed)
 
         # split into train/val/test
-        train, val, test = train_val_test_split(spark, down, seed=seed, rm_unobserved=rm_unobserved, debug=debug)
+        train, val, test = train_val_test_split(spark, down, seed=seed, rm_unobserved=rm_unobserved, debug=debug, debug_show=debug)
 
     return down, train, val, test
 
