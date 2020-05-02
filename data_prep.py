@@ -657,13 +657,13 @@ def test_caching_and_persisting(spark):
                 ['user_id', 'book_id', 'rating'])
     df_list = [df1, df2]
 
-    for in range(len(df_list)):
+    for i in range(len(df_list)):
         this_df = df_list[i]
         this_df.cache()
         print('i={}, this_df: ')
         this_df.show()
 
-    for in range(len(df_list)):
+    for i in range(len(df_list)):
         that_df = df_list[i]
         that_df.persist()
         print('i={}, that_df: ')
