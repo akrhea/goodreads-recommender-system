@@ -59,47 +59,47 @@ def als(spark, train, val, lamb, rank):
     predictions = model.transform(val)
     return predictions
 
-def evaluator(truth, preds, k): #revelation...do we actually need an evaluator function
-
-    #reference: https://vinta.ws/code/spark-ml-cookbook-pyspark.html
-
-    from pyspark.ml.evaluation import RegressionEvaluator
-    from pyspark.mllib.evaluation import RankingMetrics
-    from pyspark.sql import Window
-    from pyspark.sql.functions import col, expr
-    import pyspark.sql.functions as F
-    
-  
 def hyperparam_search(train, val, k):
+
+     from pyspark.ml.recommendation import ALS
+     from pyspark.mllib.evaluation import RankingMetrics
+     import pyspark.sql.functions as F
 
     # Tune hyper-parameters with cross-validation 
     # references https://spark.apache.org/docs/latest/api/python/pyspark.ml.html#pyspark.ml.tuning.CrossValidator
     # https://spark.apache.org/docs/latest/ml-tuning.html
     # https://github.com/nyu-big-data/lab-mllib-not-assignment-ldarinzo/blob/master/supervised_train.py
+    #https://vinta.ws/code/spark-ml-cookbook-pyspark.html
+
+    user_id = val.select('user_id').distinct()
+    true_label = val.select('user_id', 'book_id')\
+                .groupBy('user_id')\
+                .agg(expr('collect_list(book_id) as true_item'))
 
     paramGrid = ParamGridBuilder() \
         .addGrid(als.regParam, [0.0001, 0.001, 0.01, 0.1, 1, 10]) \
         .addGrid(als.rank, [5, 10, 20 , 100, 500]) \
         .build()
 
-    crossval = CrossValidator(estimator=als,
-                              estimatorParamMaps=paramGrid,
-                              evaluator=rankingMetrics.meanAveragePrecision,
-                              numFolds=5)
+    for i in param_grid:
+        als = ALS(rank = i[1], regParam=i[0], userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
+        model = als.fit(train)
 
-    # Build the pipeline
-    pipeline = Pipeline(stages=[assembler, scaler, indexer, crossval])
-    
-    # Train the model
-    pipelineModel = pipeline.fit(data)
+        recs = model.recommendForUserSubset(user_id, 500)
+        pred_label = recs.select('user_id','recommendations.book_id)
 
-    # Save the model
-    pipelineModel.save(model_file)
+        pred_true_rdd = pred_label.join(F.broadcast(true_label), 'user_id', 'inner') \
+                    .rdd \
+                    .map(lambda row: (row[1], row[2]))
 
-    # Get best LR hyper-parameters
-    model = pipelineModel.stages[-1].bestModel
-    print('Best Param (regParam): ', model.getOrDefault('regParam'))
-    print('Best Param (elasticNetParam): ', model.getOrDefault('elasticNetParam'))
+        metrics = RankingMetrics(pred_true_rdd)
+        map_ = metrics.meanAveragePrecision
+        ndcg = metrics.ndcgAt(500)
+        mpa = metrics.precisionAt(500)
+        print(i, 'map score: ', map_, 'ndcg score: ', ndcg, 'map score: ', mpa)
+
+
+
 
 
 
