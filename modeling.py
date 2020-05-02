@@ -31,13 +31,16 @@ def dummy_run(spark):
     ['user_id', 'book_id', 'rating'] 
     )
 
+    user_id = val.select('user_id').distinct()
+    true_label = val.select('user_id', 'book_id')\
+                .groupBy('user_id')\
+                .agg(expr('collect_list(book_id) as true_item'))
+
     als = ALS(rank = 3 , regParam=0.1, userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
     model = als.fit(train)
 
-    #need to define a user subset in order to use this function (but we will probably want it later)
-    #recs = model.recommendForUserSubset('user_id', 2)
-    recs = model.recommendForAllUsers(2)
-    print(recs)
+    recs = model.recommendForUserSubset(user_id, 2)
+    print(recs
     pred_label = recs.select('user_id','recommendations.book_id')
 
     pred_true_rdd = pred_label.join(F.broadcast(true_label), 'user_id', 'inner') \
