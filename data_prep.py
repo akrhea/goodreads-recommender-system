@@ -430,10 +430,12 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
 
     spark: spark
     fraction: decimal percentage of users to retrieve (i.e. 0.01, 0.05, 0.25)
-                - rounds down to the neareast 0.01
+              - rounds down to the neareast 0.01
     seed: set random seed for reproducibility
     save_pq: boolean option to save train/val/test splits to parquet
+             - will be reset to "False" if using synthetic data
     rm_unobserved: boolean option to remove all unobserved items and move unobserved users to train
+                   - will be reset to "True" if saving to parquet
     synthetic: boolean option to use synthetic data (will use goodreads data if False)
     debug: boolean option to debug train_val_test_split
     '''
@@ -443,6 +445,16 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
 
     # retain only 2 decimal places (round down to nearest 0.01)
     fraction = int(fraction*100)/100
+
+    if synthetic:
+        # if using synthetic data, bypass inputted save_pq argument
+        # ensures we are not crossing wires by saving synthetic data 
+        save_pq = False
+
+    if save_pq:
+        # if saving to parquet, bypass inputted rm_observed argument
+        # ensures that saved versions of val and test include only observed users and items
+        rm_unobserved=True
 
     if synthetic==False:
 
