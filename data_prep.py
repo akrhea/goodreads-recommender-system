@@ -63,7 +63,7 @@ def downsample(spark, full_data, fraction=0.01, seed=42):
         print('Downsampling to {}%'.format(int(fraction*100)))
         downsampled_ids = unique_ids.sample(False, fraction=fraction, seed=seed)
         downsampled_ids.createOrReplaceTempView('downsampled_ids')
-        downsampled_ids.cache()
+        downsampled_ids.persist()
 
         # can also read in is_read and/or is_reviewed if necessary
         down = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids INNER JOIN full_data on downsampled_ids.user_id=full_data.user_id')
@@ -176,12 +176,12 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     '''
     print('Get all distinct users from downsampled data')
     users=down.select('user_id').distinct()
-    # users = users.cache() # necessary? may need to delete for memory reasons persist instead?
+    # users = users.cache() # removed for memory reasons
     print('Sampling users with randomSplit')
     users_train, users_val, users_test = users.randomSplit([0.6, 0.2, 0.2], seed=seed)
-    users_train.cache() # consider persist?
-    users_val.cache() # consider persist?
-    users_test.cache() # consider persist?
+    users_train.persist()
+    users_val.persist()
+    users_test.persist()
     users_train.createOrReplaceTempView('users_train')
     users_val.createOrReplaceTempView('users_val')
     users_test.createOrReplaceTempView('users_test')
@@ -217,7 +217,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     print('Set validation users')
     #Validation Set - 20% of users
     val_all = spark.sql('SELECT users_val.user_id, book_id, rating FROM users_val INNER JOIN down on users_val.user_id=down.user_id')
-    val_all = val_all.cache() # consider persist
+    val_all = val_all.cache()
 
     if debug:
         print ('\n')
@@ -234,7 +234,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     print('Done collecting validation users as map')
     print('Sample interactions for validation users')
     val_50 = val_all.sampleBy("user_id", fractions=val_dict, seed=seed)
-    val_50.cache() # consider persist
+    val_50.persist()
 
     if debug:
         print ('\n')
@@ -290,7 +290,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     print('Done collecting test users as map')
     print('Sample interactions for test users')
     test_50 = test_all.sampleBy("user_id", fractions=test_dict, seed=seed)
-    test_50.cache() # consider persist
+    test_50.persist()
 
     if debug:
         print ('\n')
