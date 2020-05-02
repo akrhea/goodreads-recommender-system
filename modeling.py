@@ -3,6 +3,7 @@
 #starting point: train, val, test in memory from data_prep
 
 def dummy_run(spark):
+
     from pyspark.ml.recommendation import ALS
     from pyspark.mllib.evaluation import RankingMetrics
     import pyspark.sql.functions as F
@@ -29,9 +30,10 @@ def dummy_run(spark):
     ],
     ['user_id', 'book_id', 'rating'] 
     )
-    
+
     als=ALS(spark, train, val, lamb=0.01, rank=3)
     model = als.fit(train)
+    
     recs = model.recommendForUserSubset(user_id, 2)
     print(recs)
     pred_label = recs.select('user_id','recommendations.book_id')
