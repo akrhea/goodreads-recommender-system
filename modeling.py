@@ -109,8 +109,6 @@ def hyperparam_search(spark, train, val, k=500):
                 .groupBy('user_id')\
                 .agg(expr('collect_list(book_id) as true_item'))
 
-
-    lr = LogisticRegression(featuresCol='out_features', labelCol='label')
     als = ALS(userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
 
     # Tune hyper-parameters with cross-validation
