@@ -365,7 +365,11 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
             test_and_val_users.createOrReplaceTempView('test_and_val_users')
             train_users_putback.createOrReplaceTempView('train_users_putback')
             unobserved_users = spark.sql('SELECT * FROM test_and_val_users EXCEPT SELECT * FROM train_users_putback')
-            print('&&& Number of unobserved users: (should be 0)', unobserved_users.count())
+            print('&&& Number of users that were put back: ', test_inters_unob_users.union(val_inters_unob_users).select('user_id').distinct().count())
+            print('&&& Number of interactions that were put back: ', test_inters_unob_users.union(val_inters_unob_users).count())
+            print('&&& Number of currently unobserved users (should be 0): ', unobserved_users.count())
+            print('&&& train user count / total user count (should be 1): ', tr_users_count/users_all_count)
+            print('&&& (train + val + test) count / total count (should be 1): ', (train.count() + val_inters_ob_users.count() + test_inters_ob_users.count())/down.count() )
             print('\n')
 
         # Remove unobserved items from val and test
@@ -388,7 +392,11 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
             test_and_val_items.createOrReplaceTempView('test_and_val_items')
             train_items.createOrReplaceTempView('train_items')
             unobserved_items = spark.sql('SELECT * FROM test_and_val_items EXCEPT SELECT * FROM train_items')
-            print('&&& Number of unobserved items: (should be 0)', unobserved_items.count())
+            print('&&& Number of removed items:', unobserved_items.count())
+            print('&&& Number of removed interactions:', val.count() + test.count() - val_inters_ob_users.count() - test_inters_ob_users.count())
+            print('&&& Number of currently unobserved items (should be 0):', unobserved_items.count())
+
+            print('', )
             print('\n')
 
     if rm_unobserved==False:
