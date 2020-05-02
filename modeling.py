@@ -135,6 +135,13 @@ def search(spark, train, val, k=500):
     return
   
 def search_w_crossval():
+
+    from pyspark.ml.recommendation import ALS
+    from pyspark.mllib.evaluation import RankingMetrics
+    import pyspark.sql.functions as F
+    from pyspark.sql.functions import expr
+    from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
+    import itertools 
     
     als = ALS(userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
 
