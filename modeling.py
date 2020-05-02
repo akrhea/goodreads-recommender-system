@@ -111,8 +111,8 @@ def hyperparam_search(spark, train, val, k=500):
 
     #build paramGrid lambda/rank combos
     paramGrid = ParamGridBuilder() \
-        .addGrid(als.regParam, [0.0001, 0.001, 0.01, 0.1, 1, 10]) \
-        .addGrid(als.rank, [5, 10, 20, 100, 500]) \
+        .addGrid(ALS.regParam, [0.0001, 0.001, 0.01, 0.1, 1, 10]) \
+        .addGrid(ALS.rank, [5, 10, 20, 100, 500]) \
         .build()
     print(paramGrid)
 
