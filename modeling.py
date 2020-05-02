@@ -109,6 +109,37 @@ def hyperparam_search(spark, train, val, k=500):
                 .groupBy('user_id')\
                 .agg(expr('collect_list(book_id) as true_item'))
 
+
+    lr = LogisticRegression(featuresCol='out_features', labelCol='label')
+    als = ALS(userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
+
+    # Tune hyper-parameters with cross-validation
+    paramGrid = ParamGridBuilder() \
+        .addGrid(als.regParam, [0.0001, 0.001, 0.01, 0.1, 1, 10]) \
+        .addGrid(als).rank, [5, 10, 20, 100, 500]) \
+        .build()
+
+    crossval = CrossValidator(estimator=lr,
+                            estimatorParamMaps=paramGrid,
+                            evaluator=MulticlassClassificationEvaluator(),
+                            numFolds=5)
+
+    pipeline = Pipeline(stages=[assembler, scaler, indexer, crossval])
+
+        
+    # Train the model
+    pipelineModel = pipeline.fit(data)
+
+    # Save the model
+    pipelineModel.save(model_file)
+
+    #best hyperparameters
+    model = pipelineModel.stages[-1].bestModel
+    print('Best Param (regParam): ', model.getOrDefault('regParam'))
+    print('Best Param (rank): ', model.getOrDefault('rank'))
+
+def other_func():
+
     #build paramGrid lambda/rank combos
     paramGrid = ParamGridBuilder() \
         .addGrid(ALS.regParam, [0.0001, 0.001, 0.01, 0.1, 1, 10]) \
@@ -117,7 +148,7 @@ def hyperparam_search(spark, train, val, k=500):
 
     for i in paramGrid:
         print(i)
-        
+
     #fit and evaluate for all combos
     for i in paramGrid:
         als = ALS(rank = i[1], regParam=i[0], userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
@@ -136,6 +167,7 @@ def hyperparam_search(spark, train, val, k=500):
         p_at_k= metrics.precisionAt(k)
         print('Lambda ', i[0], 'and Rank ', i[1] , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
 
+return
 
 
 
