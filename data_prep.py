@@ -395,8 +395,6 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
             print('&&& Number of removed items:', val_inters_ob_users.union(test_inters_ob_users).select('book_id').distinct.count() - val.union(test).select('book_id').distinct.count())
             print('&&& Number of removed interactions:', val.union(test).count() - val_inters_ob_users.union(test_inters_ob_users).count())
             print('&&& Number of currently unobserved items (should be 0):', unobserved_items.count())
-
-            print('', )
             print('\n')
 
     if rm_unobserved==False:
