@@ -80,7 +80,7 @@ def als(spark, train, val, lamb, rank):
     predictions = model.transform(val)
     return predictions
 
-def hyperparam_search(spark, train, val, k=500):
+def search(spark, train, val, k=500):
     ''' 
         Fits ALS model from train, ranks k top items, and evaluates with MAP, P, NDCG across combos of rank/lambda hyperparameter
         Imput: training file
@@ -95,6 +95,8 @@ def hyperparam_search(spark, train, val, k=500):
     from pyspark.mllib.evaluation import RankingMetrics
     import pyspark.sql.functions as F
     from pyspark.sql.functions import expr
+    from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
+    import itertools 
 
     # Tune hyper-parameters with cross-validation 
     # references https://spark.apache.org/docs/latest/api/python/pyspark.ml.html#pyspark.ml.tuning.CrossValidator
@@ -108,15 +110,12 @@ def hyperparam_search(spark, train, val, k=500):
                 .groupBy('user_id')\
                 .agg(expr('collect_list(book_id) as true_item'))
 
-    #build paramGrid lambda/rank combos
-    paramGrid = ParamGridBuilder() \
-        .addGrid(als.regParam, [0.0001, 0.001, 0.01, 0.1, 1, 10]) \
-        .addGrid(als.rank, [5, 10, 20, 100, 500]) \
-        .build()
-    print(paramGrid)
+    regParam = [0.0001, 0.001, 0.01, 0.1, 1, 10]
+    rank  = [5, 10, 20, 100, 500]
+    paramGrid = itertools.product(regParam, rank)
 
-    #fit and evaluate for all combos
-    for i in param_grid:
+  #fit and evaluate for all combos
+    for i in paramGrid:
         als = ALS(rank = i[1], regParam=i[0], userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
         model = als.fit(train)
 
@@ -132,6 +131,40 @@ def hyperparam_search(spark, train, val, k=500):
         ndcg_at_k = metrics.ndcgAt(k)
         p_at_k= metrics.precisionAt(k)
         print('Lambda ', i[0], 'and Rank ', i[1] , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
+
+    return
+  
+def search_w_crossval():
+    
+    als = ALS(userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
+
+    # Tune hyper-parameters with cross-validation
+    paramGrid = ParamGridBuilder() \
+        .addGrid(als.regParam, [0.0001, 0.001, 0.01, 0.1, 1, 10]) \
+        .addGrid(als.rank, [5, 10, 20, 100, 500]) \
+        .build()
+
+    crossval = CrossValidator(estimator=als,
+                            estimatorParamMaps=paramGrid,
+                            evaluator=RankingMetrics.metrics.meanAveragePrecision,
+                            numFolds=5)
+
+    pipeline = Pipeline(stages=[assembler, scaler, indexer, crossval])
+
+    # Train the model
+    pipelineModel = pipeline.fit(data)
+
+    # Save the model
+    pipelineModel.save(model_file)
+
+    #best hyperparameters
+    model = pipelineModel.stages[-1].bestModel
+    print('Best Param (regParam): ', model.getOrDefault('regParam'))
+    print('Best Param (rank): ', model.getOrDefault('rank'))
+    return 
+
+
+
 
 
 
