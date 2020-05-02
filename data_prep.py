@@ -169,6 +169,8 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False):
      - Unify variable names
      - Remove debugging statements
     '''
+    print('debug: ', debug)
+
     print('Get all distinct users from downsampled data')
     users=down.select('user_id').distinct()
     # users = users.cache() # necessary? may need to delete for memory reasons persist instead?
@@ -550,30 +552,34 @@ def quality_check(spark, fraction, synthetic, rm_unobserved=False):
 
     print('\n')
 
-    #print('down:')
-    #down.orderBy('user_id').show(down_inter_count, False)
+    if synthetic:
+        print('down:')
+        down.orderBy('user_id').show(down_inter_count, False)
 
-    #print('train:')
-    #train.orderBy('user_id').show(train_inter_count, False)
+        print('train:')
+        train.orderBy('user_id').show(train_inter_count, False)
 
-    #print('val:')
-    #val.orderBy('user_id').show(val_inter_count, False)
+        print('val:')
+        val.orderBy('user_id').show(val_inter_count, False)
 
-    #print('test:')
-    #test.orderBy('user_id').show(test_inter_count, False)
+        print('test:')
+        test.orderBy('user_id').show(test_inter_count, False)
 
     recombined=train.union(val).union(test)
     recombined = recombined.cache()
-    #print('recombined:')
-    #recombined.orderBy('user_id').show(recombined.count(), False)
+    if synthetic:
+        print('recombined:')
+        recombined.orderBy('user_id').show(recombined.count(), False)
     down.createOrReplaceTempView('down')
     recombined.createOrReplaceTempView('recombined')
     differences1 = spark.sql('SELECT * FROM down EXCEPT SELECT * FROM recombined')
     print('&&& downsampled - recombined (should be 0): ', differences1.count())
-    # differences1.show()
+    if synthetic:
+        differences1.show()
     differences2 = spark.sql('SELECT * FROM recombined EXCEPT SELECT * FROM down')
     print('&&& recombined - downsampled (should be 0): ', differences2.count())
-    # differences2.show()
+    if synthetic:
+        differences2.show()
 
     print('\n')
 
