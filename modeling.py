@@ -3,6 +3,12 @@
 #starting point: train, val, test in memory from data_prep
 
 def dummy_run(spark):
+
+    from pyspark.ml.recommendation import ALS
+    from pyspark.mllib.evaluation import RankingMetrics
+    import pyspark.sql.functions as F
+    from pyspark.sql.functions import expr
+
     train=spark.createDataFrame(
     [
         (82, 124, 5.0),
@@ -24,11 +30,23 @@ def dummy_run(spark):
     ],
     ['user_id', 'book_id', 'rating'] 
     )
-    
-    predictions=als(spark, train, val, lamb=0.01, rank=3)
-    print(predictions)
-    print(type(predictions))
-    predictions.show()
+
+    als = ALS(rank = 3 , regParam=0.1, userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
+    model = als.fit(train)
+
+    recs = model.recommendForUserSubset('user_id', 2)
+    print(recs)
+    pred_label = recs.select('user_id','recommendations.book_id')
+
+    pred_true_rdd = pred_label.join(F.broadcast(true_label), 'user_id', 'inner') \
+                .rdd \
+                .map(lambda row: (row[1], row[2]))
+
+    metrics = RankingMetrics(pred_true_rdd)
+    mean_ap = metrics.meanAveragePrecision
+    ndcg_at_k = metrics.ndcgAt(k)
+    p_at_k= metrics.precisionAt(k)
+    print('MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
     return 
 
 def als(spark, train, val, lamb, rank):
