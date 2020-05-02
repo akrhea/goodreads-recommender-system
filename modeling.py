@@ -115,9 +115,11 @@ def hyperparam_search(spark, train, val, k=500):
         .addGrid(ALS.rank, [5, 10, 20, 100, 500]) \
         .build()
 
+    for i in paramGrid:
+        print(i)
+        
     #fit and evaluate for all combos
     for i in paramGrid:
-        print (i)
         als = ALS(rank = i[1], regParam=i[0], userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
         model = als.fit(train)
 
