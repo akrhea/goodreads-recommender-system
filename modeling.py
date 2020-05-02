@@ -70,10 +70,10 @@ def hyperparam_search(spark, train, val, k=500):
             k - how many top items to predict (default = 500)
         Returns: MAP, P, NDCG for each model
     '''
-     from pyspark.ml.recommendation import ALS
-     from pyspark.mllib.evaluation import RankingMetrics
-     import pyspark.sql.functions as F
-     from pyspark.sql.functions import expr
+    from pyspark.ml.recommendation import ALS
+    from pyspark.mllib.evaluation import RankingMetrics
+    import pyspark.sql.functions as F
+    from pyspark.sql.functions import expr
 
     # Tune hyper-parameters with cross-validation 
     # references https://spark.apache.org/docs/latest/api/python/pyspark.ml.html#pyspark.ml.tuning.CrossValidator
@@ -92,6 +92,7 @@ def hyperparam_search(spark, train, val, k=500):
         .addGrid(als.regParam, [0.0001, 0.001, 0.01, 0.1, 1, 10]) \
         .addGrid(als.rank, [5, 10, 20, 100, 500]) \
         .build()
+    print(paramGrid)
 
     #fit and evaluate for all combos
     for i in param_grid:
@@ -109,7 +110,7 @@ def hyperparam_search(spark, train, val, k=500):
         mean_ap = metrics.meanAveragePrecision
         ndcg_at_k = metrics.ndcgAt(k)
         p_at_k= metrics.precisionAt(k)
-        print(i, 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
+        print('Lambda ' i[0] 'and Rank ', i[1] , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
 
 
 
