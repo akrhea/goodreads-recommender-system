@@ -370,7 +370,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False):
             print('After dealing with unobserved books, train has {} items, val has {} items, and test has {} items'.format(tr_items_count, va_items_count, te_items_count))
             print('Train - val - test (should be 0): ', tr_items_count - va_items_count - te_items_count)
 
-    if rm_observed==False:
+    if rm_unobserved==False:
         train = train_100
         val = val_50
         test = test_50
