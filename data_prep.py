@@ -330,7 +330,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False):
         '''
         print('Get all distinct users in train')
         train_100_users = train_100.select('user_id').distinct()
-        train_100_users.createOrReplaceTempView('train_100_users'
+        train_100_users.createOrReplaceTempView('train_100_users')
         print('Select val interactions with observed users')
         val_inters_ob_users = spark.sql('SELECT train_100_users.user_id, book_id, rating FROM val_50 RIGHT JOIN train_100_users ON val_50.user_id = train_100_users.user_id')
         val_inters_ob_users.createOrReplaceTempView('val_inters_ob_users')
