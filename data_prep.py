@@ -422,7 +422,8 @@ def remove_lowitem_users(spark, interactions):
 
 def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobserved=True, synthetic=False, debug=False):
     '''
-    Optionally reads in interactions data (and writes to Parquet if not already saved)
+    By default, reads in interactions data (and writes to Parquet if not already saved)
+        - Also has option to use synthetic data
     Downsamples fraction of user_id's
     Splits into training/validation/test sets
     Optionally writes splits to parquet
