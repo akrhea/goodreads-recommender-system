@@ -31,21 +31,24 @@ def dummy_run(spark):
     ['user_id', 'book_id', 'rating'] 
     )
 
+    user_id = val.select('user_id').distinct()
+    true_label = val.select('user_id', 'book_id')\
+                .groupBy('user_id')\
+                .agg(expr('collect_list(book_id) as true_item'))
+
     als = ALS(rank = 3 , regParam=0.1, userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
     model = als.fit(train)
 
-    recs = model.recommendForUserSubset('user_id', 2)
-    print(recs)
+    recs = model.recommendForUserSubset(user_id, 2)
     pred_label = recs.select('user_id','recommendations.book_id')
-
     pred_true_rdd = pred_label.join(F.broadcast(true_label), 'user_id', 'inner') \
                 .rdd \
                 .map(lambda row: (row[1], row[2]))
 
     metrics = RankingMetrics(pred_true_rdd)
     mean_ap = metrics.meanAveragePrecision
-    ndcg_at_k = metrics.ndcgAt(k)
-    p_at_k= metrics.precisionAt(k)
+    ndcg_at_k = metrics.ndcgAt(2)
+    p_at_k= metrics.precisionAt(2)
     print('MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
     return 
 
