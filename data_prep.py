@@ -66,7 +66,7 @@ def downsample(spark, full_data, fraction=0.01, seed=42):
         downsampled_ids.cache()
 
         # can also read in is_read and/or is_reviewed if necessary
-        down = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids LEFT JOIN full_data on downsampled_ids.user_id=full_data.user_id')
+        down = spark.sql('SELECT downsampled_ids.user_id, book_id, rating FROM downsampled_ids INNER JOIN full_data on downsampled_ids.user_id=full_data.user_id')
     
         # for debugging:
         # print('full_data:')
@@ -202,7 +202,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     
     print('Set training users')
     #Training Set - 60% of users
-    train_60 = spark.sql('SELECT users_train.user_id, book_id, rating FROM users_train LEFT JOIN down on users_train.user_id=down.user_id')
+    train_60 = spark.sql('SELECT users_train.user_id, book_id, rating FROM users_train INNER JOIN down on users_train.user_id=down.user_id')
 
     if debug:
         #train_60.cache()
@@ -216,7 +216,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
 
     print('Set validation users')
     #Validation Set - 20% of users
-    val_all = spark.sql('SELECT users_val.user_id, book_id, rating FROM users_val LEFT JOIN down on users_val.user_id=down.user_id')
+    val_all = spark.sql('SELECT users_val.user_id, book_id, rating FROM users_val INNER JOIN down on users_val.user_id=down.user_id')
     val_all = val_all.cache() # consider persist
 
     if debug:
@@ -272,7 +272,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
 
     print('Set test users')
     #Test Set - 20% of users
-    test_all = spark.sql('SELECT users_test.user_id, book_id, rating FROM users_test LEFT JOIN down on users_test.user_id=down.user_id')
+    test_all = spark.sql('SELECT users_test.user_id, book_id, rating FROM users_test INNER JOIN down on users_test.user_id=down.user_id')
     test_all = test_all.cache()
 
     if debug:
