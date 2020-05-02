@@ -59,23 +59,46 @@ def als(spark, train, val, lamb, rank):
     predictions = model.transform(val)
     return predictions
 
-def evaluate(truth, preds):
+def evaluate(truth, preds, k):
+
+    #reference: https://vinta.ws/code/spark-ml-cookbook-pyspark.html
 
     from pyspark.ml.evaluation import RegressionEvaluator
     from pyspark.mllib.evaluation import RankingMetrics
+    from pyspark.sql import Window
+    from pyspark.sql.functions import col, expr
+    import pyspark.sql.functions as F
     
     #make the true utility matrix
     true_value = val.select('user_id', 'book_id').groupBy('user_id').agg(expr('collect_list(track_id_indexed) as true_value'))
-    
-    #auc
 
-    #average precision
+    windowSpec = Window.partitionBy('user').orderBy(col('prediction').desc())
+    perUserPredictedItemsDF = outputDF \
+        .select('user', 'item', 'prediction', F.rank().over(windowSpec).alias('rank')) \
+        .where('rank <= {0}'.format(k)) \
+        .groupBy('user') \
+        .agg(expr('collect_list(item) as items'))
+    perUserPredictedItemsDF.show()
 
-    #reciprocal rank
+    windowSpec = Window.partitionBy('from_user_id').orderBy(col('starred_at').desc())
+    perUserActualItemsDF = rawDF \
+        .select('from_user_id', 'repo_id', 'starred_at', F.rank().over(windowSpec).alias('rank')) \
+        .where('rank <= {0}'.format(k)) \
+        .groupBy('from_user_id') \
+        .agg(expr('collect_list(repo_id) as items')) \
+        .withColumnRenamed('from_user_id', 'user')
 
+    perUserItemsRDD = perUserPredictedItemsDF.join(perUserActualItemsDF, 'user') \
+        .rdd \
+        .map(lambda row: (row[1], row[2]))
+    rankingMetrics = RankingMetrics(perUserItemsRDD)
+
+    print("Precision at k: ", rankingMetrics.precisionAt(k))
+    print("MAP : ", rankingMetrics.meanAveragePrecision)
+    print("NDCG at k: ", rankingMetrics.ndcgAt(k))
 
 #use spark grid search -- see example code
-def hyperparam_search(train):
+def hyperparam_search(train, val):
 
     lambs=[0.0001, 0.001, 0.01, 0.1, 1, 10]
     ranks=[5, 10, 100, 500, 1000, 10000]
@@ -83,6 +106,33 @@ def hyperparam_search(train):
     for i in lambs:
         for j in ranks:
             model=fit_als(train, lamb=i, rank=j)
+
+
+     # Tune hyper-parameters with cross-validation 
+     # reference: 
+    paramGrid = ParamGridBuilder() \
+        .addGrid(lr.regParam, [0.0001, 0.001, 0.01, 0.1, 1]) \
+        .addGrid(lr.elasticNetParam, [0, 0.25, 0.5, 0.75, 1]) \
+        .build()
+
+    crossval = CrossValidator(estimator=lr,
+                              estimatorParamMaps=paramGrid,
+                              evaluator=MulticlassClassificationEvaluator(),
+                              numFolds=5)
+
+    # Build the pipeline
+    pipeline = Pipeline(stages=[assembler, scaler, indexer, crossval])
+    
+    # Train the model
+    pipelineModel = pipeline.fit(data)
+
+    # Save the model
+    pipelineModel.save(model_file)
+
+    # Get best LR hyper-parameters
+    model = pipelineModel.stages[-1].bestModel
+    print('Best Param (regParam): ', model.getOrDefault('regParam'))
+    print('Best Param (elasticNetParam): ', model.getOrDefault('elasticNetParam'))
 
 
 
