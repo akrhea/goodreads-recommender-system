@@ -40,9 +40,7 @@ def dummy_run(spark):
     model = als.fit(train)
 
     recs = model.recommendForUserSubset(user_id, 2)
-    print(recs
     pred_label = recs.select('user_id','recommendations.book_id')
-
     pred_true_rdd = pred_label.join(F.broadcast(true_label), 'user_id', 'inner') \
                 .rdd \
                 .map(lambda row: (row[1], row[2]))
