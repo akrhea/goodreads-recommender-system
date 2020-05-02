@@ -466,8 +466,7 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
             train = spark.read.parquet(train_path)
             val = spark.read.parquet(val_path)
             test = spark.read.parquet(test_path)
-
-            down = None
+            down = None # no access to downsampled df
         
         except:
 
@@ -638,6 +637,45 @@ def quality_check(spark, fraction, synthetic, rm_unobserved=False):
 
     return full, down, train, val, test
 
+def test_caching_and_persisting(spark):
+    df1 = spark.createDataFrame(
+                [(666, 1, 3.0),
+                (666, 2, 3.0),
+                (666, 3, 3.0),
+                (666, 4, 3.0),
+                (666, 5, 3.0),
+                (666, 6, 3.0),],
+                ['user_id', 'book_id', 'rating'])
+    df2 = spark.createDataFrame(
+                [(666, 1, 3.0),
+                (666, 2, 3.0),
+                (666, 3, 3.0),
+                (666, 4, 3.0),
+                (666, 5, 3.0),
+                (666, 6, 3.0),
+                (42, 1, 3.0),
+                (42, 2, 3.0),
+                (42, 3, 3.0),
+                (42, 4, 3.0),
+                (42, 5, 3.0),
+                (42, 6, 3.0),],
+                ['user_id', 'book_id', 'rating'])
+    df_list = [df1, df2]
+
+    for in range(len(df_list)):
+        this_df = df_list[i]
+        this_df.cache()
+        print('i={}, this_df: ')
+        this_df.show()
+
+    for in range(len(df_list)):
+        that_df = df_list[i]
+        that_df.persist()
+        print('i={}, that_df: ')
+        that_df.show()
+    return
+    
+    
 def get_synth_data(spark):
     '''
     Returns synethetic dataframe
