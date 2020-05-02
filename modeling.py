@@ -47,8 +47,8 @@ def dummy_run(spark):
 
     metrics = RankingMetrics(pred_true_rdd)
     mean_ap = metrics.meanAveragePrecision
-    ndcg_at_k = metrics.ndcgAt(k)
-    p_at_k= metrics.precisionAt(k)
+    ndcg_at_k = metrics.ndcgAt(2)
+    p_at_k= metrics.precisionAt(2)
     print('MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
     return 
 
