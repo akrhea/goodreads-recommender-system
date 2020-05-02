@@ -30,7 +30,7 @@ def dummy_run(spark):
     ['user_id', 'book_id', 'rating'] 
     )
     
-    als=als(spark, train, val, lamb=0.01, rank=3)
+    als=ALS(spark, train, val, lamb=0.01, rank=3)
     model = als.fit(train)
     recs = model.recommendForUserSubset(user_id, 2)
     print(recs)
