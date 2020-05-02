@@ -59,7 +59,7 @@ def als(spark, train, val, lamb, rank):
     predictions = model.transform(val)
     return predictions
 
-def evaluate(truth, preds, k):
+def evaluator(truth, preds, k): #revelation...do we actually need an evaluator function
 
     #reference: https://vinta.ws/code/spark-ml-cookbook-pyspark.html
 
@@ -69,55 +69,22 @@ def evaluate(truth, preds, k):
     from pyspark.sql.functions import col, expr
     import pyspark.sql.functions as F
     
-    #make the true utility matrix
-    true_value = val.select('user_id', 'book_id').groupBy('user_id').agg(expr('collect_list(track_id_indexed) as true_value'))
+  
+def hyperparam_search(train, val, k):
 
-    windowSpec = Window.partitionBy('user').orderBy(col('prediction').desc())
-    perUserPredictedItemsDF = outputDF \
-        .select('user', 'item', 'prediction', F.rank().over(windowSpec).alias('rank')) \
-        .where('rank <= {0}'.format(k)) \
-        .groupBy('user') \
-        .agg(expr('collect_list(item) as items'))
-    perUserPredictedItemsDF.show()
+    # Tune hyper-parameters with cross-validation 
+    # references https://spark.apache.org/docs/latest/api/python/pyspark.ml.html#pyspark.ml.tuning.CrossValidator
+    # https://spark.apache.org/docs/latest/ml-tuning.html
+    # https://github.com/nyu-big-data/lab-mllib-not-assignment-ldarinzo/blob/master/supervised_train.py
 
-    windowSpec = Window.partitionBy('from_user_id').orderBy(col('starred_at').desc())
-    perUserActualItemsDF = rawDF \
-        .select('from_user_id', 'repo_id', 'starred_at', F.rank().over(windowSpec).alias('rank')) \
-        .where('rank <= {0}'.format(k)) \
-        .groupBy('from_user_id') \
-        .agg(expr('collect_list(repo_id) as items')) \
-        .withColumnRenamed('from_user_id', 'user')
-
-    perUserItemsRDD = perUserPredictedItemsDF.join(perUserActualItemsDF, 'user') \
-        .rdd \
-        .map(lambda row: (row[1], row[2]))
-    rankingMetrics = RankingMetrics(perUserItemsRDD)
-
-    print("Precision at k: ", rankingMetrics.precisionAt(k))
-    print("MAP : ", rankingMetrics.meanAveragePrecision)
-    print("NDCG at k: ", rankingMetrics.ndcgAt(k))
-
-#use spark grid search -- see example code
-def hyperparam_search(train, val):
-
-    lambs=[0.0001, 0.001, 0.01, 0.1, 1, 10]
-    ranks=[5, 10, 100, 500, 1000, 10000]
-
-    for i in lambs:
-        for j in ranks:
-            model=fit_als(train, lamb=i, rank=j)
-
-
-     # Tune hyper-parameters with cross-validation 
-     # reference: 
     paramGrid = ParamGridBuilder() \
-        .addGrid(lr.regParam, [0.0001, 0.001, 0.01, 0.1, 1]) \
-        .addGrid(lr.elasticNetParam, [0, 0.25, 0.5, 0.75, 1]) \
+        .addGrid(als.regParam, [0.0001, 0.001, 0.01, 0.1, 1, 10]) \
+        .addGrid(als.rank, [5, 10, 20 , 100, 500]) \
         .build()
 
-    crossval = CrossValidator(estimator=lr,
+    crossval = CrossValidator(estimator=als,
                               estimatorParamMaps=paramGrid,
-                              evaluator=MulticlassClassificationEvaluator(),
+                              evaluator=rankingMetrics.meanAveragePrecision,
                               numFolds=5)
 
     # Build the pipeline
