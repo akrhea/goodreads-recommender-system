@@ -103,7 +103,7 @@ def path_exist(path):
         return False
     return
 
-def write_to_parquet(spark, df, filename):
+def write_to_parquet(spark, df, path):
     '''
     Takes in spark df
     Orders df by user_id
@@ -115,12 +115,6 @@ def write_to_parquet(spark, df, filename):
     filename: name of file to save in user's hdfs file
         - naming convention: [interactions/books/users]_[downsample percent]_[full/train/val/test]
     '''
-
-    #get netid
-    from getpass import getuser
-    net_id=getuser()
-
-    path = 'hdfs:/user/'+net_id+'/'+filename+'.parquet'
 
     try:
         # read parquet file if exists
@@ -485,11 +479,13 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
 
     if synthetic==False:
 
+        # set hdfs paths
+        train_path = 'hdfs:/user/{}/interactions_{}_train_low{}'.format(net_id, int(fraction*100), low_item_threshold)
+        val_path = 'hdfs:/user/{}/interactions_{}_val_low{}'.format(net_id, int(fraction*100), low_item_threshold)
+        test_path = 'hdfs:/user/{}/interactions_{}_test_low{}'.format(net_id, int(fraction*100), low_item_threshold)
+
         try:
             # read in dfs from parquet if they exist
-            train_path = 'hdfs:/user/'+net_id+'/interactions_{}_train.parquet'.format(int(fraction*100))
-            val_path = 'hdfs:/user/'+net_id+'/interactions_{}_val.parquet'.format(int(fraction*100))
-            test_path = 'hdfs:/user/'+net_id+'/interactions_{}_test.parquet'.format(int(fraction*100))
             train = spark.read.parquet(train_path)
             val = spark.read.parquet(val_path)
             test = spark.read.parquet(test_path)
@@ -520,11 +516,16 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
             # split into train/val/test
             train, val, test = train_val_test_split(spark, down, seed=seed, rm_unobserved=rm_unobserved, debug=debug, debug_show=False)
 
+            # cache the splits
+            train.cache()
+            val.cache()
+            test.cache()
+
             if save_pq:
                 # write splits to parquet
-                train = write_to_parquet(spark, train, 'interactions_{}_train_low{}'.format(int(fraction*100), low_item_threshold))
-                val = write_to_parquet(spark, val, 'interactions_{}_val_low{}'.format(int(fraction*100), low_item_threshold))
-                test = write_to_parquet(spark, test, 'interactions_{}_test_low{}'.format(int(fraction*100), low_item_threshold))
+                train = write_to_parquet(spark, train, train_path)
+                val = write_to_parquet(spark, val, val_path)
+                test = write_to_parquet(spark, test, test_path)
 
     if synthetic==True:
 
