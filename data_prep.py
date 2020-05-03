@@ -418,7 +418,9 @@ def remove_lowitem_users(spark, df0, low_item_threshold=10):
 
     if low_item_threshold>0:
         # query not cleansed!
-        df_nolow = spark.sql('SELECT * FROM df0 GROUP BY user_id HAVING COUNT(DISTINCT book_id)>{}'.format(low_item_threshold))
+        df_nolow_users = spark.sql('SELECT user_id, COUNT(DISTINCT book_id) FROM df0 GROUP BY user_id HAVING COUNT(DISTINCT book_id)>{}'.format(low_item_threshold))
+        df_nolow_users.createOrReplaceTempView('df_nolow_users')
+        df_nolow = spark.sql('SELECT df0.user_id, book_id, rating FROM df0 INNER JOIN df_nolow_users ON df0.user_id=df_nolow_users.user_id')
     else:
         # do not remove any users
         df_nolow = df0
