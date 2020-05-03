@@ -428,6 +428,9 @@ def remove_lowitem_users(spark, df0, low_item_threshold=10):
     return df_nolow
     
 def remove_zeros (spark, df):
+    '''
+    Removes all interactions with a rating of 0
+    '''
     df.createOrReplaceTempView('df')
     return spark.sql('SELECT * FROM df WHERE rating > 0')
 
