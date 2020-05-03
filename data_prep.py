@@ -464,7 +464,7 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
         print('NOTICE: Will not save synthetic data to Parquet.')
         save_pq = False
 
-    if not rm_unobservd:
+    if not rm_unobserved:
         # if not removing unobserved interactions, bypass inputted save_pq argument
         # ensures that saved versions of val and test include only observed users and items
         print('NOTICE: Will not save data with unobserved test and validation data to Parquet.')
