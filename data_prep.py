@@ -483,9 +483,9 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
     if synthetic==False:
 
         # set hdfs paths
-        train_path = 'hdfs:/user/{}/interactions_{}_train_low{}'.format(net_id, int(fraction*100), low_item_threshold)
-        val_path = 'hdfs:/user/{}/interactions_{}_val_low{}'.format(net_id, int(fraction*100), low_item_threshold)
-        test_path = 'hdfs:/user/{}/interactions_{}_test_low{}'.format(net_id, int(fraction*100), low_item_threshold)
+        train_path = 'hdfs:/user/{}/interactions_{}_train_low{}.parquet'.format(net_id, int(fraction*100), low_item_threshold)
+        val_path = 'hdfs:/user/{}/interactions_{}_val_low{}.parquet'.format(net_id, int(fraction*100), low_item_threshold)
+        test_path = 'hdfs:/user/{}/interactions_{}_test_low{}.parquet'.format(net_id, int(fraction*100), low_item_threshold)
 
         try:
             # read in dfs from parquet if they exist
