@@ -105,13 +105,17 @@ def search(spark, train, val, k=500):
     #https://vinta.ws/code/spark-ml-cookbook-pyspark.html
 
     #for all users in val set, get list of books they actually read
+    # CHANGE TO TAKE 4-5 STARS
     user_id = val.select('user_id').distinct()
     true_label = val.select('user_id', 'book_id')\
                 .groupBy('user_id')\
                 .agg(expr('collect_list(book_id) as true_item'))
 
-    regParam = [0.0001, 0.001, 0.01, 0.1, 1, 10]
-    rank  = [5, 10, 20, 100, 500]
+    # regParam = [0.0001, 0.001, 0.01, 0.1, 1, 10]
+    # rank  = [5, 10, 20, 100, 500]
+
+    regParam = [1]
+    rank  = [5]
     paramGrid = itertools.product(regParam, rank)
 
   #fit and evaluate for all combos
@@ -120,11 +124,19 @@ def search(spark, train, val, k=500):
         model = als.fit(train)
 
         recs = model.recommendForUserSubset(user_id, k)
+        print('recs: ', type(recs))
+        recs.show()
+        
         pred_label = recs.select('user_id','recommendations.book_id')
+        print('pred_label: ', type(pred_label))
+        pred_label.show()
 
         pred_true_rdd = pred_label.join(F.broadcast(true_label), 'user_id', 'inner') \
                     .rdd \
                     .map(lambda row: (row[1], row[2]))
+
+        print('pred_true_rdd: ', type(pred_true_rdd))
+        pred_true_rdd.show()
 
         metrics = RankingMetrics(pred_true_rdd)
         mean_ap = metrics.meanAveragePrecision
