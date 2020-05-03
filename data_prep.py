@@ -409,10 +409,16 @@ def remove_lowitem_users(spark, df0, low_item_threshold=10):
         especially after partitioning their observations into train/test.
         You may discard these users from the experiment.
     '''
+
+    # use assert statements in place of proper query cleansing
+    assert type(low_item_threshold)==int, 'low_item_threshold must be an integer'
+    assert low_item_threshold >= 0, 'low_item_threshold must be non-negative'
+
     df0.createOrReplaceTempView('df0')
 
     if low_item_threshold>0:
-        df_nolow = spark.sql('SELECT * FROM df0 GROUP BY user_id HAVING COUNT(DISTINCT book_id)>?', low_item_threshold)
+        # query not cleansed!
+        df_nolow = spark.sql('SELECT * FROM df0 GROUP BY user_id HAVING COUNT(DISTINCT book_id)>{}'.format(low_item_threshold))
     else:
         # do not remove any users
         df_nolow = df0
