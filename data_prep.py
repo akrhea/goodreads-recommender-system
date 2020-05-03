@@ -424,7 +424,7 @@ def remove_zeros (spark, df):
     return spark.sql('SELECT * FROM df WHERE rating > 0')
 
 def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
-                         save_pq=False, rm_unobserved=True, rm_zeros=True, low_item_threshold=0
+                         save_pq=False, rm_unobserved=True, rm_zeros=True, low_item_threshold=0, 
                          synthetic=False, debug=False):
     '''
     By default, reads in interactions data (and writes to Parquet if not already saved)
@@ -468,7 +468,7 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
     if not rm_zeros:
         # if not removing interactions with a rating of 0, bypass inputted save_pq argument
         # ensures that saved versions of val and test will not include placeholder ratings
-        print('NOTICE: Will not save data with zero-ratings to Parquet.')
+        print('NOTICE: Will not save data with ratings of zero to Parquet.')
         save_pq = False
 
 
