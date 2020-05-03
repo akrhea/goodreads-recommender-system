@@ -11,17 +11,17 @@ def read_data_from_csv(spark, which_csv):
     '''
     
     if which_csv=='interactions':
-        print('Reading interactions from csv.')
+        print('Reading interactions from csv')
         df=spark.read.csv('hdfs:/user/bm106/pub/goodreads/goodreads_interactions.csv', header = True, 
                                     schema = 'user_id INT, book_id INT, is_read INT, rating FLOAT, is_reviewed INT')
         return df
     elif which_csv=='users':
-        print('Reading users from csv.')
+        print('Reading users from csv')
         df=spark.read.csv('hdfs:/user/bm106/pub/goodreads/user_id_map.csv', header = True, 
                                     schema = 'user_id_csv INT, user_id STRING')
         return df
     elif which_csv=='books':
-        print('Reading books from csv.')
+        print('Reading books from csv')
         df=spark.read.csv('hdfs:/user/bm106/pub/goodreads/book_id_map.csv', header = True, 
                                     schema = 'book_id_csv INT, book_id STRING')
         return df
@@ -160,7 +160,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     To-do:
      - Speed up queries by repartitioning?
     '''
-    print('Get all distinct users from downsampled data')
+    print('Getting all distinct users from downsampled data')
     users=down.select('user_id').distinct()
     print('Sampling users with randomSplit')
     users_train, users_val, users_test = users.randomSplit([0.6, 0.2, 0.2], seed=seed)
@@ -185,7 +185,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
         print('&&& (train+val+test)/all (should be 1): ', (users_train_count + users_val_count + users_test_count)/users_all_count)
         print ('\n')
     
-    print('Set training users')
+    print('Setting training users')
     #Training Set - 60% of users
     train_60 = spark.sql('SELECT users_train.user_id, book_id, rating FROM users_train INNER JOIN down on users_train.user_id=down.user_id')
 
@@ -199,7 +199,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
         print('&&& train_60_users_count/users_train_count (should be 1): ', train_60_users_count/users_train_count)
         print ('\n')
 
-    print('Set validation users')
+    print('Setting validation users')
     #Validation Set - 20% of users
     val_all = spark.sql('SELECT users_val.user_id, book_id, rating FROM users_val INNER JOIN down on users_val.user_id=down.user_id')
     val_all = val_all.cache()
@@ -217,7 +217,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     print('Begin collecting validation users as map')
     val_dict = val_all.select(val_all.user_id).distinct().rdd.map(lambda x : (x[0], 0.5)).collectAsMap() #slowest step. better way?
     print('Done collecting validation users as map')
-    print('Sample interactions for validation users')
+    print('Sampling interactions for validation users')
     val_50 = val_all.sampleBy("user_id", fractions=val_dict, seed=seed)
     val_50.persist()
 
@@ -239,9 +239,9 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     #Put other 50% of interactions back into train
     val_all.createOrReplaceTempView('val_all')
     val_50.createOrReplaceTempView('val_50')
-    print('Select remaining interactions for training')
+    print('Selecting remaining interactions for training')
     val_to_train = spark.sql('SELECT * FROM val_all EXCEPT SELECT * FROM val_50')
-    print('Merge remaining interactions with train')
+    print('Merging remaining interactions with train')
     train_80=train_60.union(val_to_train) # can add .distinct() if necessary
 
     if debug:
@@ -255,7 +255,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
         print('&&& train_80 interactions / (train_60_count + val_all_count - val_count) (should be 1): ', train_80_count/(train_60_count + val_all_count - val_count))
         print ('\n')
 
-    print('Set test users')
+    print('Setting test users')
     #Test Set - 20% of users
     test_all = spark.sql('SELECT users_test.user_id, book_id, rating FROM users_test INNER JOIN down on users_test.user_id=down.user_id')
     test_all = test_all.cache()
@@ -273,7 +273,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     print('Begin collecting test users as map')
     test_dict = test_all.select(test_all.user_id).distinct().rdd.map(lambda x : (x[0], 0.5)).collectAsMap() #slowest step. better way?
     print('Done collecting test users as map')
-    print('Sample interactions for test users')
+    print('Sampling interactions for test users')
     test_50 = test_all.sampleBy("user_id", fractions=test_dict, seed=seed)
     test_50.persist()
 
@@ -295,9 +295,9 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     #Put other 50% of interactions back into train
     test_all.createOrReplaceTempView('test_all')
     test_50.createOrReplaceTempView('test_50')
-    print('Select remaining interactions for training')
+    print('Selecting remaining interactions for training')
     test_to_train = spark.sql('SELECT * FROM test_all EXCEPT SELECT * FROM test_50')
-    print('Merge remaining interactions with train')
+    print('Merging remaining interactions with train')
     train_100=train_80.union(test_to_train) # can add .distinct() if necessary
 
     if debug:
@@ -320,23 +320,23 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
         when we try to sample 50% of their actions for val or test,
         we happen to take ALL their interactions.
         '''
-        print('Get all distinct users in train')
+        print('Getting all distinct users in train')
         train_100_users = train_100.select('user_id').distinct()
         train_100_users.createOrReplaceTempView('train_100_users')
-        print('Select val interactions with observed users')
+        print('Selecting val interactions with observed users')
         val_inters_ob_users = spark.sql('SELECT train_100_users.user_id, book_id, rating FROM val_50 INNER JOIN train_100_users ON val_50.user_id = train_100_users.user_id')
         val_inters_ob_users.createOrReplaceTempView('val_inters_ob_users')
-        print('Select val interactions with unobserved users')
+        print('Selecting val interactions with unobserved users')
         val_inters_unob_users = spark.sql('SELECT * FROM val_50 EXCEPT SELECT * FROM val_inters_ob_users')
-        print('Put interactions with unobserved users into train')
+        print('Putting interactions with unobserved users into train')
         train_observes_val=train_100.union(val_inters_unob_users) # can add .distinct() if necessary
 
-        print('Select test interactions with observed users')
+        print('Selecting test interactions with observed users')
         test_inters_ob_users = spark.sql('SELECT train_100_users.user_id, book_id, rating FROM test_50 INNER JOIN train_100_users ON test_50.user_id = train_100_users.user_id')
         test_inters_ob_users.createOrReplaceTempView('test_inters_ob_users')
-        print('Select test interactions with unobserved users')
+        print('Selecting test interactions with unobserved users')
         test_inters_unob_users = spark.sql('SELECT * FROM test_50 EXCEPT SELECT * FROM test_inters_ob_users')
-        print('Put interactions with unobserved users into train')
+        print('Putting interactions with unobserved users into train')
         train = train_observes_val.union(test_inters_unob_users) # can add .distinct() if necessary
 
         if debug:
@@ -358,12 +358,12 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
             print('\n')
 
         # Remove unobserved items from val and test
-        print('Get all distinct observed items')
+        print('Getting all distinct observed items')
         observed_items = train.select('book_id').distinct()
         observed_items.createOrReplaceTempView('observed_items')
-        print('Remove unobserved items from validation')
+        print('Removing unobserved items from validation')
         val = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items INNER JOIN val_inters_ob_users on observed_items.book_id=val_inters_ob_users.book_id')
-        print('Remove unobserved items from test')
+        print('Removing unobserved items from test')
         test = spark.sql('SELECT user_id, observed_items.book_id, rating FROM observed_items INNER JOIN test_inters_ob_users on observed_items.book_id=test_inters_ob_users.book_id')
 
         if debug:
@@ -411,9 +411,11 @@ def remove_lowitem_users(spark, df0, low_item_threshold=10):
     df0.createOrReplaceTempView('df0')
 
     if low_item_threshold>0:
+        print('Selecting users with more than {} interactions'.format(low_item_threshold))
         # query not cleansed!
-        df_nolow_users = spark.sql('SELECT user_id, COUNT(DISTINCT book_id) FROM df0 GROUP BY user_id HAVING COUNT(DISTINCT book_id)>{}'.format(low_item_threshold))
+        df_nolow_users = spark.sql('SELECT user_id, COUNT(*) FROM df0 GROUP BY user_id HAVING COUNT(*)>{}'.format(low_item_threshold))
         df_nolow_users.createOrReplaceTempView('df_nolow_users')
+        print('Removing users with <= {} interactions'.format(low_item_threshold))
         df_nolow = spark.sql('SELECT df0.user_id, book_id, rating FROM df0 INNER JOIN df_nolow_users ON df0.user_id=df_nolow_users.user_id')
     else:
         # do not remove any users
@@ -425,6 +427,7 @@ def remove_zeros (spark, df):
     '''
     Removes all interactions with a rating of 0
     '''
+    print('Removing ratings with 0 stars')
     df.createOrReplaceTempView('df')
     return spark.sql('SELECT * FROM df WHERE rating > 0')
 
@@ -490,14 +493,17 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
             val = spark.read.parquet(val_path)
             test = spark.read.parquet(test_path)
             down = None # no access to downsampled df
-        
+            print('Succesfullly read splits from disk')
+
         except:
 
             full_data_path = 'hdfs:/user/'+net_id+'/interactions_100_full.parquet'
             if path_exist(full_data_path):
                 # if full interactions dataset already saved to parquet, read in pq df
+                print('Reading interactions file from Parquet')
                 df = spark.read.parquet(full_data_path)
             else:
+                print('Reading interactions file from csv')
                 df_csv = read_data_from_csv(spark, 'interactions')
                 # write full interactions dataset to parquet if not already saved
                 df = write_to_parquet(spark, df_csv, 'interactions_100_full')
@@ -508,9 +514,10 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
             else:
                 df0 = df
             
+            # remove iteractions of users with low number of interaction
             df_nolow = remove_lowitem_users(spark, df0, low_item_threshold)
 
-            #downsample 
+            # downsample 
             down = downsample(spark, df_nolow, fraction=fraction, seed=seed)
 
             # split into train/val/test
