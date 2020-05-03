@@ -395,21 +395,37 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
 
     return train, val, test
 
-def remove_lowitem_users(spark, interactions):
+def remove_lowitem_users(spark, df0, low_item_threshold=0):
     '''
     Input: 
         spark = spark
-        interactions = interactions data file
-    Returns: interactions (with users < 10 interactions filtered out)
+        df_0 = data file where ratings of 0 may have been removed
+        low_item_threshold = number to consider "low" interactions
+    Returns: interactions, with users who have low # of interactions filtered out)
+
     Notes from assignment:
         In general, users with few interactions (say, fewer than 10) 
         may not provide sufficient data for evaluation,
         especially after partitioning their observations into train/test.
         You may discard these users from the experiment.
     '''
-    
+    df0.createOrReplaceTempView('df0')
 
-def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobserved=True, synthetic=False, debug=False):
+    if low_item_threshold>0:
+        df_nolow = spark.sql('SELECT * FROM df0 GROUP BY user_id HAVING COUNT(DISTINCT book_id)>?', low_item_threshold)
+    else:
+        # do not remove any users
+        df_nolow = df0
+
+    return df_nolow
+    
+def remove_zeros (spark, df):
+    df.createOrReplaceTempView('df')
+    return spark.sql('SELECT * FROM df WHERE rating > 0')
+
+def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
+                         save_pq=False, rm_unobserved=True, rm_zeros=True, low_item_threshold=0
+                         synthetic=False, debug=False):
     '''
     By default, reads in interactions data (and writes to Parquet if not already saved)
         - Also has option to use synthetic data
@@ -423,9 +439,10 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
               - rounds down to the neareast 0.01
     seed: set random seed for reproducibility
     save_pq: boolean option to save train/val/test splits to parquet
-             - will be reset to "False" if using synthetic data
+             - will be reset to "False" if synthetic==True
+             - will be reset to "False" if rm_unobserved==False
+             - will be reset to "False" if rm_zeros==False
     rm_unobserved: boolean option to remove all unobserved items and move unobserved users to train
-                   - will be reset to "True" if saving to parquet
     synthetic: boolean option to use synthetic data (will use goodreads data if False)
     debug: boolean option to debug train_val_test_split
     '''
@@ -439,12 +456,21 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
     if synthetic:
         # if using synthetic data, bypass inputted save_pq argument
         # ensures we are not crossing wires by saving synthetic data 
+        print('NOTICE: Will not save synthetic data to Parquet.')
         save_pq = False
 
-    if save_pq:
-        # if saving to parquet, bypass inputted rm_observed argument
+    if not rm_unobservd:
+        # if not removing unobserved interactions, bypass inputted save_pq argument
         # ensures that saved versions of val and test include only observed users and items
-        rm_unobserved=True
+        print('NOTICE: Will not save data with unobserved test and validation data to Parquet.')
+        save_pq = False
+
+    if not rm_zeros:
+        # if not removing interactions with a rating of 0, bypass inputted save_pq argument
+        # ensures that saved versions of val and test will not include placeholder ratings
+        print('NOTICE: Will not save data with zero-ratings to Parquet.')
+        save_pq = False
+
 
     if synthetic==False:
 
@@ -468,18 +494,26 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, save_pq=False, rm_unobs
                 df_csv = read_data_from_csv(spark, 'interactions')
                 # write full interactions dataset to parquet if not already saved
                 df = write_to_parquet(spark, df_csv, 'interactions_100_full')
-        
+
+            if rm_zeros:
+                # remove all interactions with a rating of 0
+                df0 = remove_zeros(spark, df)
+            else:
+                df0 = df
+            
+            df_nolow = remove_lowitem_users(spark, df0, low_item_threshold)
+
             #downsample 
-            down = downsample(spark, df, fraction=fraction, seed=seed)
+            down = downsample(spark, df_nolow, fraction=fraction, seed=seed)
 
             # split into train/val/test
             train, val, test = train_val_test_split(spark, down, seed=seed, rm_unobserved=rm_unobserved, debug=debug, debug_show=False)
 
             if save_pq:
                 # write splits to parquet
-                train = write_to_parquet(spark, train, 'interactions_{}_train'.format(int(fraction*100)))
-                val = write_to_parquet(spark, val, 'interactions_{}_val'.format(int(fraction*100)))
-                test = write_to_parquet(spark, test, 'interactions_{}_test'.format(int(fraction*100)))
+                train = write_to_parquet(spark, train, 'interactions_{}_train_low{}'.format(int(fraction*100), low_item_threshold))
+                val = write_to_parquet(spark, val, 'interactions_{}_val_low{}'.format(int(fraction*100), low_item_threshold))
+                test = write_to_parquet(spark, test, 'interactions_{}_test_low{}'.format(int(fraction*100), low_item_threshold))
 
     if synthetic==True:
 
