@@ -395,7 +395,7 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
 
     return train, val, test
 
-def remove_lowitem_users(spark, df0, low_item_threshold=0):
+def remove_lowitem_users(spark, df0, low_item_threshold=10):
     '''
     Input: 
         spark = spark
@@ -424,7 +424,7 @@ def remove_zeros (spark, df):
     return spark.sql('SELECT * FROM df WHERE rating > 0')
 
 def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
-                         save_pq=False, rm_unobserved=True, rm_zeros=True, low_item_threshold=0, 
+                         save_pq=False, rm_unobserved=True, rm_zeros=True, low_item_threshold=10, 
                          synthetic=False, debug=False):
     '''
     By default, reads in interactions data (and writes to Parquet if not already saved)
