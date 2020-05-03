@@ -711,8 +711,9 @@ def get_synth_data(spark):
     Returns synethetic dataframe
     There are 60 distinct user_ids, 1-60
     There are 39 distinct book_ids, 101-139
-    Users 1-30 have ratings for 10 books each
-    Users 31-60 have ratings for 4 books each
+    Users 10-30 have ratings for 10 books each
+    Users 1-9 and 31-60 have ratings for 4 books each
+    366 total interactions
     '''
     return spark.createDataFrame(
                 [
@@ -1017,7 +1018,7 @@ def get_synth_data(spark):
                 (19, 138, 3.0),
                 (19, 139, 3.0),
                 (20, 134, 3.0),
-                (10, 135, 3.0),
+                (20, 135, 3.0),
                 (20, 136, 3.0),
                 (20, 137, 3.0),
                 (20, 138, 3.0),
@@ -1076,12 +1077,12 @@ def get_synth_data(spark):
                 (29, 137, 3.0),
                 (29, 138, 3.0),
                 (29, 139, 3.0),
-                (30, 134, 3.0),
-                (30, 135, 3.0),
-                (30, 136, 3.0),
-                (30, 137, 3.0),
-                (30, 138, 3.0),
-                (30, 139, 3.0),
+                (30, 134, 0.0),
+                (30, 135, 0.0),
+                (30, 136, 0.0),
+                (30, 137, 0.0),
+                (30, 138, 0.0),
+                (30, 139, 0.0),
                 ],
                 ['user_id', 'book_id', 'rating'] )
 
