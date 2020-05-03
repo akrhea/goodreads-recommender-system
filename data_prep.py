@@ -119,12 +119,12 @@ def write_to_parquet(spark, df, path):
     try:
         # read parquet file if exists
         pq = spark.read.parquet(path)
-        print('Successfully read in ', filename)
+        print('Successfully read in ', path)
     except:
         # write to parquet
-        print('Begin writing ', filename)
+        print('Begin writing ', path)
         df.orderBy('user_id').write.parquet(path)
-        print('Done writing ', filename)
+        print('Done writing ', path)
 
         # read parquet
         pq = spark.read.parquet(path)
