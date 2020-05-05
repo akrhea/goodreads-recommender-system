@@ -22,23 +22,27 @@ def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
 
 def main(spark, task, fraction):
 
-
-    # else:
-    #     print('unsupported task argument. downsplit is only supported task')
-
-    
-
+    # read in data, get splits
     _, train, val, test = read_sample_split_pq(spark,  fraction=fraction, seed=42, \
                             save_pq=False, rm_unobserved=True, rm_zeros=True, 
                             low_item_threshold=10, synthetic=False, debug=False)
 
+    # ensure that train and val are cached
+    if not train.is_cached:
+        train.cache()
+    if not val.is_cached:
+        val.cache()
+
     if task=='eval':
-        train_and_eval(spark, train, val, rank=100, lamb=1)
+        # train and evaluate default model on val set
+        train_and_eval(spark, train, val)
 
     if task=='predict':
-        get_val_preds(spark, train, val)
+        # get predictions on validation set
+        preds = get_val_preds(spark, train, val)
 
     if task=='tune':
+        # tune hyperparameters
         tune(spark, train, val, k=500)
 
     
