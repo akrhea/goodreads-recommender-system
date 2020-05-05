@@ -120,6 +120,8 @@ def train_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=10, 
                 .rdd \
                 .map(lambda row: (row[1], row[2]))
 
+    pred_true_rdd.cache()
+
     print('{}: Instantiating metrics object'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     metrics = RankingMetrics(pred_true_rdd) # LONGEST STEP BY FAR
     print('{}: Getting mean average precision'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
