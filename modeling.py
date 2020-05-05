@@ -83,20 +83,20 @@ def get_val_preds(spark, train, val, lamb=1, rank=10):
 
 def get_val_ids_and_true_labels(spark, val):
     # for all users in val set, get list of books rated over 3 stars
-    from pyspark.sql.functions import current_timestamp
+    from time import localtime, strftime
     from pyspark.sql.functions import expr
 
-    print('{}: Getting validation IDs'.format(current_timestamp()))
+    print('{}: Getting validation IDs'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
     val_ids = val.select('user_id').distinct()
 
-    print('{}: Getting true labels'.format(current_timestamp()))
+    print('{}: Getting true labels'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
     true_labels = val.filter(val.rating > 3).select('user_id', 'book_id')\
                 .groupBy('user_id')\
                 .agg(expr('collect_list(book_id) as true_item'))
     return val_ids, true_labels
 
 def train_and_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=10, lamb=1, k=500):
-    from pyspark.sql.functions import current_timestamp
+    from time import localtime, strftime
     from pyspark.ml.recommendation import ALS
     from pyspark.mllib.evaluation import RankingMetrics
     import pyspark.sql.functions as F
@@ -108,25 +108,25 @@ def train_and_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=
                 userCol="user_id", itemCol="book_id", ratingCol='rating', 
                 implicitPrefs=False, coldStartStrategy="drop")
 
-    print('{}: Fitting model'.format(current_timestamp()))
+    print('{}: Fitting model'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
     model = als.fit(train)
 
-    print('{}: Getting predictions'.format(current_timestamp()))
+    print('{}: Getting predictions'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
     recs = model.recommendForUserSubset(val_ids, k)
     pred_label = recs.select('user_id','recommendations.book_id')
 
-    print('{}: Building RDD with predictions and true labels'.format(current_timestamp()))
+    print('{}: Building RDD with predictions and true labels'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
     pred_true_rdd = pred_label.join(F.broadcast(true_labels), 'user_id', 'inner') \
                 .rdd \
                 .map(lambda row: (row[1], row[2]))
 
-    print('{}: Getting metrics'.format(current_timestamp()))
+    print('{}: Getting metrics'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
     metrics = RankingMetrics(pred_true_rdd)
-    print('{}: Getting mean average precision'.format(current_timestamp()))
+    print('{}: Getting mean average precision'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
     mean_ap = metrics.meanAveragePrecision
-    print('{}: Getting NDCG at k'.format(current_timestamp()))
+    print('{}: Getting NDCG at k'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
     ndcg_at_k = metrics.ndcgAt(k)
-    print('{}: Getting precision at k'.format(current_timestamp()))
+    print('{}: Getting precision at k'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
     p_at_k=  metrics.precisionAt(k)
     print('Lambda ', lamb, 'and Rank ', rank , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
     return
@@ -144,7 +144,7 @@ def tune(spark, train, val, k=500):
             k - how many top items to predict (default = 500)
         Returns: MAP, P, NDCG for each model
     '''
-    from pyspark.sql.functions import current_timestamp
+    from time import localtime, strftime
     from pyspark.ml.tuning import ParamGridBuilder
     import itertools 
 
