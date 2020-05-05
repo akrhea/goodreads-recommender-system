@@ -32,6 +32,9 @@ def main(spark, task, fraction):
                             save_pq=False, rm_unobserved=True, rm_zeros=True, 
                             low_item_threshold=10, synthetic=False, debug=False)
 
+    if task=='eval':
+        train_and_eval(spark, train, val, rank=100, lambda=1)
+
     if task=='predict':
         als(spark, train, val)
 
@@ -55,7 +58,7 @@ if __name__ == "__main__":
     # And the location to store the trained model
     task = sys.argv[1]
 
-    assert task=='predict' or task=='tune', 'Task must be either \"predict\" or \"tune\"'
+    assert (task=='predict') or (task=='tune') or (task=='eval'), 'Task must be either \"predict\" or \"tune\"'
 
     # Get the fraction from the command line
     fraction = float(sys.argv[2])
