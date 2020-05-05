@@ -3,12 +3,12 @@
 import sys
 from pyspark.sql import SparkSession
 from data_prep import read_sample_split_pq
-from modeling import tune, als
+from modeling import tune, train_and_eval, get_val_preds
 
 '''
 Usage:
 
-    $ spark-submit supervised_train.py [task] [downsample fraction]
+    $ spark-submit main.py [task] [downsample fraction]
 '''
 
 
@@ -36,7 +36,7 @@ def main(spark, task, fraction):
         train_and_eval(spark, train, val, rank=100, lamb=1)
 
     if task=='predict':
-        als(spark, train, val)
+        get_val_preds(spark, train, val)
 
     if task=='tune':
         tune(spark, train, val, k=500)
