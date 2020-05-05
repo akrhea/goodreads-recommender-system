@@ -8,7 +8,7 @@ from modeling import tune
 '''
 Usage:
 
-    $ spark-submit supervised_train.py [downsample fraction]
+    $ spark-submit supervised_train.py [task] [downsample fraction]
 '''
 
 
@@ -20,18 +20,23 @@ def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
         train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42)
     return
 
-def main(spark, fraction):
+def main(spark, task, fraction):
 
 
     # else:
     #     print('unsupported task argument. downsplit is only supported task')
 
+    
 
     _, train, val, test = read_sample_split_pq(spark,  fraction=fraction, seed=42, \
                             save_pq=False, rm_unobserved=True, rm_zeros=True, 
                             low_item_threshold=10, synthetic=False, debug=False)
 
-    tune(spark, train, val, k=500)
+    if task=='predict':
+        als(spark, train, val, lamb, rank)
+
+    if task=='tune':
+        tune(spark, train, val, k=500)
 
     
 
@@ -47,16 +52,20 @@ if __name__ == "__main__":
     # Create the spark session object
     spark = SparkSession.builder.appName('supervised_train').getOrCreate()
 
-    # Get the fraction from the command line
-    fraction = float(sys.argv[1])
+    # And the location to store the trained model
+    task = sys.argv[1]
 
-    # # And the location to store the trained model
-    # model_file = sys.argv[2]
+    assert task=='predict' or task=='tune', 'Task must be either \"predict\" or \"tune\"'
+
+    # Get the fraction from the command line
+    fraction = float(sys.argv[2])
+
+    
 
 
 
     # Call our main routine
-    main(spark, fraction)
+    main(spark, task, fraction)
 
 
 
