@@ -183,7 +183,6 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     train_60 = spark.sql('SELECT users_train.user_id, book_id, rating FROM users_train INNER JOIN down on users_train.user_id=down.user_id')
 
     if debug:
-        #train_60.cache()
         train_60_users_count = train_60.select(train_60.user_id).distinct().count()
         train_60_count = train_60.count()
         print ('\n')
@@ -238,7 +237,6 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     train_80=train_60.union(val_to_train) # can add .distinct() if necessary
 
     if debug:
-        #train_80.cache()
         train_80_count = train_80.count()
         train_80_users = train_80.select(train_80.user_id).distinct().count()
         print ('\n')
@@ -294,7 +292,6 @@ def train_val_test_split(spark, down, seed=42, rm_unobserved=True, debug=False, 
     train_100=train_80.union(test_to_train) # can add .distinct() if necessary
 
     if debug:
-        #train_100.cache()
         train_final_count = train_100.count()
         train_final_users = train_100.select(train_100.user_id).distinct().count()
         print ('\n')
@@ -425,7 +422,7 @@ def remove_zeros (spark, df):
     return spark.sql('SELECT * FROM df WHERE rating > 0')
 
 def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
-                         save_pq=False, rm_unobserved=True, rm_zeros=True, low_item_threshold=10, 
+                         implicit=False, save_pq=False, rm_unobserved=True, rm_zeros=True, low_item_threshold=10, 
                          synthetic=False, debug=False):
     '''
     By default, reads in interactions data (and writes to Parquet if not already saved)
@@ -471,7 +468,6 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
         # ensures that saved versions of val and test will not include placeholder ratings
         print('NOTICE: Will not save data with ratings of zero to Parquet.')
         save_pq = False
-
 
     if synthetic==False:
 
