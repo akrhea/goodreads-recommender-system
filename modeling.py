@@ -53,7 +53,7 @@ def dummy_run(spark):
     print('MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
     return 
 
-def als(spark, train, val, lamb, rank):
+def als(spark, train, val, lamb=1, rank=100):
     ''' 
         Fits ALS model from train and makes predictions 
         Imput: training file
@@ -127,7 +127,7 @@ def tune(spark, train, val, k=500):
         recs = model.recommendForUserSubset(user_id, k)
 
         pred_label = recs.select('user_id','recommendations.book_id')
-        
+
         pred_true_rdd = pred_label.join(F.broadcast(true_label), 'user_id', 'inner') \
                     .rdd \
                     .map(lambda row: (row[1], row[2]))
