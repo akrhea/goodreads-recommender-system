@@ -83,6 +83,9 @@ def get_val_preds(spark, train, val, lamb=1, rank=100):
 
 def get_val_ids_and_true_labels(spark, val):
     # for all users in val set, get list of books rated over 3 stars
+
+    from pyspark.sql.functions import expr
+
     val_ids = val.select('user_id').distinct()
     true_labels = val.filter(val.rating > 3).select('user_id', 'book_id')\
                 .groupBy('user_id')\
@@ -94,7 +97,6 @@ def train_and_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=
     from pyspark.ml.recommendation import ALS
     from pyspark.mllib.evaluation import RankingMetrics
     import pyspark.sql.functions as F
-    from pyspark.sql.functions import expr
 
     if (val_ids==None) or (true_labels==None):
         val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
@@ -133,8 +135,7 @@ def tune(spark, train, val, k=500):
             k - how many top items to predict (default = 500)
         Returns: MAP, P, NDCG for each model
     '''
-
-    from pyspark.sql.functions import expr
+    
     from pyspark.ml.tuning import ParamGridBuilder
     import itertools 
 
