@@ -5,7 +5,7 @@ from modeling import reload_test
 '''
 Usage:
 
-    $ spark-submit supervised_train.py hdfs:/path/to/file.parquet hdfs:/path/to/save/model
+    $ spark-submit supervised_train.py [downsample fraction]
 '''
 
 
@@ -20,8 +20,8 @@ def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
 def main(task):
 
 
-    else:
-        print('unsupported task argument. downsplit is only supported task')
+    # else:
+    #     print('unsupported task argument. downsplit is only supported task')
 
 
     _, train, val, test = read_sample_split_pq(spark,  fraction=0.01, seed=42, \
