@@ -53,7 +53,7 @@ def dummy_run(spark):
     print('MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
     return 
 
-def get_val_preds(spark, train, val, lamb=1, rank=100):
+def get_val_preds(spark, train, val, lamb=1, rank=10):
     ''' 
         Fits ALS model from train and makes predictions 
         Imput: training file
@@ -95,7 +95,7 @@ def get_val_ids_and_true_labels(spark, val):
                 .agg(expr('collect_list(book_id) as true_item'))
     return val_ids, true_labels
 
-def train_and_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=100, lamb=1):
+def train_and_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=10, lamb=1, k=500):
 
     from pyspark.ml.recommendation import ALS
     from pyspark.mllib.evaluation import RankingMetrics
@@ -165,7 +165,7 @@ def tune(spark, train, val, k=500):
     #fit and evaluate for all combos
     for i in paramGrid:
         train_and_eval(spark, train, val_ids=val_ids, true_labels=true_labels, 
-                        rank=i[1], lamb=i[0])
+                        rank=i[1], lamb=i[0], k=k)
     return
   
 def search_w_crossval():
