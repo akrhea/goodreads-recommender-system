@@ -2,6 +2,7 @@
 
 import sys
 from pyspark.sql import SparkSession
+import spark.sqlContext.implicits._
 from data_prep import read_sample_split_pq
 from modeling import tune, train_and_eval, get_val_preds
 
