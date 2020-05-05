@@ -44,7 +44,7 @@ def dummy_run(spark):
     pred_label = recs.select('user_id','recommendations.book_id')
     pred_true_rdd = pred_label.join(F.broadcast(true_label), 'user_id', 'inner') \
                 .rdd \
-                .map(lamb row: (row[1], row[2]))
+                .map(lambda row: (row[1], row[2]))
 
     metrics = RankingMetrics(pred_true_rdd)
     mean_ap = metrics.meanAveragePrecision
@@ -111,7 +111,7 @@ def train_and_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=
 
     pred_true_rdd = pred_label.join(F.broadcast(true_labels), 'user_id', 'inner') \
                 .rdd \
-                .map(lamb row: (row[1], row[2]))
+                .map(lambda row: (row[1], row[2]))
 
     metrics = RankingMetrics(pred_true_rdd)
     mean_ap = metrics.meanAveragePrecision
