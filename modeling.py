@@ -44,7 +44,7 @@ def dummy_run(spark):
     pred_label = recs.select('user_id','recommendations.book_id')
     pred_true_rdd = pred_label.join(F.broadcast(true_label), 'user_id', 'inner') \
                 .rdd \
-                .map(lambda row: (row[1], row[2]))
+                .map(lamb row: (row[1], row[2]))
 
     metrics = RankingMetrics(pred_true_rdd)
     mean_ap = metrics.meanAveragePrecision
@@ -89,7 +89,7 @@ def get_val_ids_and_true_labels(spark, val):
                 .agg(expr('collect_list(book_id) as true_item'))
     return val_ids, true_labels
 
-def train_and_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=100, lambda=1):
+def train_and_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=100, lamb=1):
 
     from pyspark.ml.recommendation import ALS
     from pyspark.mllib.evaluation import RankingMetrics
@@ -99,7 +99,7 @@ def train_and_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=
     if (val_ids==None) or (true_labels==None):
         val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
 
-    als = ALS(rank = rank, regParam=lambda, 
+    als = ALS(rank = rank, regParam=lamb, 
                 userCol="user_id", itemCol="book_id", ratingCol='rating', 
                 implicitPrefs=False, coldStartStrategy="drop")
 
@@ -111,13 +111,13 @@ def train_and_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=
 
     pred_true_rdd = pred_label.join(F.broadcast(true_labels), 'user_id', 'inner') \
                 .rdd \
-                .map(lambda row: (row[1], row[2]))
+                .map(lamb row: (row[1], row[2]))
 
     metrics = RankingMetrics(pred_true_rdd)
     mean_ap = metrics.meanAveragePrecision
     ndcg_at_k = metrics.ndcgAt(k)
     p_at_k=  metrics.precisionAt(k)
-    print('Lambda ', lambda, 'and Rank ', rank , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
+    print('Lambda ', lamb, 'and Rank ', rank , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
     return
 
     
@@ -155,7 +155,7 @@ def tune(spark, train, val, k=500):
     #fit and evaluate for all combos
     for i in paramGrid:
         train_and_eval(spark, train, val_ids=val_ids, true_labels=true_labels, 
-                        rank=i[1], lambda=i[0])
+                        rank=i[1], lamb=i[0])
     return
   
 def search_w_crossval():
