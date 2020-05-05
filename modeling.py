@@ -120,7 +120,7 @@ def train_and_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=
                 .rdd \
                 .map(lambda row: (row[1], row[2]))
 
-    print('{}: Getting metrics'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    print('{}: Instantiating metrics object'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
     metrics = RankingMetrics(pred_true_rdd)
     print('{}: Getting mean average precision'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
     mean_ap = metrics.meanAveragePrecision
@@ -157,9 +157,9 @@ def tune(spark, train, val, k=500):
     #for all users in val set, get list of books rated over 3 stars
     val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
 
+    # set hyperparameters to test
     regParam = [0.0001, 0.001, 0.01, 0.1, 1, 10]
     rank  = [5, 10, 20, 100, 500]
-
     paramGrid = itertools.product(regParam, rank)
 
     #fit and evaluate for all combos
