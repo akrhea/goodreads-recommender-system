@@ -89,7 +89,7 @@ def get_val_ids_and_true_labels(spark, val):
                 .agg(expr('collect_list(book_id) as true_item'))
     return val_ids, true_labels
 
-def train_and_eval(spark, train, val_ids=None, true_labels=None, rank=100, lambda=1):
+def train_and_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=100, lambda=1):
 
     from pyspark.ml.recommendation import ALS
     from pyspark.mllib.evaluation import RankingMetrics
@@ -154,7 +154,8 @@ def tune(spark, train, val, k=500):
 
     #fit and evaluate for all combos
     for i in paramGrid:
-        train_and_eval(spark, train, val_ids, true_labels, rank=i[1], lambda=i[0])
+        train_and_eval(spark, train, val_ids=val_ids, true_labels=true_labels, 
+                        rank=i[1], lambda=i[0])
     return
   
 def search_w_crossval():
