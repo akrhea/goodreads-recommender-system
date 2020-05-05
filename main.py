@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from data_prep import read_sample_split_pq
-from modeling import reload_test
+from modeling import tune
 
 '''
 Usage:
