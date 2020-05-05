@@ -45,13 +45,6 @@ def main(spark, task, fraction):
         # tune hyperparameters
         tune(spark, train, val, k=500)
 
-    
-
-    # elif...
-    # model?
-
-    # elif...
-    # evaluate?
 
 
 if __name__ == "__main__":
@@ -59,17 +52,13 @@ if __name__ == "__main__":
     # Create the spark session object
     spark = SparkSession.builder.appName('supervised_train').getOrCreate()
 
-    # And the location to store the trained model
+    # Get the task from the command line
     task = sys.argv[1]
 
-    assert (task=='predict') or (task=='tune') or (task=='eval'), 'Task must be either \"predict\" or \"tune\"'
+    assert (task=='predict') or (task=='tune') or (task=='eval'), 'Task must be  \"predict,\" \"eval,\"or \"tune\"'
 
     # Get the fraction from the command line
     fraction = float(sys.argv[2])
-
-    
-
-
 
     # Call our main routine
     main(spark, task, fraction)
