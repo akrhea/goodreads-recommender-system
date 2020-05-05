@@ -53,7 +53,7 @@ def dummy_run(spark):
     print('MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
     return 
 
-def als(spark, train, val, lamb=1, rank=100):
+def get_val_preds(spark, train, val, lamb=1, rank=100):
     ''' 
         Fits ALS model from train and makes predictions 
         Imput: training file
@@ -81,6 +81,47 @@ def als(spark, train, val, lamb=1, rank=100):
     predictions = model.transform(val)
     return predictions
 
+def get_val_ids_and_true_labels(spark, val):
+    # for all users in val set, get list of books rated over 3 stars
+    val_ids = val.select('user_id').distinct()
+    true_labels = val.filter(val.rating > 3).select('user_id', 'book_id')\
+                .groupBy('user_id')\
+                .agg(expr('collect_list(book_id) as true_item'))
+    return val_ids, true_labels
+
+def train_and_eval(spark, train, val_ids, true_labels, rank, lambda):
+
+    from pyspark.ml.recommendation import ALS
+    from pyspark.mllib.evaluation import RankingMetrics
+    import pyspark.sql.functions as F
+    from pyspark.sql.functions import expr
+
+    if (val_ids==None) or (true_labels==None):
+        val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
+
+    als = ALS(rank = rank, regParam=lambda, 
+                userCol="user_id", itemCol="book_id", ratingCol='rating', 
+                implicitPrefs=False, coldStartStrategy="drop")
+
+    model = als.fit(train)
+
+    recs = model.recommendForUserSubset(val_ids, k)
+
+    pred_label = recs.select('user_id','recommendations.book_id')
+
+    pred_true_rdd = pred_label.join(F.broadcast(true_labels), 'user_id', 'inner') \
+                .rdd \
+                .map(lambda row: (row[1], row[2]))
+
+    metrics = RankingMetrics(pred_true_rdd)
+    mean_ap = metrics.meanAveragePrecision
+    ndcg_at_k = metrics.ndcgAt(k)
+    p_at_k=  metrics.precisionAt(k)
+    print('Lambda ', lambda, 'and Rank ', rank , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
+    return
+
+    
+
 def tune(spark, train, val, k=500):
     ''' 
         Fits ALS model from train, ranks k top items, and evaluates with MAP, P, NDCG across combos of rank/lambda hyperparameter
@@ -92,11 +133,9 @@ def tune(spark, train, val, k=500):
             k - how many top items to predict (default = 500)
         Returns: MAP, P, NDCG for each model
     '''
-    from pyspark.ml.recommendation import ALS
-    from pyspark.mllib.evaluation import RankingMetrics
-    import pyspark.sql.functions as F
+
     from pyspark.sql.functions import expr
-    from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
+    from pyspark.ml.tuning import ParamGridBuilder
     import itertools 
 
     # Tune hyper-parameters with cross-validation 
@@ -105,39 +144,17 @@ def tune(spark, train, val, k=500):
     # https://github.com/nyu-big-data/lab-mllib-not-assignment-ldarinzo/blob/master/supervised_train.py
     #https://vinta.ws/code/spark-ml-cookbook-pyspark.html
 
-    #for all users in val set, get list of books they actually read
-    # CHANGE TO TAKE 4-5 STARS
-    user_id = val.select('user_id').distinct()
-    true_label = val.select('user_id', 'book_id')\
-                .groupBy('user_id')\
-                .agg(expr('collect_list(book_id) as true_item'))
+    #for all users in val set, get list of books rated over 3 stars
+    val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
 
     regParam = [0.0001, 0.001, 0.01, 0.1, 1, 10]
     rank  = [5, 10, 20, 100, 500]
 
-    # regParam = [1]
-    # rank  = [5]
     paramGrid = itertools.product(regParam, rank)
 
-  #fit and evaluate for all combos
+    #fit and evaluate for all combos
     for i in paramGrid:
-        als = ALS(rank = i[1], regParam=i[0], userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
-        model = als.fit(train)
-
-        recs = model.recommendForUserSubset(user_id, k)
-
-        pred_label = recs.select('user_id','recommendations.book_id')
-
-        pred_true_rdd = pred_label.join(F.broadcast(true_label), 'user_id', 'inner') \
-                    .rdd \
-                    .map(lambda row: (row[1], row[2]))
-
-        metrics = RankingMetrics(pred_true_rdd)
-        mean_ap = metrics.meanAveragePrecision
-        ndcg_at_k = metrics.ndcgAt(k)
-        p_at_k= metrics.precisionAt(k)
-        print('Lambda ', i[0], 'and Rank ', i[1] , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
-
+        train_and_eval(spark, train, val_ids, true_labels, rank=i[1], lambda=i[0])
     return
   
 def search_w_crossval():
