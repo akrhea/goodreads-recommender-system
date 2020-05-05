@@ -86,10 +86,10 @@ def get_val_ids_and_true_labels(spark, val):
 
     from pyspark.sql.functions import expr
 
-    print('Get validation IDs')
+    print('{}: Getting validation IDs'.format(current_timestamp()))
     val_ids = val.select('user_id').distinct()
 
-    print('Get true labels')
+    print('{}: Getting true labels'.format(current_timestamp()))
     true_labels = val.filter(val.rating > 3).select('user_id', 'book_id')\
                 .groupBy('user_id')\
                 .agg(expr('collect_list(book_id) as true_item'))
@@ -108,25 +108,25 @@ def train_and_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=
                 userCol="user_id", itemCol="book_id", ratingCol='rating', 
                 implicitPrefs=False, coldStartStrategy="drop")
 
-    print('Fit model')
+    print('{}: Fitting model'.format(current_timestamp()))
     model = als.fit(train)
 
-    print('Get predictions')
+    print('{}: Getting predictions'.format(current_timestamp()))
     recs = model.recommendForUserSubset(val_ids, k)
     pred_label = recs.select('user_id','recommendations.book_id')
 
-    print('Built RDD with predictions and true labels')
+    print('{}: Building RDD with predictions and true labels'.format(current_timestamp()))
     pred_true_rdd = pred_label.join(F.broadcast(true_labels), 'user_id', 'inner') \
                 .rdd \
                 .map(lambda row: (row[1], row[2]))
 
-    print('Get metrics')
+    print('{}: Getting metrics'.format(current_timestamp()))
     metrics = RankingMetrics(pred_true_rdd)
-    print('Get mean average precision')
+    print('{}: Getting mean average precision'.format(current_timestamp()))
     mean_ap = metrics.meanAveragePrecision
-    print('Get NDCG at k')
+    print('{}: Getting NDCG at k'.format(current_timestamp()))
     ndcg_at_k = metrics.ndcgAt(k)
-    print('Get precision at k')
+    print('{}: Getting precision at k'.format(current_timestamp()))
     p_at_k=  metrics.precisionAt(k)
     print('Lambda ', lamb, 'and Rank ', rank , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
     return
