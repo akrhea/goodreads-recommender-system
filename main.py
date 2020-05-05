@@ -3,7 +3,7 @@
 import sys
 from pyspark.sql import SparkSession
 from data_prep import read_sample_split_pq
-from modeling import tune, train_and_eval, get_val_preds
+from modeling import tune, train_eval, get_val_preds
 
 '''
 Usage:
@@ -35,7 +35,7 @@ def main(spark, task, fraction):
 
     if task=='eval':
         # train and evaluate default model on val set
-        train_and_eval(spark, train, val)
+        train_eval(spark, train, val)
 
     if task=='predict':
         # get predictions on validation set
