@@ -516,11 +516,6 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
             # split into train/val/test
             train, val, test = train_val_test_split(spark, down, seed=seed, rm_unobserved=rm_unobserved, debug=debug, debug_show=False)
 
-            # cache the splits
-            train.cache()
-            val.cache()
-            test.cache()
-
             if save_pq:
                 # write splits to parquet
                 train = write_to_parquet(spark, train, train_path)
@@ -536,6 +531,11 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
 
         # split into train/val/test
         train, val, test = train_val_test_split(spark, down, seed=seed, rm_unobserved=rm_unobserved, debug=debug, debug_show=debug)
+    
+    # cache the splits
+    train.cache()
+    val.cache()
+    test.cache()
 
     return down, train, val, test
 
