@@ -6,6 +6,8 @@ COMMAND LINE ARGUMENTS NOT WORKING
 '''
 
 
+
+
 def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
     
     for fraction in sample_fractions:
@@ -13,7 +15,7 @@ def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
         train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42)
     return
 
-def main():
+def main(task):
     '''
     to-do in 4/25 meeting
 
@@ -24,6 +26,8 @@ def main():
         save_down_splits()
     else:
         print('unsupported task argument. downsplit is only supported task')
+
+    reload_test()
     
     # elif...
     # model?
@@ -33,7 +37,7 @@ def main():
 
 
 if __name__ == "__main__":
-    task = sys.argv[1]
+    #task = sys.argv[1]
     # arg2 = sys.argv[2]
     # etc.
 

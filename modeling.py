@@ -2,6 +2,10 @@
 
 #starting point: train, val, test in memory from data_prep
 
+def reload_test():
+    print ('reloaded')
+    return
+
 def dummy_run(spark):
 
     from pyspark.ml.recommendation import ALS
