@@ -95,7 +95,7 @@ def get_val_ids_and_true_labels(spark, val):
                 .agg(expr('collect_list(book_id) as true_item'))
     return val_ids, true_labels
 
-def train_and_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=10, lamb=1, k=500):
+def train_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=10, lamb=1, k=500):
     from time import localtime, strftime
     from pyspark.ml.recommendation import ALS
     from pyspark.mllib.evaluation import RankingMetrics
@@ -121,7 +121,7 @@ def train_and_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=
                 .map(lambda row: (row[1], row[2]))
 
     print('{}: Instantiating metrics object'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-    metrics = RankingMetrics(pred_true_rdd)
+    metrics = RankingMetrics(pred_true_rdd) # LONGEST STEP BY FAR
     print('{}: Getting mean average precision'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     mean_ap = metrics.meanAveragePrecision
     print('{}: Getting NDCG at k'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
@@ -164,7 +164,7 @@ def tune(spark, train, val, k=500):
 
     #fit and evaluate for all combos
     for i in paramGrid:
-        train_and_eval(spark, train, val_ids=val_ids, true_labels=true_labels, 
+        train_eval(spark, train, val_ids=val_ids, true_labels=true_labels, 
                         rank=i[1], lamb=i[0], k=k)
     return
   
