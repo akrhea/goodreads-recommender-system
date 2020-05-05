@@ -86,10 +86,10 @@ def get_val_ids_and_true_labels(spark, val):
     from time import localtime, strftime
     from pyspark.sql.functions import expr
 
-    print('{}: Getting validation IDs'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    print('{}: Getting validation IDs'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     val_ids = val.select('user_id').distinct()
 
-    print('{}: Getting true labels'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    print('{}: Getting true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     true_labels = val.filter(val.rating > 3).select('user_id', 'book_id')\
                 .groupBy('user_id')\
                 .agg(expr('collect_list(book_id) as true_item'))
@@ -108,25 +108,25 @@ def train_and_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=
                 userCol="user_id", itemCol="book_id", ratingCol='rating', 
                 implicitPrefs=False, coldStartStrategy="drop")
 
-    print('{}: Fitting model'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    print('{}: Fitting model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     model = als.fit(train)
 
-    print('{}: Getting predictions'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    print('{}: Getting predictions'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     recs = model.recommendForUserSubset(val_ids, k)
     pred_label = recs.select('user_id','recommendations.book_id')
 
-    print('{}: Building RDD with predictions and true labels'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    print('{}: Building RDD with predictions and true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     pred_true_rdd = pred_label.join(F.broadcast(true_labels), 'user_id', 'inner') \
                 .rdd \
                 .map(lambda row: (row[1], row[2]))
 
-    print('{}: Instantiating metrics object'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    print('{}: Instantiating metrics object'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     metrics = RankingMetrics(pred_true_rdd)
-    print('{}: Getting mean average precision'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    print('{}: Getting mean average precision'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     mean_ap = metrics.meanAveragePrecision
-    print('{}: Getting NDCG at k'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    print('{}: Getting NDCG at k'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     ndcg_at_k = metrics.ndcgAt(k)
-    print('{}: Getting precision at k'.strftime("%Y-%m-%d %H:%M:%S", localtime()))
+    print('{}: Getting precision at k'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     p_at_k=  metrics.precisionAt(k)
     print('Lambda ', lamb, 'and Rank ', rank , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
     return
