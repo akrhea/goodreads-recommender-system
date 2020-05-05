@@ -33,7 +33,7 @@ def main(spark, task, fraction):
                             low_item_threshold=10, synthetic=False, debug=False)
 
     if task=='predict':
-        als(spark, train, val, lamb, rank)
+        als(spark, train, val)
 
     if task=='tune':
         tune(spark, train, val, k=500)
