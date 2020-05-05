@@ -2,9 +2,6 @@
 
 #starting point: train, val, test in memory from data_prep
 
-def reload_test():
-    print ('reloaded')
-    return
 
 def dummy_run(spark):
 
@@ -115,11 +112,11 @@ def search(spark, train, val, k=500):
                 .groupBy('user_id')\
                 .agg(expr('collect_list(book_id) as true_item'))
 
-    # regParam = [0.0001, 0.001, 0.01, 0.1, 1, 10]
-    # rank  = [5, 10, 20, 100, 500]
+    regParam = [0.0001, 0.001, 0.01, 0.1, 1, 10]
+    rank  = [5, 10, 20, 100, 500]
 
-    regParam = [1]
-    rank  = [5]
+    # regParam = [1]
+    # rank  = [5]
     paramGrid = itertools.product(regParam, rank)
 
   #fit and evaluate for all combos
