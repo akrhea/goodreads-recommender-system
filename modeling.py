@@ -89,7 +89,7 @@ def get_val_ids_and_true_labels(spark, val):
                 .agg(expr('collect_list(book_id) as true_item'))
     return val_ids, true_labels
 
-def train_and_eval(spark, train, val_ids, true_labels, rank, lambda):
+def train_and_eval(spark, train, val_ids=None, true_labels=None, rank=100, lambda=1):
 
     from pyspark.ml.recommendation import ALS
     from pyspark.mllib.evaluation import RankingMetrics
