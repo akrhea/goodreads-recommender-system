@@ -48,7 +48,7 @@ if __name__ == "__main__":
     spark = SparkSession.builder.appName('supervised_train').getOrCreate()
 
     # Get the fraction from the command line
-    fraction = sys.argv[1]
+    fraction = float(sys.argv[1])
 
     # # And the location to store the trained model
     # model_file = sys.argv[2]
