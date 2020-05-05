@@ -33,7 +33,7 @@ def main(spark, task, fraction):
                             low_item_threshold=10, synthetic=False, debug=False)
 
     if task=='eval':
-        train_and_eval(spark, train, val, rank=100, lambda=1)
+        train_and_eval(spark, train, val, rank=100, lamb=1)
 
     if task=='predict':
         als(spark, train, val)
