@@ -3,9 +3,10 @@ from data_prep import read_sample_split_pq
 from modeling import reload_test
 
 '''
-COMMAND LINE ARGUMENTS NOT WORKING
-'''
+Usage:
 
+    $ spark-submit supervised_train.py hdfs:/path/to/file.parquet hdfs:/path/to/save/model
+'''
 
 
 
@@ -17,19 +18,20 @@ def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
     return
 
 def main(task):
-    '''
-    to-do in 4/25 meeting
 
-    use arguments from argparse/argv
-    '''
 
-    if task=='downsplit':
-        save_down_splits()
     else:
         print('unsupported task argument. downsplit is only supported task')
 
-    reload_test()
+
+    _, train, val, test = read_sample_split_pq(spark,  fraction=0.01, seed=42, \
+                            save_pq=False, rm_unobserved=True, rm_zeros=True, 
+                            low_item_threshold=10, synthetic=False, debug=False)
+
+    tune(spark, train, val, k=500)
+
     
+
     # elif...
     # model?
 
@@ -38,11 +40,21 @@ def main(task):
 
 
 if __name__ == "__main__":
-    #task = sys.argv[1]
-    # arg2 = sys.argv[2]
-    # etc.
 
-    main()
+    # Create the spark session object
+    spark = SparkSession.builder.appName('supervised_train').getOrCreate()
+
+    # Get the fraction from the command line
+    frac = sys.argv[1]
+
+    # # And the location to store the trained model
+    # model_file = sys.argv[2]
+
+
+
+    # Call our main routine
+    main(spark, data_file, model_file)
+
 
 
 
