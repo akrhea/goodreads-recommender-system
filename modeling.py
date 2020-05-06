@@ -122,7 +122,7 @@ def train_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=10, 
     
     #pred_true_rdd.repartition('book_id')
     #pred_true_rdd.repartition('rating')
-    pred_true_rdd.repartition(20)
+    #pred_true_rdd.repartition(20)
 
     pred_true_rdd.cache()
 
