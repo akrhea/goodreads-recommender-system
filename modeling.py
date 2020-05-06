@@ -45,7 +45,7 @@ def dummy_run(spark):
     pred_true_rdd = pred_label.join(F.broadcast(true_label), 'user_id', 'inner') \
                 .rdd \
                 .map(lambda row: (row[1], row[2]))
-
+    
     metrics = RankingMetrics(pred_true_rdd)
     mean_ap = metrics.meanAveragePrecision
     ndcg_at_k = metrics.ndcgAt(2)
@@ -118,7 +118,11 @@ def train_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=10, 
     print('{}: Building RDD with predictions and true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     pred_true_rdd = pred_label.join(F.broadcast(true_labels), 'user_id', 'inner') \
                 .rdd \
-                .map(lambda row: (row[1], row[2]))
+                .map(lambda x: (x[1], x[2]))
+    
+    #pred_true_rdd.repartition('book_id')
+    #pred_true_rdd.repartition('rating')
+    pred_true_rdd.repartition(20)
 
     pred_true_rdd.cache()
 
@@ -132,8 +136,6 @@ def train_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=10, 
     p_at_k=  metrics.precisionAt(k)
     print('Lambda ', lamb, 'and Rank ', rank , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
     return
-
-    
 
 def tune(spark, train, val, k=500):
     ''' 
@@ -170,41 +172,7 @@ def tune(spark, train, val, k=500):
                         rank=i[1], lamb=i[0], k=k)
     return
   
-def search_w_crossval():
 
-    from pyspark.ml.recommendation import ALS
-    from pyspark.mllib.evaluation import RankingMetrics
-    import pyspark.sql.functions as F
-    from pyspark.sql.functions import expr
-    from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
-    import itertools 
-    
-    als = ALS(userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
-
-    # Tune hyper-parameters with cross-validation
-    paramGrid = ParamGridBuilder() \
-        .addGrid(als.regParam, [0.0001, 0.001, 0.01, 0.1, 1, 10]) \
-        .addGrid(als.rank, [5, 10, 20, 100, 500]) \
-        .build()
-
-    crossval = CrossValidator(estimator=als,
-                            estimatorParamMaps=paramGrid,
-                            evaluator=RankingMetrics.metrics.meanAveragePrecision,
-                            numFolds=5)
-
-    pipeline = Pipeline(stages=[assembler, scaler, indexer, crossval])
-
-    # Train the model
-    pipelineModel = pipeline.fit(data)
-
-    # Save the model
-    pipelineModel.save(model_file)
-
-    #best hyperparameters
-    model = pipelineModel.stages[-1].bestModel
-    print('Best Param (regParam): ', model.getOrDefault('regParam'))
-    print('Best Param (rank): ', model.getOrDefault('rank'))
-    return 
 
 
 
