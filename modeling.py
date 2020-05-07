@@ -163,12 +163,13 @@ def tune(spark, train, val, k=500):
     val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
 
     # set hyperparameters to test
-    regParam = [0.0001, 0.001, 0.01, 0.1, 1, 10]
-    rank  = [5, 10, 20, 100, 500]
+    regParam = [0.01, 0.1, 1, 10]
+    rank  = [10, 20, 100, 500]
     paramGrid = itertools.product(regParam, rank)
 
     #fit and evaluate for all combos
     for i in paramGrid:
+        print('{}: Evaluating at rank {}, lambda {}'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), rank=i[1], lamb=i[0]))
         train_eval(spark, train, val_ids=val_ids, true_labels=true_labels, 
                         rank=i[1], lamb=i[0], k=k)
     return
