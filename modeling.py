@@ -169,7 +169,7 @@ def tune(spark, train, val, k=500):
 
     #fit and evaluate for all combos
     for i in paramGrid:
-        print('{}: Evaluating at rank {}, lambda {}'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), rank=i[1], lamb=i[0]))
+        print('{}: Evaluating at rank {}, lambda {}'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), i[1], i[0]))
         train_eval(spark, train, val_ids=val_ids, true_labels=true_labels, 
                         rank=i[1], lamb=i[0], k=k)
     return
