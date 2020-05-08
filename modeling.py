@@ -110,6 +110,7 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     model_path = 'hdfs:/user/{}/als_{}_rank_{}_lambda_{}'.format(net_id, int(fraction*100), rank, lamb)
 
     if path_exist(model_path):
+        print('{}: Reading model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
         model = ALSModel.load(model_path)
     else:
         if (val_ids==None) or (true_labels==None):
@@ -155,7 +156,7 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     p_at_k=  metrics.precisionAt(k)
     print('Lambda ', lamb, 'and Rank ', rank , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
     f = open("results_{}.txt".format(int(fraction*100)), "a")
-    f.write('Lambda {}, and Rank {}: MAP={}, NDCG={}, Precision at k={}\n'.format(lamb, rank, mean_ap, mdcg_at_k, p_at_k))
+    f.write('Lambda {}, and Rank {}: MAP={}, NDCG={}, Precision at k={}\n'.format(lamb, rank, mean_ap, ndcg_at_k, p_at_k))
     f.close()
     return
 
