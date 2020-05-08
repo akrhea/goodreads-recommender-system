@@ -129,20 +129,26 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
         print('{}: Reloading model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
         model = ALSModel.load(model_path)
 
-    print('{}: Getting predictions'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-    recs = model.recommendForUserSubset(val_ids, k) # alternate:  recs = model.transform(val)
-    pred_label = recs.select('user_id','recommendations.book_id')
+    print('{}: Getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
+    recs = model.recommendForUserSubset(val_ids, k)
+    recs.show(10)  # for testing
+
+    print('{}: Selecting pred labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    pred_label = recs.select('user_id','recommendations.book_id') # is this correct?? 
+                                                                  # we don't need to pass the predicted RATING to rankingmetrics?
+    pred_label.show(10)  # for testing
 
     print('{}: Building RDD with predictions and true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     pred_true_rdd = pred_label.join(F.broadcast(true_labels), 'user_id', 'inner') \
                 .rdd \
                 .map(lambda x: (x[1], x[2]))
-    
-    #pred_true_rdd.repartition('book_id')
-    #pred_true_rdd.repartition('rating')
-    #pred_true_rdd.repartition(20)
-    print('{}: Repartitioning'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-    pred_true_rdd.repartition(100)
+    pred_true_rdd.show(10) # for testing
+
+    # print('{}: Repartitioning'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    # pred_true_rdd.repartition('book_id')
+    # pred_true_rdd.repartition('rating')
+    # pred_true_rdd.repartition(20)
+    # pred_true_rdd.repartition(100)
 
     pred_true_rdd.cache()
 
@@ -156,7 +162,7 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     p_at_k=  metrics.precisionAt(k)
     print('Lambda ', lamb, 'and Rank ', rank , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
     f = open("results_{}.txt".format(int(fraction*100)), "a")
-    f.write('Lambda {}, and Rank {}: MAP={}, NDCG={}, Precision at k={}\n'.format(lamb, rank, mean_ap, ndcg_at_k, p_at_k))
+    f.write('Evaluation for k={}, lambda={}, and rank={}: MAP={}, NDCG={}, Precision at k={}\n'.format(k, lamb, rank, mean_ap, ndcg_at_k, p_at_k))
     f.close()
     return
 
@@ -187,14 +193,14 @@ def tune(spark, train, val, fraction, k=500):
     # set hyperparameters to test
     regParam = [0.01, 0.1, 1, 10]
     rank  = [10, 20, 100, 500]
-    paramGrid = itertools.product(regParam, rank)
+    paramGrid = itertools.product(rank, regParam) # order has been switched to get more results
 
     #fit and evaluate for all combos
     for i in paramGrid:
-        print('{}: Evaluating {} at rank {}, lambda {}'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), \
-                                                                int(fraction*100), i[1], i[0]))
+        print('{}: Evaluating {}% at k={}, rank={}, lambda={}'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), \
+                                                                int(fraction*100), k, i[0], i[1]))
         train_eval(spark, train, val_ids=val_ids, true_labels=true_labels, 
-                        rank=i[1], lamb=i[0], k=k, fraction=fraction)
+                        rank=i[0], lamb=i[1], k=k, fraction=fraction)
     return
   
 
