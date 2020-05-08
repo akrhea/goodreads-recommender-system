@@ -100,19 +100,36 @@ def train_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=10, 
     from pyspark.ml.recommendation import ALS
     from pyspark.mllib.evaluation import RankingMetrics
     import pyspark.sql.functions as F
+    from data_prep import path_exist
 
-    if (val_ids==None) or (true_labels==None):
-        val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
 
-    als = ALS(rank = rank, regParam=lamb, 
-                userCol="user_id", itemCol="book_id", ratingCol='rating', 
-                implicitPrefs=False, coldStartStrategy="drop")
+    #get netid
+    from getpass import getuser
+    net_id=getuser()
 
-    print('{}: Fitting model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-    model = als.fit(train)
+    model_path = 'hdfs:/user/{}/als_rank_{}_lambda_{}.parquet'.format(net_id, rank, lamb)
+
+    if path_exist(model_path):
+        model = ALS.load(model_path)
+    else:
+        if (val_ids==None) or (true_labels==None):
+            val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
+
+        als = ALS(rank = rank, regParam=lamb, 
+                    userCol="user_id", itemCol="book_id", ratingCol='rating', 
+                    implicitPrefs=False, coldStartStrategy="drop")
+
+        print('{}: Fitting model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        model = als.fit(train)
+
+        print('{}: Saving model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        model.save(model)
+
+        print('{}: Reloading model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        model = ALS.load(model_path)
 
     print('{}: Getting predictions'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-    recs = model.recommendForUserSubset(val_ids, k)
+    recs = model.recommendForUserSubset(val_ids, k) # alternate:  recs = model.transform(val)
     pred_label = recs.select('user_id','recommendations.book_id')
 
     print('{}: Building RDD with predictions and true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
@@ -123,6 +140,7 @@ def train_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=10, 
     #pred_true_rdd.repartition('book_id')
     #pred_true_rdd.repartition('rating')
     #pred_true_rdd.repartition(20)
+    print('{}: Repartitioning'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     pred_true_rdd.repartition(100)
 
     pred_true_rdd.cache()
