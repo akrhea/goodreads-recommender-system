@@ -2,3 +2,7 @@ Hyperparameter Tuning on 1% of the Goodreads Interaction Data
 Hyperparameter Tuning on 1% of the Goodreads Interaction Data
 Hyperparameter Tuning on 1% of the Goodreads Interaction Data
 Hyperparameter Tuning on 1% of the Goodreads Interaction Data
+Hyperparameter Tuning on 1% of the Goodreads Interaction Data
+Lambda 0.01, and Rank 10: MAP=0.00013258309768433398, NDCG=0.003289479750808688, Precision at k=0.0006609442060085841
+Lambda 0.01, and Rank 20: MAP=0.000379172736113444, NDCG=0.008189509597023492, Precision at k=0.0016795422031473525
+Lambda 0.01, and Rank 100: MAP=0.004776545554933678, NDCG=0.061759243073971966, Precision at k=0.008555078683834044
