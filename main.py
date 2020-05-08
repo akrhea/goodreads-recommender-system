@@ -65,7 +65,19 @@ if __name__ == "__main__":
     assert (task=='predict') or (task=='tune') or (task=='eval'), 'Task must be  \"predict,\" \"eval,\"or \"tune\"'
 
     # Create the spark session object
-    spark = SparkSession.builder.appName('goodreads_{}_{}'.format(task, fraction)).getOrCreate()
+    spark = SparkSession.builder.appName('goodreads_{}_{}'.format(task, fraction)) 
+                                .master('yarn')
+                                .config('spark.executor.memory', '10g')
+                                .config('spark.driver.memory', '10g')
+                                .config('spark.memory.offHeap.enabled', '10g')
+                                .config('spark.memory.offHeap.size', '10g')
+                                .config('spark.driver.memoryOverhead.size', '10g')
+                                .config('spark.executor.memoryOverhead.size', '10g')
+                                .config('spark.executor.memory', '10g')
+                                .config('spark.executor.cores', '5')
+                                #.config('spark.driver.cores', '5')
+                                .config('spark.executor.instances', '20')
+                                .getOrCreate()
 
     # Call our main routine
     main(spark, task, fraction)
