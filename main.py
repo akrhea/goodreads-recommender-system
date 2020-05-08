@@ -46,7 +46,7 @@ def main(spark, task, fraction):
         f = open("results_{}.txt".format(int(fraction*100)), "a")
         f.write('Hyperparameter Tuning on {}% of the Goodreads Interaction Data\n'.format(int(fraction*100)))
         f.close()
-        tune(spark, train, val, k=500, fraction)
+        tune(spark, train, val, k=500, fraction=fraction)
         f = open("results.txt", "a")
         f.write('---------------------------------------------------------------\n\n')
         f.close()

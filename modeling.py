@@ -193,7 +193,7 @@ def tune(spark, train, val, k=500, fraction):
         print('{}: Evaluating {} at rank {}, lambda {}'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), \
                                                                 int(fraction*100), i[1], i[0]))
         train_eval(spark, train, val_ids=val_ids, true_labels=true_labels, 
-                        rank=i[1], lamb=i[0], k=k, fraction)
+                        rank=i[1], lamb=i[0], k=k, fraction=fraction)
     return
   
 
