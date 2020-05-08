@@ -107,7 +107,7 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     from getpass import getuser
     net_id=getuser()
 
-    model_path = 'hdfs:/user/{}/als_rank_{}_lambda_{}.parquet'.format(net_id, rank, lamb)
+    model_path = 'hdfs:/user/{}/als_{}_rank_{}_lambda_{}'.format(net_id, int(fraction*100), rank, lamb)
 
     if path_exist(model_path):
         model = ALS.load(model_path)
