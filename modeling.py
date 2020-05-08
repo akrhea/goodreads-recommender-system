@@ -123,7 +123,7 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
         model = als.fit(train)
 
         print('{}: Saving model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-        model.save(model)
+        model.save(model_path)
 
         print('{}: Reloading model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
         model = ALS.load(model_path)
