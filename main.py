@@ -55,16 +55,17 @@ def main(spark, task, fraction):
 
 if __name__ == "__main__":
 
-    # Create the spark session object
-    spark = SparkSession.builder.appName('supervised_train').getOrCreate()
 
     # Get the task from the command line
     task = sys.argv[1]
 
-    assert (task=='predict') or (task=='tune') or (task=='eval'), 'Task must be  \"predict,\" \"eval,\"or \"tune\"'
-
     # Get the fraction from the command line
     fraction = float(sys.argv[2])
+
+    assert (task=='predict') or (task=='tune') or (task=='eval'), 'Task must be  \"predict,\" \"eval,\"or \"tune\"'
+
+    # Create the spark session object
+    spark = SparkSession.builder.appName('goodreads_{}_{}'.format(task, fraction)).getOrCreate()
 
     # Call our main routine
     main(spark, task, fraction)
