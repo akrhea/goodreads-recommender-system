@@ -159,7 +159,7 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     f.close()
     return
 
-def tune(spark, train, val, k=500, fraction):
+def tune(spark, train, val, fraction, k=500):
     ''' 
         Fits ALS model from train, ranks k top items, and evaluates with MAP, P, NDCG across combos of rank/lambda hyperparameter
         Imput: training file
