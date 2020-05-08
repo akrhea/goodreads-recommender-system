@@ -154,7 +154,7 @@ def train_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=10, 
     print('{}: Getting precision at k'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     p_at_k=  metrics.precisionAt(k)
     print('Lambda ', lamb, 'and Rank ', rank , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
-    f = open("results_{}.txt", "a")
+    f = open("results_{}.txt".format(int(fraction*100)), "a")
     f.write('Lambda {}, and Rank {}: MAP={}, NDCG={}, Precision at k={}\n'.format(lamb, rank, mean_ap, mdcg_at_k, p_at_k))
     f.close()
     return
