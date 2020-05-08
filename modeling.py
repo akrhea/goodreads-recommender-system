@@ -97,7 +97,7 @@ def get_val_ids_and_true_labels(spark, val):
 
 def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None, rank=10, lamb=1, k=500):
     from time import localtime, strftime
-    from pyspark.ml.recommendation import ALS
+    from pyspark.ml.recommendation import ALS, ALSModel
     from pyspark.mllib.evaluation import RankingMetrics
     import pyspark.sql.functions as F
     from data_prep import path_exist
@@ -110,7 +110,7 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     model_path = 'hdfs:/user/{}/als_{}_rank_{}_lambda_{}'.format(net_id, int(fraction*100), rank, lamb)
 
     if path_exist(model_path):
-        model = ALS.load(model_path)
+        model = ALSModel.load(model_path)
     else:
         if (val_ids==None) or (true_labels==None):
             val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
@@ -126,7 +126,7 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
         model.save(model_path)
 
         print('{}: Reloading model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-        model = ALS.load(model_path)
+        model = ALSModel.load(model_path)
 
     print('{}: Getting predictions'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     recs = model.recommendForUserSubset(val_ids, k) # alternate:  recs = model.transform(val)
