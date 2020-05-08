@@ -95,7 +95,7 @@ def get_val_ids_and_true_labels(spark, val):
                 .agg(expr('collect_list(book_id) as true_item'))
     return val_ids, true_labels
 
-def train_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=10, lamb=1, k=500):
+def train_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=10, lamb=1, k=500, fraction):
     from time import localtime, strftime
     from pyspark.ml.recommendation import ALS
     from pyspark.mllib.evaluation import RankingMetrics
@@ -154,12 +154,12 @@ def train_eval(spark, train, val=None, val_ids=None, true_labels=None, rank=10, 
     print('{}: Getting precision at k'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     p_at_k=  metrics.precisionAt(k)
     print('Lambda ', lamb, 'and Rank ', rank , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
-    f = open("results.txt", "a")
+    f = open("results_{}.txt", "a")
     f.write('Lambda {}, and Rank {}: MAP={}, NDCG={}, Precision at k={}\n'.format(lamb, rank, mean_ap, mdcg_at_k, p_at_k))
     f.close()
     return
 
-def tune(spark, train, val, k=500):
+def tune(spark, train, val, k=500, fraction):
     ''' 
         Fits ALS model from train, ranks k top items, and evaluates with MAP, P, NDCG across combos of rank/lambda hyperparameter
         Imput: training file
@@ -190,9 +190,10 @@ def tune(spark, train, val, k=500):
 
     #fit and evaluate for all combos
     for i in paramGrid:
-        print('{}: Evaluating at rank {}, lambda {}'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), i[1], i[0]))
+        print('{}: Evaluating {} at rank {}, lambda {}'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), \
+                                                                int(fraction*100), i[1], i[0]))
         train_eval(spark, train, val_ids=val_ids, true_labels=true_labels, 
-                        rank=i[1], lamb=i[0], k=k)
+                        rank=i[1], lamb=i[0], k=k, fraction)
     return
   
 
