@@ -8,7 +8,7 @@ from modeling import tune, train_eval, get_val_preds
 '''
 Usage:
 
-    $ spark-submit main.py [task] [downsample fraction]
+    $ spark-submit main.py [task] [downsample fraction] [memory (# of gigabytes to rquest)] [# cores to request] [# instances to request]
 '''
 
 
@@ -62,20 +62,29 @@ if __name__ == "__main__":
     # Get the fraction from the command line
     fraction = float(sys.argv[2])
 
+    # Get the memory from the command line
+    memory = sys.argv[3]
+
+    # Get the cores from the command line
+    cores = sys.argv[4]
+
+    # Get the cores from the command line
+    instances = sys.argv[4]
+
     assert (task=='predict') or (task=='tune') or (task=='eval'), 'Task must be  \"predict,\" \"eval,\"or \"tune\"'
 
     # Create the spark session object
     spark = SparkSession.builder.appName('goodreads_{}_{}'.format(task, fraction))\
                                 .master('yarn')\
-                                .config('spark.executor.memory', '10g')\
-                                .config('spark.driver.memory', '10g')\
-                                .config('spark.memory.offHeap.enabled', '10g')\
-                                .config('spark.memory.offHeap.size', '10g')\
-                                .config('spark.driver.memoryOverhead.size', '10g')\
-                                .config('spark.executor.memoryOverhead.size', '10g')\
-                                .config('spark.executor.memory', '10g')\
-                                .config('spark.executor.cores', '5')\
-                                .config('spark.executor.instances', '20')\
+                                .config('spark.executor.memory', '{}}g'.format(memory))\
+                                .config('spark.driver.memory', '{}}g'.format(memory))\
+                                .config('spark.memory.offHeap.enabled', '{}}g'.format(memory))\
+                                .config('spark.memory.offHeap.size', '{}}g'.format(memory))\
+                                .config('spark.driver.memoryOverhead.size', '{}}g'.format(memory))\
+                                .config('spark.executor.memoryOverhead.size', '{}}g'.format(memory))\
+                                .config('spark.executor.memory', '{}}g'.format(memory))\
+                                .config('spark.executor.cores', '{}}g'.format(cores))\
+                                .config('spark.executor.instances', '{}}g'.format(instances))\
                                 .getOrCreate()
 
                                 #.config('spark.driver.cores', '5')
