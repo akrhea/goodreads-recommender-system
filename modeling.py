@@ -142,7 +142,8 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     recs = model.recommendForUserSubset(val_ids, k)
 
     f = open("results_{}.txt".format(int(fraction*100)), "a")
-    f.write('{}: Finish getting {} recommendations for validation user subset:\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k), recs.show(10))
+    f.write(recs.show(10))
+    f.write('{}: Finish getting {} recommendations for validation user subset\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
     f.close()
     print('{}: Finish getting {} recommendations for validation user subset: '.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
 
@@ -158,10 +159,10 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
                                                                   # we don't need to pass the predicted RATING to rankingmetrics?
 
     f = open("results_{}.txt".format(int(fraction*100)), "a")
-    f.write('{}: Finish select pred labels:\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k), pred_label.show(10))
+    f.write(pred_label.show(10))
+    f.write('{}: Finish select pred labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
     f.close()
     print('{}: Finish selecting pred labels '.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
-
 
 
     # build RDD with predictions and true labels
@@ -175,7 +176,8 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
                 .map(lambda x: (x[1], x[2]))
 
     f = open("results_{}.txt".format(int(fraction*100)), "a")
-    f.write('{}: Finish building RDD with predictions and true labels:\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())), pred_true_rdd.show(10))
+    f.write(pred_true_rdd.show(10))
+    f.write('{}: Finish building RDD with predictions and true labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     f.close()
     print('{}: Finish building RDD with predictions and true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
 
