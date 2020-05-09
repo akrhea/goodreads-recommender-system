@@ -71,7 +71,7 @@ if __name__ == "__main__":
     fraction = float(sys.argv[2])
 
     # Get k from the command line
-    k = float(sys.argv[3])
+    k = int(sys.argv[3])
 
     # # Get the memory from the command line
     # memory = sys.argv[4]
