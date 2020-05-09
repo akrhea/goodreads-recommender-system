@@ -5,3 +5,46 @@ Hyperparameter Tuning on 5% of the Goodreads Interaction Data
 2020-05-08 22:42:38: Fitting model2020-05-08 22:43:58: Begin getting 50 recommendations for validation user subset
 Hyperparameter Tuning on 5% of the Goodreads Interaction Data
 2020-05-08 22:51:04: Fitting model2020-05-08 22:52:06: Begin getting 50 recommendations for validation user subset
+Hyperparameter Tuning on 5% of the Goodreads Interaction Data
+2020-05-08 23:39:53: Begin getting 500 recommendations for validation user subset
+Hyperparameter Tuning on 5% of the Goodreads Interaction Data
+2020-05-09 07:47:07: Begin getting 10 recommendations for validation user subset
+Hyperparameter Tuning on 5% of the Goodreads Interaction Data
+2020-05-09 07:59:10: Begin getting 10 recommendations for validation user subset
+Hyperparameter Tuning on 5% of the Goodreads Interaction Data
+2020-05-09 08:03:03: Begin getting 10 recommendations for validation user subset
+Hyperparameter Tuning on 5% of the Goodreads Interaction Data
+2020-05-09 08:11:31: Begin getting 10 recommendations for validation user subset
+2020-05-09 08:13:53: Finish getting 10 recommendations for validation user subset
+2020-05-09 08:13:53: Begin selecting pred labels 
+2020-05-09 08:16:13: Finish select pred labels
+2020-05-09 08:16:13: Begin building RDD with predictions and true labels
+Hyperparameter Tuning on 5% of the Goodreads Interaction Data
+2020-05-09 08:22:43: Begin getting 10 recommendations for validation user subset
+2020-05-09 08:24:40: Finish getting 10 recommendations for validation user subset
+2020-05-09 08:24:40: Begin selecting pred labels 
+2020-05-09 08:26:27: Finish select pred labels
+2020-05-09 08:26:27: Begin building RDD with predictions and true labels
+2020-05-09 08:26:30: Finish building RDD with predictions and true labels
+Evaluation for k=10, lambda=0.01, and rank=10: MAP=1.4134313325624773e-05, NDCG=0.00011013299461498226, Precision at k=8.661758336942402e-05
+
+
+
+2020-05-09 08:28:38: Fitting model
+2020-05-09 08:29:52: Begin getting 10 recommendations for validation user subset
+2020-05-09 08:31:41: Finish getting 10 recommendations for validation user subset
+2020-05-09 08:31:41: Begin selecting pred labels 
+2020-05-09 08:33:32: Finish select pred labels
+2020-05-09 08:33:32: Begin building RDD with predictions and true labels
+2020-05-09 08:33:35: Finish building RDD with predictions and true labels
+Evaluation for k=10, lambda=0.1, and rank=10: MAP=9.258551599264413e-07, NDCG=1.874909941581359e-05, Precision at k=2.8872527789808003e-05
+
+
+
+2020-05-09 08:35:46: Fitting model
+2020-05-09 08:36:43: Begin getting 10 recommendations for validation user subset
+2020-05-09 08:38:39: Finish getting 10 recommendations for validation user subset
+2020-05-09 08:38:39: Begin selecting pred labels 
+2020-05-09 08:40:26: Finish select pred labels
+2020-05-09 08:40:26: Begin building RDD with predictions and true labels
+2020-05-09 08:40:28: Finish building RDD with predictions and true labels
