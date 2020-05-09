@@ -48,3 +48,77 @@ Evaluation for k=10, lambda=0.1, and rank=10: MAP=9.258551599264413e-07, NDCG=1.
 2020-05-09 08:40:26: Finish select pred labels
 2020-05-09 08:40:26: Begin building RDD with predictions and true labels
 2020-05-09 08:40:28: Finish building RDD with predictions and true labels
+2020-05-09 08:47:18: Finish select pred labels
+2020-05-09 08:47:18: Begin building RDD with predictions and true labels
+2020-05-09 08:47:22: Finish building RDD with predictions and true labels
+Evaluation for k=10, lambda=10, and rank=10: MAP=0.0, NDCG=0.0, Precision at k=0.0
+
+
+
+2020-05-09 08:49:28: Fitting model
+2020-05-09 08:50:22: Begin getting 10 recommendations for validation user subset
+2020-05-09 08:52:27: Finish getting 10 recommendations for validation user subset
+2020-05-09 08:52:27: Begin selecting pred labels 
+2020-05-09 08:54:29: Finish select pred labels
+2020-05-09 08:54:29: Begin building RDD with predictions and true labels
+2020-05-09 08:54:33: Finish building RDD with predictions and true labels
+Evaluation for k=10, lambda=0.01, and rank=20: MAP=7.082779281130623e-05, NDCG=0.00028268567303754374, Precision at k=0.0002598527501082718
+
+
+
+2020-05-09 08:57:12: Fitting model
+2020-05-09 08:59:03: Begin getting 10 recommendations for validation user subset
+2020-05-09 09:01:13: Finish getting 10 recommendations for validation user subset
+2020-05-09 09:01:13: Begin selecting pred labels 
+2020-05-09 09:03:21: Finish select pred labels
+2020-05-09 09:03:21: Begin building RDD with predictions and true labels
+2020-05-09 09:03:25: Finish building RDD with predictions and true labels
+Evaluation for k=10, lambda=0.1, and rank=20: MAP=6.173036576316027e-05, NDCG=0.00021252146179771852, Precision at k=0.00018767143063375206
+
+
+
+2020-05-09 09:05:52: Fitting model
+2020-05-09 09:07:30: Begin getting 10 recommendations for validation user subset
+2020-05-09 09:09:38: Finish getting 10 recommendations for validation user subset
+2020-05-09 09:09:38: Begin selecting pred labels 
+2020-05-09 09:11:41: Finish select pred labels
+2020-05-09 09:11:41: Begin building RDD with predictions and true labels
+2020-05-09 09:11:45: Finish building RDD with predictions and true labels
+Evaluation for k=10, lambda=1, and rank=20: MAP=1.7582629102767685e-06, NDCG=2.1475950027511555e-05, Precision at k=2.8872527789808007e-05
+
+
+
+2020-05-09 09:14:20: Fitting model
+2020-05-09 09:15:38: Begin getting 10 recommendations for validation user subset
+2020-05-09 09:17:56: Finish getting 10 recommendations for validation user subset
+2020-05-09 09:17:56: Begin selecting pred labels 
+2020-05-09 09:20:04: Finish select pred labels
+2020-05-09 09:20:04: Begin building RDD with predictions and true labels
+2020-05-09 09:20:06: Finish building RDD with predictions and true labels
+Evaluation for k=10, lambda=10, and rank=20: MAP=0.0, NDCG=0.0, Precision at k=0.0
+
+
+
+2020-05-09 09:22:37: Fitting model
+2020-05-09 09:40:26: Begin getting 10 recommendations for validation user subset
+2020-05-09 09:46:31: Finish getting 10 recommendations for validation user subset
+2020-05-09 09:46:31: Begin selecting pred labels 
+2020-05-09 09:52:49: Finish select pred labels
+2020-05-09 09:52:49: Begin building RDD with predictions and true labels
+2020-05-09 09:52:51: Finish building RDD with predictions and true labels
+Evaluation for k=10, lambda=0.01, and rank=100: MAP=0.0002423907386471393, NDCG=0.001686275013372886, Precision at k=0.0016312978201241525
+
+
+
+2020-05-09 09:59:53: Fitting model
+2020-05-09 10:20:01: Begin getting 10 recommendations for validation user subset
+2020-05-09 10:26:59: Finish getting 10 recommendations for validation user subset
+2020-05-09 10:26:59: Begin selecting pred labels 
+2020-05-09 10:43:02: Finish select pred labels
+2020-05-09 10:43:02: Begin building RDD with predictions and true labels
+2020-05-09 10:43:10: Finish building RDD with predictions and true labels
+Evaluation for k=10, lambda=0.1, and rank=100: MAP=0.0001014177124464848, NDCG=0.0003714766110151031, Precision at k=0.00037534286126750396
+
+
+
+2020-05-09 11:14:45: Fitting model
