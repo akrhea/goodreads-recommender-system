@@ -140,9 +140,10 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     f.close()
 
     recs = model.recommendForUserSubset(val_ids, k)
+    recs.show(10)
 
     f = open("results_{}.txt".format(int(fraction*100)), "a")
-    f.write(recs.show(10))
+    #f.write(recs.show(10))
     f.write('{}: Finish getting {} recommendations for validation user subset\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
     f.close()
     print('{}: Finish getting {} recommendations for validation user subset: '.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
@@ -158,8 +159,9 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     pred_label = recs.select('user_id','recommendations.book_id') # is this correct?? 
                                                                   # we don't need to pass the predicted RATING to rankingmetrics?
 
+    pred_label.show(10)
     f = open("results_{}.txt".format(int(fraction*100)), "a")
-    f.write(pred_label.show(10))
+    #f.write(pred_label.show(10))
     f.write('{}: Finish select pred labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
     f.close()
     print('{}: Finish selecting pred labels '.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
@@ -175,8 +177,8 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
                 .rdd \
                 .map(lambda x: (x[1], x[2]))
 
-    f = open("results_{}.txt".format(int(fraction*100)), "a")
     pred_true_rdd.show(10)
+    f = open("results_{}.txt".format(int(fraction*100)), "a")
     #f.write(pred_true_rdd.show())
     f.write('{}: Finish building RDD with predictions and true labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     f.close()
