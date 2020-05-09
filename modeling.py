@@ -129,6 +129,11 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
         #print('{}: Reloading model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
         #model = ALSModel.load(model_path)
 
+    # for testing
+    print('k: ', k)
+    print('type(k): ' type(k))
+    print('type(model): ', type(model))
+
     print('{}: Getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
     recs = model.recommendForUserSubset(val_ids, k)
     recs.show(10)  # for testing
@@ -189,6 +194,15 @@ def tune(spark, train, val, fraction, k=500):
 
     #for all users in val set, get list of books rated over 3 stars
     val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
+
+    # for testing
+    print('{}: Showing the val ids'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    print('type(val_ids): ', type(val_ids))
+    val_ids.show(10)
+    print('{}: Showing the true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    print('type(true_labels): ', type(true_labels))
+    true_labels.show(10)
+
 
     # set hyperparameters to test
     regParam = [0.01, 0.1, 1, 10]
