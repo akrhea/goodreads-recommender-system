@@ -120,6 +120,9 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
                     userCol="user_id", itemCol="book_id", ratingCol='rating', 
                     implicitPrefs=False, coldStartStrategy="drop")
 
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Fitting model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.close()
         print('{}: Fitting model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
         model = als.fit(train)
 
@@ -129,25 +132,53 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
         #print('{}: Reloading model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
         #model = ALSModel.load(model_path)
 
-    # for testing
-    print('k: ', k)
-    print('type(k): ', type(k))
-    print('type(model): ', type(model))
 
-    print('{}: Getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
+    # recommend for user subset
+    print('{}: Begin getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
+    f = open("results_{}.txt".format(int(fraction*100)), "a")
+    f.write('{}: Begin getting {} recommendations for validation user subset\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
+    f.close()
+
     recs = model.recommendForUserSubset(val_ids, k)
-    recs.show(10)  # for testing
 
-    print('{}: Selecting pred labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    f = open("results_{}.txt".format(int(fraction*100)), "a")
+    f.write('{}: Finish getting {} recommendations for validation user subset:\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k), recs.show(10))
+    f.close()
+    print('{}: Finish getting {} recommendations for validation user subset: '.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
+
+
+
+    # select pred labels
+    print('{}: Begin selecting pred labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    f = open("results_{}.txt".format(int(fraction*100)), "a")
+    f.write('{}: Begin selecting pred labels \n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    f.close()
+
     pred_label = recs.select('user_id','recommendations.book_id') # is this correct?? 
                                                                   # we don't need to pass the predicted RATING to rankingmetrics?
-    pred_label.show(10)  # for testing
 
-    print('{}: Building RDD with predictions and true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    f = open("results_{}.txt".format(int(fraction*100)), "a")
+    f.write('{}: Finish select pred labels:\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k), pred_label.show(10))
+    f.close()
+    print('{}: Finish selecting pred labels '.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
+
+
+
+    # build RDD with predictions and true labels
+    print('{}: Begin building RDD with predictions and true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    f = open("results_{}.txt".format(int(fraction*100)), "a")
+    f.write('{}: Begin building RDD with predictions and true labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    f.close()
+
     pred_true_rdd = pred_label.join(F.broadcast(true_labels), 'user_id', 'inner') \
                 .rdd \
                 .map(lambda x: (x[1], x[2]))
-    pred_true_rdd.show(10) # for testing
+
+    f = open("results_{}.txt".format(int(fraction*100)), "a")
+    f.write('{}: Finish building RDD with predictions and true labels:\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())), pred_true_rdd.show(10))
+    f.close()
+    print('{}: Finish building RDD with predictions and true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+
 
     # print('{}: Repartitioning'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     # pred_true_rdd.repartition('book_id')
@@ -194,15 +225,6 @@ def tune(spark, train, val, fraction, k=500):
 
     #for all users in val set, get list of books rated over 3 stars
     val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
-
-    # for testing
-    print('{}: Showing the val ids'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-    print('type(val_ids): ', type(val_ids))
-    val_ids.show(10)
-    print('{}: Showing the true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-    print('type(true_labels): ', type(true_labels))
-    true_labels.show(10)
-
 
     # set hyperparameters to test
     regParam = [0.01, 0.1, 1, 10]
