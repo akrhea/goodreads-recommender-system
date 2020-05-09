@@ -131,7 +131,7 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
 
     # for testing
     print('k: ', k)
-    print('type(k): ' type(k))
+    print('type(k): ', type(k))
     print('type(model): ', type(model))
 
     print('{}: Getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
