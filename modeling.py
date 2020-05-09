@@ -121,7 +121,7 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
                     implicitPrefs=False, coldStartStrategy="drop")
 
         f = open("results_{}.txt".format(int(fraction*100)), "a")
-        f.write('{}: Fitting model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.write('{}: Fitting model\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
         f.close()
         print('{}: Fitting model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
         model = als.fit(train)
