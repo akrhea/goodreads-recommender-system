@@ -482,7 +482,7 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
             val = spark.read.parquet(val_path)
             test = spark.read.parquet(test_path)
             down = None # no access to downsampled df
-            print('Succesfullly read splits from disk')
+            print('Succesfullly read splits from hdfs')
 
         except:
 
