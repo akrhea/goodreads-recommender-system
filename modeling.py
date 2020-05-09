@@ -177,7 +177,7 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
                 .rdd \
                 .map(lambda x: (x[1], x[2]))
 
-    pred_true_rdd.show(10)
+    print(pred_true_rdd)
     f = open("results_{}.txt".format(int(fraction*100)), "a")
     #f.write(pred_true_rdd.show())
     f.write('{}: Finish building RDD with predictions and true labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
