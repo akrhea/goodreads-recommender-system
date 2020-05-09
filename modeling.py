@@ -132,6 +132,7 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
         print('{}: Reloading model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
         model = ALSModel.load(model_path)
 
+    true_labels.show(10)
 
     # recommend for user subset
     print('{}: Begin getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
@@ -139,6 +140,7 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     f.write('{}: Begin getting {} recommendations for validation user subset\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
     f.close()
 
+    val_ids.coalesce(10)
     recs = model.recommendForUserSubset(val_ids, k)
     recs.show(10)
 
