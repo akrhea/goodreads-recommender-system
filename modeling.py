@@ -123,11 +123,11 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
         print('{}: Fitting model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
         model = als.fit(train)
 
-        print('{}: Saving model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-        model.save(model_path)
+        #print('{}: Saving model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        #model.save(model_path)
 
-        print('{}: Reloading model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-        model = ALSModel.load(model_path)
+        #print('{}: Reloading model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        #model = ALSModel.load(model_path)
 
     print('{}: Getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
     recs = model.recommendForUserSubset(val_ids, k)
