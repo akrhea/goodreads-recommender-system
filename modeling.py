@@ -56,7 +56,7 @@ def dummy_run(spark):
 def get_recs(spark, train, fraction, val=None, val_ids=None, 
                     lamb=1, rank=10, k=500, implicit=False, 
                     save_model = True, save_recs_csv=True, save_recs_pq=False,
-                    debug=False, coalesce_num=10):
+                    debug=False, coalesce_num=10, synthetic=False):
     ''' 
         Fits or loads ALS model from train and makes predictions 
         Imput: training file
@@ -127,10 +127,10 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
             als = ALS(rank = rank, regParam=lamb, 
                         userCol="user_id", itemCol="book_id", ratingCol=ratingCol, 
                         implicitPrefs=implicitPrefs, coldStartStrategy="drop")
-
-            f = open("results_{}.txt".format(int(fraction*100)), "a")
-            f.write('{}: Fitting model\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-            f.close()
+            if not synthetic:
+                f = open("results_{}.txt".format(int(fraction*100)), "a")
+                f.write('{}: Fitting model\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+                f.close()
             print('{}: Fitting model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
             model = als.fit(train)
 
@@ -147,17 +147,19 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
                 
         # recommend for user subset
         print('{}: Begin getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
-        f = open("results_{}.txt".format(int(fraction*100)), "a")
-        f.write('{}: Begin getting {} recommendations for validation user subset\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
-        f.close()
+        if not synthetic:
+            f = open("results_{}.txt".format(int(fraction*100)), "a")
+            f.write('{}: Begin getting {} recommendations for validation user subset\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
+            f.close()
 
         recs = model.recommendForUserSubset(val_ids, k)
         if debug:
             recs.explain()
 
-        f = open("results_{}.txt".format(int(fraction*100)), "a")
-        f.write('{}: Finish getting {} recommendations for validation user subset\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
-        f.close()
+        if not synthetic:
+            f = open("results_{}.txt".format(int(fraction*100)), "a")
+            f.write('{}: Finish getting {} recommendations for validation user subset\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
+            f.close()
         print('{}: Finish getting {} recommendations for validation user subset: '.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
 
         if save_recs_pq:
