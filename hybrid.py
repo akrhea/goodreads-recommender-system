@@ -83,7 +83,14 @@ def get_isrev_splits(spark, train, val, test, fraction, save_pq=False, synthetic
 
 def get_both_recs(spark, train, val, isrev_train, isrev_val, fraction, 
                         k=500, lamb=1, rank=10, 
-                        debug=False, coalesce_num=10):
+                        debug=False, coalesce_num=10, synthetic = False, 
+                        save_model = True, save_recs_csv = True, save_recs_pq=False):
+
+    if synthetic:
+        print('NOTICE: Will not save model or predictions for synthetic data.')
+        save_model = False
+        save_recs_csv =  False
+        save_recs_pq = False
 
     from modeling import get_recs
     
@@ -91,12 +98,12 @@ def get_both_recs(spark, train, val, isrev_train, isrev_val, fraction,
 
     rating_recs = get_recs(spark, train, fraction, val=val, #val_ids=None, 
                                     lamb=lamb, rank=rank, k=k, implicit=False, 
-                                    save_model = True, save_recs_csv=True, save_recs_pq=False,
+                                    save_model = save_model, save_recs_csv=save_recs_csv, save_recs_pq=save_recs_pq,
                                     debug=debug, coalesce_num=None)
 
     isrev_recs = get_recs(spark, isrev_train, fraction, val=isrev_val, #val_ids=None, 
                                     lamb=lamb, rank=rank, k=k, implicit=True, 
-                                    save_model = True, save_recs_csv=True, save_recs_pq=False,
+                                    save_model = save_model, save_recs_csv=save_recs_csv, save_recs_pq=save_recs_pq,
                                     debug=debug, coalesce_num=None)
 
     if debug:
