@@ -113,7 +113,7 @@ def get_both_recs(spark, train, val, fraction,
                         save_revsplits = True, save_model=True, 
                         save_recs_csv=True, save_recs_pq=False):
 
-    from pyspark.sql.functions import col, explode
+    from pyspark.sql.functions import col, explode, collect_list
     from modeling import get_recs
     
     if synthetic:
@@ -166,6 +166,19 @@ def get_both_recs(spark, train, val, fraction,
 
     weighted_sum.createOrReplaceTempView('weighted_sum')
 
-    # order by rating, then map to list of ids....
+    # # order by rating, then map to list of ids....
+    # 'SELECT * FROM weighted_sum ORDER BY rating DESC'
 
-    return weighted_sum
+    # # order first, collect 2nd
+    # ordered = spark.sql('SELECT * FROM weighted_sum ORDER BY rating DESC')
+    # collected = ordered.groupBy('user_id').agg(collect_list('book_id') as 'book_id')
+
+    # #collect first, order 2nd
+    # collected = weighted_sum.groupBy('user_id').agg(collect_list('book_id', 'rating')) 
+    # ..... #.sortBy(lambda x:x[1]).collect()
+
+    # window!
+    w = Window.partitionBy('user_id').orderBy(F.desc('rating'))
+    pred_label = weighted_sum.withColumn('book_id', F.collect_list('book_id').over(w)).filter(F.size('book_id')==5).select('user_id', 'book_id')
+
+    return pred_label
