@@ -2,7 +2,7 @@
 
 import sys
 from pyspark.sql import SparkSession
-from data_prep import save_down_splits
+from data_prep import read_sample_split_pq, save_down_splits
 from modeling import tune, get_recs, get_val_ids_and_true_labels, eval
 from hybrid import tune_isrev_weight
 from time import localtime, strftime
