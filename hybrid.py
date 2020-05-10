@@ -100,12 +100,12 @@ def get_both_recs(spark, train, val, isrev_train, isrev_val, fraction,
     rating_recs = get_recs(spark, train, fraction, val=val, #val_ids=None, 
                                     lamb=lamb, rank=rank, k=k, implicit=False, 
                                     save_model = save_model, save_recs_csv=save_recs_csv, save_recs_pq=save_recs_pq,
-                                    debug=debug, coalesce_num=None)
+                                    debug=debug, coalesce_num=coalesce_num)
 
     isrev_recs = get_recs(spark, isrev_train, fraction, val=isrev_val, #val_ids=None, 
                                     lamb=lamb, rank=rank, k=k, implicit=True, 
                                     save_model = save_model, save_recs_csv=save_recs_csv, save_recs_pq=save_recs_pq,
-                                    debug=debug, coalesce_num=None)
+                                    debug=debug, coalesce_num=coalesce_num)
 
     if debug:
         rating_recs.show(10)
