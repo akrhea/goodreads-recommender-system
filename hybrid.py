@@ -55,14 +55,20 @@ def get_isrev_splits_from_ratings(spark, train, val, fraction, test=None, get_te
                                       FROM df INNER JOIN train \
                                           ON df.user_id=train.user_id AND df.book_id=train.book_id')
 
+            isrev_train = isrev_train.coalesce(int((0.25+fraction)*200))
+
             isrev_val = spark.sql('SELECT df.user_id, df.book_id, is_reviewed \
                                   FROM df INNER JOIN val \
                                       ON df.user_id=val.user_id AND df.book_id=val.book_id')
+
+            isrev_val = isrev_val.coalesce(int((0.25+fraction)*200))
             
             if get_test:
                 isrev_test = spark.sql('SELECT df.user_id, df.book_id, is_reviewed \
                                         FROM df INNER JOIN test \
                                             ON df.user_id=test.user_id AND df.book_id=test.book_id')
+
+                isrev_test = isrev_test.coalesce(int((0.25+fraction)*200))
 
         if save_pq:
             isrev_train = write_to_parquet(spark, isrev_train, train_isrev_path)
@@ -107,8 +113,7 @@ def get_isrev_splits_from_ratings(spark, train, val, fraction, test=None, get_te
 
 
 def hybrid_pred_labels(spark, train, val, fraction, 
-                        k=500, lamb=1, rank=10, 
-                        rev_weight=1, rat_weight=1,
+                        k=500, lamb=1, rank=10, isrev_weight=1,
                         debug=False, synthetic=False, 
                         save_revsplits = True, save_model=True, 
                         save_recs_csv=True, save_recs_pq=False):
@@ -124,17 +129,15 @@ def hybrid_pred_labels(spark, train, val, fraction,
         save_recs_pq = False
         save_revsplits = False
 
-    #coalesce_num = int(fraction*100)
-
     isrev_train, isrev_val, _ = get_isrev_splits_from_ratings(spark, train, val, \
                                 fraction, get_test=False, save_pq=save_revsplits, synthetic=synthetic)
 
-    rating_recs = get_recs(spark, train, fraction, val=val, #val_ids=None, 
+    rating_recs = get_recs(spark, train, fraction, val=val, 
                                     lamb=lamb, rank=rank, k=k, implicit=False,
                                     save_model = save_model, save_recs_csv=save_recs_csv, save_recs_pq=save_recs_pq,
                                     debug=debug)
 
-    isrev_recs = get_recs(spark, isrev_train, fraction, val=isrev_val, #val_ids=None, 
+    isrev_recs = get_recs(spark, isrev_train, fraction, val=isrev_val, 
                                     lamb=lamb, rank=rank, k=k, implicit=True, 
                                     save_model = save_model, save_recs_csv=save_recs_csv, save_recs_pq=save_recs_pq,
                                     debug=debug)
@@ -146,8 +149,13 @@ def hybrid_pred_labels(spark, train, val, fraction,
     rat_long = rating_recs.select('user_id', explode('recommendations')\
                                                 .alias('recs')).select('user_id', 'recs.*')
 
+    rat_long = rat_long.coalesce((int((0.25+fraction)*200)))
+
     rev_long = isrev_recs.select('user_id', explode('recommendations')\
                                                 .alias('recs')).select('user_id', 'recs.*')
+
+    rat_long = rat_long.coalesce((int((0.25+fraction)*200)))
+    rev_long = rev_long.coalesce((int((0.25+fraction)*200)))
 
     rev_long.createOrReplaceTempView('rev_long')
     rat_long.createOrReplaceTempView('rat_long')
@@ -164,6 +172,8 @@ def hybrid_pred_labels(spark, train, val, fraction,
                             withColumn('rating', ((col('rev_rating')*isrev_weight) + col('rat_rating'))) \
                             .select('user_id', 'book_id', 'rating')
 
+    weighted_sum = weighted_sum.coalesce((int((0.25+fraction)*200)))
+
     # define window
     w = Window.partitionBy('user_id').orderBy(desc('rating'))
 
@@ -171,4 +181,33 @@ def hybrid_pred_labels(spark, train, val, fraction,
     pred_labels = weighted_sum.withColumn('book_id', collect_list('book_id')\
                         .over(w)).filter(size('book_id')==k).select('user_id', 'book_id')
 
+    pred_labels = pred_labels.coalesce((int((0.25+fraction)*200)))
+
     return pred_labels
+
+    def tune_isrev_weight(spark, train, val, fraction, k=500, lamb=1, rank=10):
+
+        from modeling import eval, get_val_ids_and_true_labels
+
+        #for all users in val set, get list of books rated over 3 stars
+        val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
+        true_labels.cache()
+
+        weights = [-1, 0, 0.5, 1, 5]
+
+        for w in weights:
+
+            # get hybrid prediction labels for weight w
+            pred_labels = hybrid_pred_labels(spark, train, val=val, 
+                                                fraction=fraction, k=k lamb=lamb, rank=rank, 
+                                                isrev_weight=w,
+                                                debug=False, synthetic=False, 
+                                                save_revsplits = False, save_model=True, 
+                                                save_recs_csv=True, save_recs_pq=False)
+
+            # evaluate hybrid predictions
+            mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, isrev_weight=w,
+                                                fraction=fraction, rank=rank, lamb=lamb, k=k,
+                                                debug=False, synthetic=False)
+
+        return

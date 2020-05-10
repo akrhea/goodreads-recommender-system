@@ -149,7 +149,7 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
 
         if val_ids==None:
                 val_ids = val.select('user_id').distinct()
-                # val_ids = val_ids.coalesce() 
+                val_ids = val_ids.coalesce((int((0.25+fraction)*200))) 
                 
         # recommend for user subset
         print('{}: Begin getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
@@ -171,11 +171,15 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
         print('{}: Finish getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
 
         if save_recs_pq:
+            recs = recs.coalesce(10)
             recs= write_to_parquet(spark, recs, recs_path_pq)
         if save_recs_csv:
+            recs = recs.coalesce(1)
             recs.write.format("csv").save(recs_path_csv)
 
-    #recs.cache()
+        recs = recs.coalesce((int((0.25+fraction)*200)))
+
+    recs.cache()
 
     return recs
 
@@ -187,11 +191,15 @@ def get_val_ids_and_true_labels(spark, val):
     print('{}: Getting validation IDs'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     val_ids = val.select('user_id').distinct()
 
+    val_ids = val_ids.coalesce((int((0.25+fraction)*200))) 
+
     print('{}: Getting true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
 
     true_labels = val.filter(val.rating > 3).select('user_id', 'book_id')\
                 .groupBy('user_id')\
                 .agg(expr('collect_list(book_id) as true_item'))
+
+    true_labels = true_labels.coalesce((int((0.25+fraction)*200))) 
 
     return val_ids, true_labels
 
@@ -217,6 +225,8 @@ def eval(spark, pred_labels, true_labels, fraction, rank, lamb,
     pred_true_rdd = pred_labels.join(F.broadcast(true_labels), 'user_id', 'inner') \
                 .rdd \
                 .map(lambda x: (x[1], x[2]))
+                
+    pred_true_rdd = pred_true_rdd.coalesce((int((0.25+fraction)*200))) 
 
     if debug and (not synthetic):
         f = open("results_{}.txt".format(int(fraction*100)), "a")
@@ -248,7 +258,7 @@ def eval(spark, pred_labels, true_labels, fraction, rank, lamb,
     print('{}: Getting NDCG at k'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     if debug and (not synthetic):
         f = open("results_{}.txt".format(int(fraction*100)), "a")
-        f.write('{}: Getting NDCT at k\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.write('{}: Getting NDCG at k\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
         f.close()
     ndcg_at_k = metrics.ndcgAt(k)
 
@@ -317,7 +327,29 @@ def tune(spark, train, val, fraction, k=500,
         pred_labels = recs.select('user_id','recommendations.book_id')
 
         # evaluate model predictions
-        mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, fraction, rank, lamb, 
-                k=500, rat_weight=1, rev_weight=0, debug=False, synthetic=False)
+        mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, fraction=fraction, 
+                                            rank=i[0], lamb=i[1], k=500, 
+                                            isrev_weight=0, debug=False, synthetic=False)
 
     return
+
+    def train_eval(spark, train, val, fraction, k=500, rank=10, lamb=1):
+
+        #for all users in val set, get list of books rated over 3 stars
+        val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
+
+        # train or load model, get recommendations
+        recs = get_recs(spark, train, fraction, val_ids=val_ids, 
+                        lamb=lamb, rank=rank, k=k, implicit=False, 
+                        save_model=True, save_recs_csv=False, save_recs_pq=False, debug=False)
+
+        # select pred labels
+        pred_labels = recs.select('user_id','recommendations.book_id')
+
+        # evaluate model predictions
+        mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, 
+                                        fraction=fraction, rank=rank, lamb=lamb, 
+                                        k=k, isrev_weight=0, debug=False, synthetic=False)
+
+        return mean_ap, ndcg_at_k, p_at_k
+        

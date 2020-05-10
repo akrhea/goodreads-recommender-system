@@ -11,6 +11,8 @@ Usage:
 
     $ spark-submit main.py [task] [downsample fraction] [k]
     
+    Additional arguments if tuning hybrid:
+    [rank] [regularization parameter]
 
     Additional arguments if requesting resources from Dumbo:
     [memory (# of gigabytes to request)] [# cores to request] [# instances to request]
@@ -32,12 +34,14 @@ def main(spark, task, fraction, k):
                             save_pq=False, rm_unobserved=True, rm_zeros=True, 
                             low_item_threshold=10, synthetic=False, debug=False)
 
-    # ensure that train and val are cached
-    # if not train.is_cached:
-    #     train.cache()
-    # if not val.is_cached:
-    #     val.cache()
+    train = train.coalesce((int((0.25+fraction)*200))) 
+    val = val.coalesce((int((0.25+fraction)*200))) 
 
+    # ensure that train and val are cached
+    if not train.is_cached:
+        train.cache()
+    if not val.is_cached:
+        val.cache()
 
 
     if task=='tune':
@@ -50,21 +54,38 @@ def main(spark, task, fraction, k):
         f.write('---------------------------------------------------------------\n\n')
         f.close()
 
-    if task=='coalesce_test':
+    if task=='hybrid-tune':
+
+        # get hyperparameters from command line
+        rank = int(sys.argv[4])
+        lamb = float(sys.argv[5])
+
+        
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('Hyperparameter Tuning on {}% of the Goodreads Interaction Data\n'.format(int(fraction*100)))
+        f.close()
+
+        # tune weight of is_reviewed in hybrid model
+        tune_isrev_weight(spark, train, val, fraction=fraction, k=k, lamb=lamb, rank=rank)
+        f = open("results.txt", "a")
+        f.write('---------------------------------------------------------------\n\n')
+        f.close()
+
+    if task=='coalesce-test':
         import itertools 
         from modeling import get_recs
 
-        # train_coalesce_nums = [50, 100, 200]
-        # val_coalesce_nums = [10, 50, 100]
+        train_coalesce_nums = [50, 100, 200]
+        val_coalesce_nums = [10, 50, 100]
         val_ids_coalesce_nums = [10, 20, 50]
 
-        # paramGrid = itertools.product(train_coalesce_nums, val_coalesce_nums, val_ids_coalesce_nums)
+        paramGrid = itertools.product(train_coalesce_nums, val_coalesce_nums, val_ids_coalesce_nums)
 
-        for i in val_ids_coalesce_nums: #paramGrid:
+        for i in paramGrid:
 
-            train_coalesce_num = 100
-            val_coalesce_num = 50
-            val_ids_coalesce_num = i
+            train_coalesce_num = i[0]
+            val_coalesce_num = i[0]
+            val_ids_coalesce_num = i[0]
 
             # coalesce and cache
             train = train.coalesce(train_coalesce_num)
@@ -181,7 +202,8 @@ if __name__ == "__main__":
     # # Get the cores from the command line
     # instances = sys.argv[6]
 
-    assert (task=='coalesce_test') or (task=='tune'), 'Task must be  \"coalesce_test\" or \"tune\"'
+    assert (task=='coalesce-test') or (task=='tune') or (task == 'tune-hybrid'), \
+            'Task must be  \"coalesce-test," \"tune,\" or \"tune-hybrid,\" 
     #assert (task=='predict') or (task=='tune') or (task=='eval'), 'Task must be  \"predict,\" \"eval,\"or \"tune\"'
 
     # Create the spark session object

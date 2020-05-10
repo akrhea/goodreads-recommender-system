@@ -536,6 +536,10 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
         train = train.coalesce(1)
         val = val.coalesce(1)
         test = test.coalesce(1)
+
+    train = train.coalesce(int((0.25+fraction)*200))
+    val = test.coalesce(int((0.25+fraction)*200))
+    test = test.coalesce(int((0.25+fraction)*200))
     
     # cache the splits
     train.cache()
