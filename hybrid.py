@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-def get_isread_splits(spark, train, val, test, fraction, save_pq=False)
+def get_isread_splits(spark, train, val, test, fraction, save_pq=False):
 
     #get netid
     from getpass import getuser
@@ -56,7 +56,7 @@ def get_isread_splits(spark, train, val, test, fraction, save_pq=False)
 
     def get_both_recs(spark, train, val, isread_train, isread_val, fraction, 
                         k=500, lamb=1, rank=10, 
-                        debug=False, coalesce_num=10)
+                        debug=False, coalesce_num=10):
 
         from modeling import get_recs
         
