@@ -1,36 +1,3 @@
 Hyperparameter Tuning on 100.0% of the Goodreads Interaction Data
 Lambda  0.01 and Rank  10 MAP:  6.798752457074917e-07 NDCG:  2.686734899424323e-05 Precision at k:  5.944393945952185e-06
 
-2020-05-09 22:18:25: Fitting model
-2020-05-09 22:30:27: Fitting model
-2020-05-09 22:39:40: Fitting model
-2020-05-09 22:41:47: Fitting model
-2020-05-09 22:42:01: Begin getting 3 recommendations for validation user subset
-2020-05-09 22:42:02: Finish getting 3 recommendations for validation user subset
-2020-05-09 22:42:08: Fitting model
-2020-05-09 22:42:21: Begin getting 3 recommendations for validation user subset
-2020-05-09 22:42:22: Finish getting 3 recommendations for validation user subset
-2020-05-10 01:55:40: Fitting model
-2020-05-10 01:56:04: Begin getting 5 recommendations for validation user subset
-2020-05-10 01:56:04: Finish getting 5 recommendations for validation user subset
-2020-05-10 01:56:15: Fitting model
-2020-05-10 01:56:35: Begin getting 5 recommendations for validation user subset
-2020-05-10 01:56:35: Finish getting 5 recommendations for validation user subset
-2020-05-10 01:58:23: Fitting model
-2020-05-10 01:58:49: Begin getting 5 recommendations for validation user subset
-2020-05-10 01:58:49: Finish getting 5 recommendations for validation user subset
-2020-05-10 01:59:01: Fitting model
-2020-05-10 01:59:21: Begin getting 5 recommendations for validation user subset
-2020-05-10 01:59:21: Finish getting 5 recommendations for validation user subset
-2020-05-10 03:25:38: Fitting model
-2020-05-10 03:26:01: Begin getting 5 recommendations for validation user subset
-2020-05-10 03:26:01: Finish getting 5 recommendations for validation user subset
-2020-05-10 03:26:07: Fitting model
-2020-05-10 03:26:23: Begin getting 5 recommendations for validation user subset
-2020-05-10 03:26:23: Finish getting 5 recommendations for validation user subset
-2020-05-10 03:35:14: Fitting model
-2020-05-10 03:35:36: Begin getting 5 recommendations for validation user subset
-2020-05-10 03:35:36: Finish getting 5 recommendations for validation user subset
-2020-05-10 03:35:42: Fitting model
-2020-05-10 03:35:58: Begin getting 5 recommendations for validation user subset
-2020-05-10 03:35:59: Finish getting 5 recommendations for validation user subset
