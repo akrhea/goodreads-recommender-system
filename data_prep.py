@@ -553,7 +553,7 @@ def save_down_splits(spark, sample_fractions = [.01, .05, 0.25, 1], low_item_thr
     Used to save splits to parquet.
     '''
     for fraction in sample_fractions:
-        down, train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42, \
+        _, _, _, _ = read_sample_split_pq(spark, fraction=fraction, seed=42, \
                                                       save_pq=True, rm_unobserved=True, rm_zeros=True, \
                                                       low_item_threshold=low_item_threshold, \
                                                       synthetic=False, debug=False)

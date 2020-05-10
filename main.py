@@ -2,8 +2,9 @@
 
 import sys
 from pyspark.sql import SparkSession
-from data_prep import read_sample_split_pq
+from data_prep import save_down_splits
 from modeling import tune, get_recs, get_val_ids_and_true_labels, eval
+from hybrid import tune_isrev_weight
 from time import localtime, strftime
 
 '''
@@ -18,14 +19,6 @@ Usage:
     [memory (# of gigabytes to request)] [# cores to request] [# instances to request]
 '''
 
-
-
-def save_down_splits(spark, sample_fractions = [.01, .05, 0.25]):
-    
-    for fraction in sample_fractions:
-        print('frac: ', fraction)
-        train, val, test = read_sample_split_pq(spark, fraction=fraction, seed=42)
-    return
 
 def main(spark, task, fraction, k):
 
@@ -70,6 +63,17 @@ def main(spark, task, fraction, k):
         f = open("results.txt", "a")
         f.write('---------------------------------------------------------------\n\n')
         f.close()
+
+        return
+
+    if task=='save-splits':
+        # For 1%, 5%, 25%, and 100%,
+        # save downsampled train, val, and test to parquet
+        # includes only user_id, book_id, and rating
+        
+        save_down_splits(spark)
+
+        return
 
     if task=='coalesce-test':
         import itertools 
@@ -153,7 +157,7 @@ def main(spark, task, fraction, k):
             f.close()
 
             # evaluate model predictions
-            mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, fraction=fraction, 
+            _, _, _ = eval(spark, pred_labels, true_labels, fraction=fraction, 
                                                 rank=10, lamb=1.1, k=k, debug=True, synthetic=False)
             print('{}: Evaluation complete'\
                         .format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
@@ -203,7 +207,7 @@ if __name__ == "__main__":
     # instances = sys.argv[6]
 
     assert (task=='coalesce-test') or (task=='tune') or (task == 'hybrid-tune'), \
-            'Task must be  \"coalesce-test," \"tune,\" or \"hybrid-tune\" '
+            'Task must be one of:  \"coalesce-test," \"tune,\" \"hybrid-tune,\" \"save-splits\"'
     #assert (task=='predict') or (task=='tune') or (task=='eval'), 'Task must be  \"predict,\" \"eval,\"or \"tune\"'
 
     # Create the spark session object

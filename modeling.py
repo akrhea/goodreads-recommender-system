@@ -327,7 +327,7 @@ def tune(spark, train, val, fraction, k=500,
         pred_labels = recs.select('user_id','recommendations.book_id')
 
         # evaluate model predictions
-        mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, fraction=fraction, 
+        _, _, _ = eval(spark, pred_labels, true_labels, fraction=fraction, 
                                             rank=i[0], lamb=i[1], k=500, 
                                             isrev_weight=0, debug=False, synthetic=False)
 
