@@ -199,7 +199,7 @@ def hybrid_pred_labels(spark, train, val, fraction,
 
             # get hybrid prediction labels for weight w
             pred_labels = hybrid_pred_labels(spark, train, val=val, 
-                                                fraction=fraction, k=k lamb=lamb, rank=rank, 
+                                                fraction=fraction, k=k, lamb=lamb, rank=rank, 
                                                 isrev_weight=w,
                                                 debug=False, synthetic=False, 
                                                 save_revsplits = False, save_model=True, 
