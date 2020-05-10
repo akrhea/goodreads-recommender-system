@@ -32,18 +32,12 @@ def main(spark, task, fraction, k):
                             low_item_threshold=10, synthetic=False, debug=False)
 
     # ensure that train and val are cached
-    if not train.is_cached:
-        train.cache()
-    if not val.is_cached:
-        val.cache()
+    # if not train.is_cached:
+    #     train.cache()
+    # if not val.is_cached:
+    #     val.cache()
 
-    if task=='eval':
-        # train and evaluate default model on val set
-        train_eval(spark, train, val)
 
-    # if task=='predict':
-    #     # get predictions on validation set
-    #     preds = get_recs(spark, train, val, fraction)
 
     if task=='tune':
         # tune hyperparameters
@@ -55,6 +49,36 @@ def main(spark, task, fraction, k):
         f.write('---------------------------------------------------------------\n\n')
         f.close()
 
+    if task=='coalesce_test':
+        import itertools 
+        from modeling import get_recs
+
+        train_coalesce_nums = [50, 100, 200]
+        val_coalesce_nums = [10, 50, 100]
+
+        paramGrid = itertools.product(val_coalesce_nums, train_coalesce_nums)
+
+        for i in paramGrid:
+
+            train = train.coalesce(i[1])
+            val = val.coalesce(i[0])
+
+            val.cache()
+            train.cache()
+
+            _ = get_recs(spark, train, fraction, val=val,
+                            lamb=1, rank=10, k=10, implicit=False, 
+                            save_model=False, save_recs_csv=False, save_recs_pq=False, debug=True)
+
+
+    # if task=='eval':
+    #     # train and evaluate default model on val set
+    #     train_eval(spark, train, val)
+
+
+    # if task=='predict':
+    #     # get predictions on validation set
+    #     preds = get_recs(spark, train, val, fraction)
 
 
 if __name__ == "__main__":
@@ -78,7 +102,8 @@ if __name__ == "__main__":
     # # Get the cores from the command line
     # instances = sys.argv[6]
 
-    assert (task=='predict') or (task=='tune') or (task=='eval'), 'Task must be  \"predict,\" \"eval,\"or \"tune\"'
+    assert (task=='coalesce_test') or (task=='tune'), 'Task must be  \"coalesce_test\" or \"tune\"'
+    #assert (task=='predict') or (task=='tune') or (task=='eval'), 'Task must be  \"predict,\" \"eval,\"or \"tune\"'
 
     # Create the spark session object
     spark = SparkSession.builder.appName('goodreads_{}_{}'.format(task, fraction)).getOrCreate()

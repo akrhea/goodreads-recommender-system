@@ -133,7 +133,7 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
             als = ALS(rank = rank, regParam=lamb, 
                         userCol="user_id", itemCol="book_id", ratingCol=ratingCol, 
                         implicitPrefs=implicitPrefs, coldStartStrategy="drop")
-            if not synthetic:
+            if debug and (not synthetic):
                 f = open("results_{}.txt".format(int(fraction*100)), "a")
                 f.write('{}: Fitting model\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
                 f.close()
@@ -153,7 +153,7 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
                 
         # recommend for user subset
         print('{}: Begin getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
-        if not synthetic:
+        if debug and (not synthetic):
             f = open("results_{}.txt".format(int(fraction*100)), "a")
             f.write('{}: Begin getting {} recommendations for validation user subset\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
             f.close()
@@ -162,7 +162,8 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
         if debug:
             recs.explain()
 
-        if not synthetic:
+        if debug and (not synthetic):
+            recs.show(10)
             f = open("results_{}.txt".format(int(fraction*100)), "a")
             f.write('{}: Finish getting {} recommendations for validation user subset\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
             f.close()
@@ -173,7 +174,7 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
         if save_recs_csv:
             recs.write.format("csv").save(recs_path_csv)
 
-    recs.cache()
+    #recs.cache()
 
     return recs
 
