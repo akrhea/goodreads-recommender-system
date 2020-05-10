@@ -81,7 +81,7 @@ def get_isrev_splits(spark, train, val, test, fraction, save_pq=False, synthetic
     return isrev_train, isrev_val, isrev_test
 
 
-    def get_both_recs(spark, train, val, isrev_train, isrev_val, fraction, 
+def get_both_recs(spark, train, val, isrev_train, isrev_val, fraction, 
                         k=500, lamb=1, rank=10, 
                         debug=False, coalesce_num=10):
 
