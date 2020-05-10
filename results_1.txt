@@ -25,7 +25,7 @@ Lambda 10, and Rank 500: MAP=0.00012641654606928085, NDCG=0.0010672497231691087,
 2020-05-10 07:21:37: Getting mean average precision
 2020-05-10 07:21:49: Getting NDCT at k
 2020-05-10 07:21:55: Getting precision at k
-2020-05-10 07:22:00: Evaluation for k=10, isrev_weight=0,                 lambda=1.1, and rank=10: MAP=1.7882689556509304e-05, NDCG=6.780283574359863e-05, Precision at k=7.153075822603716e-05
+2020-05-10 07:22:00: Evaluation for k=10, isrev_weight=0, lambda=1.1, and rank=10: MAP=1.7882689556509304e-05, NDCG=6.780283574359863e-05, Precision at k=7.153075822603716e-05
 
 
 
@@ -39,7 +39,7 @@ Lambda 10, and Rank 500: MAP=0.00012641654606928085, NDCG=0.0010672497231691087,
 2020-05-10 07:22:52: Getting mean average precision
 2020-05-10 07:23:04: Getting NDCT at k
 2020-05-10 07:23:09: Getting precision at k
-2020-05-10 07:23:15: Evaluation for k=10, isrev_weight=0,                 lambda=1.1, and rank=10: MAP=1.78826895565093e-05, NDCG=6.780283574359857e-05, Precision at k=7.153075822603723e-05
+2020-05-10 07:23:15: Evaluation for k=10, isrev_weight=0, lambda=1.1, and rank=10: MAP=1.78826895565093e-05, NDCG=6.780283574359857e-05, Precision at k=7.153075822603723e-05
 
 
 

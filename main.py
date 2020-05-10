@@ -72,8 +72,9 @@ def main(spark, task, fraction, k):
             val.cache()
             train.cache()
 
-            print('{}: Testing for {}% downsample, {} train partitions and {} val partitions'\
-                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), int(fraction*100), i[1], i[0]))
+            print('{}: Testing for {}% downsample, {} train partitions, {} val partitions, and {} val_ids partitions'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), int(fraction*100), 
+                                        train_coalesce_num, val_coalesce_num, val_ids_coalesce_num))
 
             f = open("coalesce_results.txt", "a")
             f.write('{}: Testing for {}% downsample, {} train partitions and {} val partitions\n'\
@@ -125,7 +126,7 @@ def main(spark, task, fraction, k):
             print('{}: Beginning evaluation'\
                         .format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
             f = open("coalesce_results.txt", "a") 
-            f.write('{}: Beginning evaluation'\
+            f.write('{}: Beginning evaluation\n'\
                         .format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
             f.close()
 
@@ -135,10 +136,14 @@ def main(spark, task, fraction, k):
             print('{}: Evaluation complete'\
                         .format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
             f = open("coalesce_results.txt", "a")
-            f.write('{}: Evaluation complete'\
+            f.write('{}: Evaluation complete\n\n'\
                         .format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
             f.close()
 
+        f = open("coalesce_results.txt", "a")
+        f.write('\n\n')
+        f.close()
+        
         return
 
 

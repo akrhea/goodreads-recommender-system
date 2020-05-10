@@ -263,8 +263,7 @@ def eval(spark, pred_labels, true_labels, fraction, rank, lamb,
 
     if not synthetic:
         f = open("results_{}.txt".format(int(fraction*100)), "a")
-        f.write('{}: Evaluation for k={}, isrev_weight={}, \
-                lambda={}, and rank={}: MAP={}, NDCG={}, Precision at k={}\n\n\n\n'\
+        f.write('{}: Evaluation for k={}, isrev_weight={}, lambda={}, and rank={}: MAP={}, NDCG={}, Precision at k={}\n\n\n\n'\
                 .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), \
                         k, isrev_weight, lamb, rank, mean_ap, ndcg_at_k, p_at_k))
         f.close()
