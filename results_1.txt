@@ -1,8 +1,4 @@
 Hyperparameter Tuning on 1% of the Goodreads Interaction Data
-Hyperparameter Tuning on 1% of the Goodreads Interaction Data
-Hyperparameter Tuning on 1% of the Goodreads Interaction Data
-Hyperparameter Tuning on 1% of the Goodreads Interaction Data
-Hyperparameter Tuning on 1% of the Goodreads Interaction Data
 Lambda 0.01, and Rank 10: MAP=0.00013258309768433398, NDCG=0.003289479750808688, Precision at k=0.0006609442060085841
 Lambda 0.01, and Rank 20: MAP=0.000379172736113444, NDCG=0.008189509597023492, Precision at k=0.0016795422031473525
 Lambda 0.01, and Rank 100: MAP=0.004776545554933678, NDCG=0.061759243073971966, Precision at k=0.008555078683834044
@@ -19,25 +15,3 @@ Lambda 10, and Rank 10: MAP=1.8453485921888814e-05, NDCG=0.00035146021031453624,
 Lambda 10, and Rank 20: MAP=2.3799078422973573e-05, NDCG=0.0005599302269118572, Precision at k=6.580829756795421e-05
 Lambda 10, and Rank 100: MAP=7.96213892329678e-05, NDCG=0.0007050000954833323, Precision at k=7.29613733905579e-05
 Lambda 10, and Rank 500: MAP=0.00012641654606928085, NDCG=0.0010672497231691087, Precision at k=0.00011587982832618024
-2020-05-10 05:48:47: Begin getting 10 recommendations for validation user subset
-2020-05-10 05:49:21: Finish getting 10 recommendations for validation user subset
-2020-05-10 05:49:29: Begin getting 10 recommendations for validation user subset
-2020-05-10 05:49:50: Finish getting 10 recommendations for validation user subset
-2020-05-10 05:49:57: Begin getting 10 recommendations for validation user subset
-2020-05-10 05:50:18: Finish getting 10 recommendations for validation user subset
-2020-05-10 05:50:26: Begin getting 10 recommendations for validation user subset
-2020-05-10 05:50:47: Finish getting 10 recommendations for validation user subset
-2020-05-10 05:50:55: Begin getting 10 recommendations for validation user subset
-2020-05-10 05:51:14: Finish getting 10 recommendations for validation user subset
-2020-05-10 05:51:22: Begin getting 10 recommendations for validation user subset
-2020-05-10 05:51:42: Finish getting 10 recommendations for validation user subset
-2020-05-10 05:51:49: Begin getting 10 recommendations for validation user subset
-2020-05-10 05:52:11: Finish getting 10 recommendations for validation user subset
-2020-05-10 05:52:18: Begin getting 10 recommendations for validation user subset
-2020-05-10 05:52:37: Finish getting 10 recommendations for validation user subset
-2020-05-10 05:52:44: Begin getting 10 recommendations for validation user subset
-2020-05-10 05:53:03: Finish getting 10 recommendations for validation user subset
-2020-05-10 07:04:45: Fitting model
-2020-05-10 07:05:19: Begin getting 10 recommendations for validation user subset
-2020-05-10 07:06:06: Finish getting 10 recommendations for validation user subset
-2020-05-10 07:06:06: Begin building RDD with predictions and true labels
