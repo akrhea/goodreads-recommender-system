@@ -161,13 +161,14 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
         recs = model.recommendForUserSubset(val_ids, k)
         if debug:
             recs.explain()
-
-        if debug and (not synthetic):
+            recs.cache()
             recs.show(10)
             f = open("results_{}.txt".format(int(fraction*100)), "a")
-            f.write('{}: Finish getting {} recommendations for validation user subset\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
+            f.write('{}: Finish getting {} recommendations for validation user subset\n'\
+                                            .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
             f.close()
-        print('{}: Finish getting {} recommendations for validation user subset: '.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
+
+        print('{}: Finish getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
 
         if save_recs_pq:
             recs= write_to_parquet(spark, recs, recs_path_pq)
@@ -187,9 +188,11 @@ def get_val_ids_and_true_labels(spark, val):
     val_ids = val.select('user_id').distinct()
 
     print('{}: Getting true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+
     true_labels = val.filter(val.rating > 3).select('user_id', 'book_id')\
                 .groupBy('user_id')\
                 .agg(expr('collect_list(book_id) as true_item'))
+
     return val_ids, true_labels
 
 
@@ -205,7 +208,7 @@ def eval(spark, pred_labels, true_labels, fraction, rank, lamb,
     net_id=getuser()
 
     print('{}: Building RDD with predictions and true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-    if debug:
+    if debug and (not synthetic):
         f = open("results_{}.txt".format(int(fraction*100)), "a")
         f.write('{}: Begin building RDD with predictions and true labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
         f.close()
@@ -215,8 +218,8 @@ def eval(spark, pred_labels, true_labels, fraction, rank, lamb,
                 .rdd \
                 .map(lambda x: (x[1], x[2]))
 
-    if debug:
-        pred_true_rdd.show()
+    if debug and (not synthetic):
+        pred_true_rdd.show(10)
         f = open("results_{}.txt".format(int(fraction*100)), "a")
         f.write('{}: Finish building RDD with predictions and true labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
         f.close()
@@ -224,13 +227,38 @@ def eval(spark, pred_labels, true_labels, fraction, rank, lamb,
     pred_true_rdd.cache()
 
     print('{}: Instantiating metrics object'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-    metrics = RankingMetrics(pred_true_rdd) # LONGEST STEP BY FAR
+    if debug and (not synthetic):
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Begin instantiating metrics object\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.close()
+
+        metrics = RankingMetrics(pred_true_rdd)
+
+    if debug and (not synthetic):
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Finish instantiating metrics object\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.close()
 
     print('{}: Getting mean average precision'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    if debug and (not synthetic):
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Getting mean average precision\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.close()
     mean_ap = metrics.meanAveragePrecision
+
     print('{}: Getting NDCG at k'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    if debug and (not synthetic):
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Getting NDCT at k\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.close()
     ndcg_at_k = metrics.ndcgAt(k)
+
+
     print('{}: Getting precision at k'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    if debug and (not synthetic):
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Getting precision at k\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.close()
     p_at_k=  metrics.precisionAt(k)
     print('Lambda ', lamb, 'and Rank ', rank , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
 

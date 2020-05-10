@@ -3,7 +3,8 @@
 import sys
 from pyspark.sql import SparkSession
 from data_prep import read_sample_split_pq
-from modeling import tune, get_recs
+from modeling import tune, get_recs, get_val_ids_and_true_labels, eval
+from time import localtime, strftime
 
 '''
 Usage:
@@ -60,15 +61,80 @@ def main(spark, task, fraction, k):
 
         for i in paramGrid:
 
+            # coalesce and cache
             train = train.coalesce(i[1])
             val = val.coalesce(i[0])
-
             val.cache()
             train.cache()
 
-            _ = get_recs(spark, train, fraction, val=val,
-                            lamb=1, rank=10, k=10, implicit=False, 
+            print('{}: Testing for {}% downsample, {} train partitions and {} val partitions'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), int(fraction*100), i[1], i[0]))
+
+            f = open("coalesce_results.txt", "a")
+            f.write('{}: Testing for {}% downsample, {} train partitions and {} val partitions\n'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), int(fraction*100), i[1], i[0]))
+            f.close()
+
+            #get val ids and true labels
+            val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
+
+            print('{}: val_id partitions={}'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), val_ids.rdd.getNumPartitions()))
+            f = open("coalesce_results.txt", "a")
+            f.write('{}: val_id partitions={}\n'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), val_ids.rdd.getNumPartitions()))
+            f.close()
+            
+
+            print('{}: Begin getting recs'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S")))
+            f = open("coalesce_results.txt", "a")
+            f.write('{}: Begin getting recs\n'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S")))
+            f.close()
+
+            #get recs
+            recs = get_recs(spark, train, fraction=fraction, val_ids=val_ids,
+                            lamb=1.1, rank=11, k=k, implicit=False, 
                             save_model=False, save_recs_csv=False, save_recs_pq=False, debug=True)
+
+            print('{}: Finish getting recs\n'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S")))
+            f = open("coalesce_results.txt", "a")
+            f.write('{}: Finish getting recs\n'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S")))
+            f.close()
+
+            # select pred labels
+            pred_labels = recs.select('user_id','recommendations.book_id')
+
+            print('{}: pred_labels partitions={}'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), pred_labels.rdd.getNumPartitions()))
+            f = open("coalesce_results.txt", "a")
+            f.write('{}: pred_labels partitions={}\n'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), pred_labels.rdd.getNumPartitions()))
+            f.close()
+
+            print('{}: Beginning evaluation'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+            f = open("coalesce_results.txt", "a") 
+            f.write('{}: Beginning evaluation'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+            f.close()
+
+            # evaluate model predictions
+            mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, fraction=fraction, 
+                                                rank=10, lamb=1.1, k=k, debug=True, synthetic=False)
+            print('{}: Evaluation complete'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+            f = open("coalesce_results.txt", "a")
+            f.write('{}: Evaluation complete'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+            f.close()
+
+        return
+
+
 
 
     # if task=='eval':
