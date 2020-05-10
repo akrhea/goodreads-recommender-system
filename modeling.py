@@ -173,6 +173,8 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
         if save_recs_csv:
             recs.write.format("csv").save(recs_path_csv)
 
+    recs.cache()
+
     return recs
 
 def get_val_ids_and_true_labels(spark, val):
