@@ -292,5 +292,5 @@ def tune(spark, train, val, fraction, k=500,
         # evaluate model predictions
         mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, fraction, rank, lamb, 
                 k=500, rat_weight=1, rev_weight=0, debug=False, synthetic=False)
-.
+
     return
