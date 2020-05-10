@@ -162,7 +162,7 @@ def hybrid_pred_labels(spark, train, val, fraction,
                         ON rev_long.user_id = rat_long.user_id \
                                 AND rev_long.book_id = rat_long.book_id')\
                         .na.fill(0).\
-                            withColumn('rating', ((col('rev_rating')*rev_weight) + (col('rat_rating')*rat_weight))) \
+                            withColumn('rating', ((col('rev_rating')*isrev_weight) + col('rat_rating'))) \
                             .select('user_id', 'book_id', 'rating')
 
     # define window

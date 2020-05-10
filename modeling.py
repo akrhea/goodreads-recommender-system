@@ -149,7 +149,7 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
 
         if val_ids==None:
                 val_ids = val.select('user_id').distinct()
-                val_ids = val_ids.coalesce(coalesce_num) # test!!!
+                val_ids = val_ids.coalesce(coalesce_num) # test!
                 
         # recommend for user subset
         print('{}: Begin getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
@@ -191,70 +191,40 @@ def get_val_ids_and_true_labels(spark, val):
                 .agg(expr('collect_list(book_id) as true_item'))
     return val_ids, true_labels
 
-def eval(spark, pred_labels,  ):
 
+def eval(spark, pred_labels, true_labels, fraction, rank, lamb, 
+         k=500, isrev_weight=0, debug=False, synthetic=False):
 
-def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None, rank=10, lamb=1, k=500):
     from time import localtime, strftime
-    from pyspark.ml.recommendation import ALS, ALSModel
     from pyspark.mllib.evaluation import RankingMetrics
     import pyspark.sql.functions as F
-    from data_prep import path_exist
-
 
     #get netid
     from getpass import getuser
     net_id=getuser()
 
-    recs = get_recs(spark, train, fraction, 
-                    val=val, val_ids=val_ids, 
-                    lamb=lamb, rank=rank, k=k, implicit=False, 
-                    save_model=True, save_recs_csv=False, save_recs_pq=False, 
-                    debug=False, coalesce_num=10)
-
-    # select pred labels
-    print('{}: Begin selecting pred labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-    f = open("results_{}.txt".format(int(fraction*100)), "a")
-    f.write('{}: Begin selecting pred labels \n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-    f.close()
-
-    pred_labels = recs.select('user_id','recommendations.book_id') # is this correct?? 
-                                                                  # we don't need to pass the predicted RATING to rankingmetrics?
-
-    pred_labels.show(10)
-    f = open("results_{}.txt".format(int(fraction*100)), "a")
-    f.write('{}: Finish select pred labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
-    f.close()
-    print('{}: Finish selecting pred labels '.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
-
+    print('{}: Building RDD with predictions and true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    if debug:
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Begin building RDD with predictions and true labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.close()
 
     # build RDD with predictions and true labels
-    print('{}: Begin building RDD with predictions and true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-    f = open("results_{}.txt".format(int(fraction*100)), "a")
-    f.write('{}: Begin building RDD with predictions and true labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-    f.close()
-
     pred_true_rdd = pred_labels.join(F.broadcast(true_labels), 'user_id', 'inner') \
                 .rdd \
                 .map(lambda x: (x[1], x[2]))
 
-    print(pred_true_rdd)
-    f = open("results_{}.txt".format(int(fraction*100)), "a")
-    #f.write(pred_true_rdd.show())
-    f.write('{}: Finish building RDD with predictions and true labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-    f.close()
-    print('{}: Finish building RDD with predictions and true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-
-    # print('{}: Repartitioning'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-    # pred_true_rdd.repartition('book_id')
-    # pred_true_rdd.repartition('rating')
-    # pred_true_rdd.repartition(20)
-    # pred_true_rdd.repartition(100)
+    if debug:
+        pred_true_rdd.show()
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Finish building RDD with predictions and true labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.close()
 
     pred_true_rdd.cache()
 
     print('{}: Instantiating metrics object'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     metrics = RankingMetrics(pred_true_rdd) # LONGEST STEP BY FAR
+
     print('{}: Getting mean average precision'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     mean_ap = metrics.meanAveragePrecision
     print('{}: Getting NDCG at k'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
@@ -262,12 +232,21 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     print('{}: Getting precision at k'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     p_at_k=  metrics.precisionAt(k)
     print('Lambda ', lamb, 'and Rank ', rank , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
-    f = open("results_{}.txt".format(int(fraction*100)), "a")
-    f.write('Evaluation for k={}, lambda={}, and rank={}: MAP={}, NDCG={}, Precision at k={}\n\n\n\n'.format(k, lamb, rank, mean_ap, ndcg_at_k, p_at_k))
-    f.close()
-    return
 
-def tune(spark, train, val, fraction, k=500):
+    if not synthetic:
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Evaluation for k={}, isrev_weight={}, \
+                lambda={}, and rank={}: MAP={}, NDCG={}, Precision at k={}\n\n\n\n'\
+                .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), \
+                        k, isrev_weight, lamb, rank, mean_ap, ndcg_at_k, p_at_k))
+        f.close()
+
+    return mean_ap, ndcg_at_k, p_at_k
+
+
+def tune(spark, train, val, fraction, k=500, 
+        rank =[10, 20, 100, 500], 
+        regParam = [0.01, 0.1, 1, 10]):
     ''' 
         Fits ALS model from train, ranks k top items, and evaluates with MAP, P, NDCG across combos of rank/lambda hyperparameter
         Imput: training file
@@ -290,16 +269,28 @@ def tune(spark, train, val, fraction, k=500):
 
     #for all users in val set, get list of books rated over 3 stars
     val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
+    val_ids.cache()
+    true_labels.cache()
 
-    # set hyperparameters to test
-    regParam = [0.01, 0.1, 1, 10]
-    rank  = [10, 20, 100, 500]
-    paramGrid = itertools.product(rank, regParam) # order has been switched to get more results
+    paramGrid = itertools.product(rank, regParam) # cycle through lambas first
+                                                  # work up to large ranks
 
     #fit and evaluate for all combos
     for i in paramGrid:
+
         print('{}: Evaluating {}% at k={}, rank={}, lambda={}'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), \
                                                                 int(fraction*100), k, i[0], i[1]))
-        train_eval(spark, train, val_ids=val_ids, true_labels=true_labels, 
-                        rank=i[0], lamb=i[1], k=k, fraction=fraction)
+
+        # train or load model, get recommendations
+        recs = get_recs(spark, train, fraction, val_ids=val_ids, 
+                        lamb=i[1], rank=i[0], k=k, implicit=False, 
+                        save_model=True, save_recs_csv=False, save_recs_pq=False, debug=False)
+
+        # select pred labels
+        pred_labels = recs.select('user_id','recommendations.book_id')
+
+        # evaluate model predictions
+        mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, fraction, rank, lamb, 
+                k=500, rat_weight=1, rev_weight=0, debug=False, synthetic=False)
+
     return

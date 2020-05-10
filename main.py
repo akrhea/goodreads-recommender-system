@@ -32,7 +32,9 @@ def main(spark, task, fraction, k):
                             low_item_threshold=10, synthetic=False, debug=False)
 
 
-    ### COALESCE HERE
+    # train.coalesce()
+    # val.coalesce()
+    # test.coalesce()
 
 
     # ensure that train and val are cached
@@ -45,9 +47,9 @@ def main(spark, task, fraction, k):
         # train and evaluate default model on val set
         train_eval(spark, train, val)
 
-    if task=='predict':
-        # get predictions on validation set
-        preds = get_val_preds(spark, train, val)
+    # if task=='predict':
+    #     # get predictions on validation set
+    #     preds = get_recs(spark, train, val, fraction)
 
     if task=='tune':
         # tune hyperparameters
