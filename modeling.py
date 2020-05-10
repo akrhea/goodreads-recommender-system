@@ -53,9 +53,12 @@ def dummy_run(spark):
     print('MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
     return 
 
-def get_val_preds(spark, train, val, lamb=1, rank=10):
+def get_predictions(spark, train, fraction, val=None, val_ids=None, 
+                    lamb=1, rank=10, k=500, implicit=False, 
+                    save_model = True, save_preds_csv=True, save_preds_pq=False,
+                    debug=False, coalesce_num=10):
     ''' 
-        Fits ALS model from train and makes predictions 
+        Fits or loads ALS model from train and makes predictions 
         Imput: training file
         arguments:
             spark - spark
@@ -73,13 +76,96 @@ def get_val_preds(spark, train, val, lamb=1, rank=10):
         The evaluation metric will then be computed over the non-NaN data and will be valid" 
        
     '''
-    from pyspark.ml.recommendation import ALS
+    from data_prep import path_exist
 
-    als = ALS(rank = rank, regParam=lamb, userCol="user_id", itemCol="book_id", ratingCol='rating', implicitPrefs=False, coldStartStrategy="drop")
-    model = als.fit(train)
-   
-    predictions = model.transform(val)
+    #get netid
+    from getpass import getuser
+    net_id=getuser()
+
+    pred_path_pq = 'hdfs:/user/{}/preds_val{}_k{}_rank{}_lambda{}.parquet'.format(net_id, int(fraction*100), k, rank, lamb)
+    pred_path_csv = 'hdfs:/user/{}/preds_val{}_k{}_rank{}_lambda{}.csv'.format(net_id, int(fraction*100), k, rank, lamb)
+
+    if path_exist(pred_path_pq):
+        predictions = spark.read.parquet(pred_path_pq)
+
+    elif path_exit(pred_path_csv):
+        predictions = spark.read.csv(pred_path_csv) # schema?
+
+    else:
+        from data_prep import write_to_parquet
+        from pyspark.ml.recommendation import ALS
+
+         if implicit:
+            model_type = 'implicit'
+        else:
+            model_type = 'explicit'
+
+        model_path = 'hdfs:/user/{}/als_{}_{}_rank_{}_lambda_{}'.format(net_id, int(fraction*100), model_type, rank, lamb)
+        old_model_path = 'hdfs:/user/{}/als_{}_rank_{}_lambda_{}'.format(net_id, int(fraction*100), rank, lamb)
+        
+        # load model if exists
+        if path_exist(model_path):
+            print('{}: Reading model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+            model = ALSModel.load(model_path)
+
+        # load model if exists under old naming protocol
+        elif (not implicit) and path_exist(old_model_path):
+            print('{}: Reading model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+            model = ALSModel.load(old_model_path)
+
+        # fit model if does not already exist
+        else:
+            if implicit:
+                implicitPrefs = True
+                ratingCol = 'is_read'
+            else:
+                implicitPrefs = False
+                ratingCol = 'rating'
+
+            als = ALS(rank = rank, regParam=lamb, 
+                        userCol="user_id", itemCol="book_id", ratingCol=ratingCol, 
+                        implicitPrefs=implicitPrefs, coldStartStrategy="drop")
+
+            f = open("results_{}.txt".format(int(fraction*100)), "a")
+            f.write('{}: Fitting model\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+            f.close()
+            print('{}: Fitting model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+            model = als.fit(train)
+
+            if save_model:
+                print('{}: Saving model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+                model.save(model_path)
+
+                print('{}: Reloading model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+                model = ALSModel.load(model_path)
+
+        if val_ids==None:
+                val_ids = val.select('user_id').distinct()
+                val_ids.coalesce(coalesce_num) # test!!!
+                
+        # recommend for user subset
+        print('{}: Begin getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Begin getting {} recommendations for validation user subset\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
+        f.close()
+
+        recs = model.recommendForUserSubset(val_ids, k)
+        if debug:
+            recs.explain()
+
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Finish getting {} recommendations for validation user subset\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
+        f.close()
+        print('{}: Finish getting {} recommendations for validation user subset: '.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
+
+        if save_preds_pq:
+            predictions = write_to_parquet(spark, predictions, pred_path_pq)
+        if save_preds_csv:
+            predictions.write.format("csv").save(pred_path_pq)
+
     return predictions
+
+
 
 def get_val_ids_and_true_labels(spark, val):
     # for all users in val set, get list of books rated over 3 stars
@@ -107,49 +193,7 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     from getpass import getuser
     net_id=getuser()
 
-    model_path = 'hdfs:/user/{}/als_{}_rank_{}_lambda_{}'.format(net_id, int(fraction*100), rank, lamb)
-
-    if path_exist(model_path):
-        print('{}: Reading model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-        model = ALSModel.load(model_path)
-    else:
-        if (val_ids==None) or (true_labels==None):
-            val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
-
-        als = ALS(rank = rank, regParam=lamb, 
-                    userCol="user_id", itemCol="book_id", ratingCol='rating', 
-                    implicitPrefs=False, coldStartStrategy="drop")
-
-        f = open("results_{}.txt".format(int(fraction*100)), "a")
-        f.write('{}: Fitting model\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-        f.close()
-        print('{}: Fitting model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-        model = als.fit(train)
-
-        print('{}: Saving model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-        model.save(model_path)
-
-        print('{}: Reloading model'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-        model = ALSModel.load(model_path)
-
-    true_labels.show(10)
-
-    # recommend for user subset
-    print('{}: Begin getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
-    f = open("results_{}.txt".format(int(fraction*100)), "a")
-    f.write('{}: Begin getting {} recommendations for validation user subset\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
-    f.close()
-
-    val_ids.coalesce(10)
-    recs = model.recommendForUserSubset(val_ids, k)
-    recs.show(10)
-
-    f = open("results_{}.txt".format(int(fraction*100)), "a")
-    #f.write(recs.show(10))
-    f.write('{}: Finish getting {} recommendations for validation user subset\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
-    f.close()
-    print('{}: Finish getting {} recommendations for validation user subset: '.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
-
+ ....... GET PREDS
 
 
     # select pred labels
@@ -163,7 +207,6 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
 
     pred_label.show(10)
     f = open("results_{}.txt".format(int(fraction*100)), "a")
-    #f.write(pred_label.show(10))
     f.write('{}: Finish select pred labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
     f.close()
     print('{}: Finish selecting pred labels '.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
@@ -185,7 +228,6 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     f.write('{}: Finish building RDD with predictions and true labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     f.close()
     print('{}: Finish building RDD with predictions and true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
-
 
     # print('{}: Repartitioning'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     # pred_true_rdd.repartition('book_id')

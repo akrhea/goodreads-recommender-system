@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-def read_isread(spark, train, val, test, fraction, save_pq=False)
+def get_isread_splits(spark, train, val, test, fraction, save_pq=False)
 
     #get netid
     from getpass import getuser
@@ -54,7 +54,31 @@ def read_isread(spark, train, val, test, fraction, save_pq=False)
 
     return isread_train, isread_val, isread_test
 
+    def get_both_preds(spark, train, val, isread_train, isread_val, fraction, 
+                        k=500, lamb=1, rank=10, 
+                        debug=False, coalesce_num=10)
 
+        from modeling import get_predictions
+        
+        #coalesce_num = int(fraction*100)
+
+        rating_preds = get_predictions(spark, train, fraction, val=val, #val_ids=None, 
+                                        lamb=lamb, rank=rank, k=k, implicit=False, 
+                                        save_model = True, save_preds_csv=True, save_preds_pq=False,
+                                        debug=debug, coalesce_num=None)
+
+        isread_preds = get_predictions(spark, isread_train, fraction, val=isread_val, #val_ids=None, 
+                                        lamb=lamb, rank=rank, k=k, implicit=True, 
+                                        save_model = True, save_preds_csv=True, save_preds_pq=False
+                                        debug=debug, coalesce_num=None)
+
+        if debug:
+            rating_preds.show(10)
+            isread_preds.show(10)
+        
     
+
+
+
 
     
