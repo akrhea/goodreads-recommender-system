@@ -743,7 +743,7 @@ def get_synth_data(spark, size='large', version='explicit'):
                     (2, 104, 4),
                     (2, 105, 4),
                     (3, 103, 3),
-                    (3, 104, 3)
+                    (3, 104, 3), 
                     (3, 105, 4),
                     (3, 106, 3),
                     (4, 104, 1),
@@ -786,7 +786,7 @@ def get_synth_data(spark, size='large', version='explicit'):
                     (2, 104, 4, 1),
                     (2, 105, 4, 0),
                     (3, 103, 3, 1),
-                    (3, 104, 3, 1)
+                    (3, 104, 3, 1), 
                     (3, 105, 4, 1),
                     (3, 106, 3, 0),
                     (4, 104, 1, 1),
@@ -818,7 +818,7 @@ def get_synth_data(spark, size='large', version='explicit'):
                     (10, 112, 3, 1), 
                     (10, 113, 2, 0)],
                     ['user_id', 'book_id', 'rating', 'is_reviewed'])
-                    
+
     if size=='large':
         if version=='explicit':
             return spark.createDataFrame(
