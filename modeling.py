@@ -95,6 +95,7 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
     else:
         from data_prep import write_to_parquet
         from pyspark.ml.recommendation import ALS
+        from pyspark.ml.recommendation import ALSModel
 
         if implicit:
             model_type = 'implicit'
