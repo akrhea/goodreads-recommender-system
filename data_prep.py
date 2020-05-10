@@ -423,7 +423,7 @@ def remove_zeros (spark, df):
 
 def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
                          save_pq=False, rm_unobserved=True, rm_zeros=True, low_item_threshold=10, 
-                         synthetic=False, debug=False):
+                         synthetic=False, debug=False, hybrid=False):
     '''
     By default, reads in interactions data (and writes to Parquet if not already saved)
         - Also has option to use synthetic data
@@ -520,7 +520,11 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
 
     if synthetic==True:
 
-        df = get_synth_data(spark)
+        if hybrid=False:
+            df = get_synth_data(spark, size='large', version='explicit')
+
+        if hybrid=True:
+            df = get_synth_data(spark, size='small', version='explicit')
 
         # downsample     
         down = downsample(spark, df, fraction=fraction, seed=seed)
