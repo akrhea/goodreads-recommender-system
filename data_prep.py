@@ -774,7 +774,7 @@ def get_synth_data(spark, size='large', version='explicit'):
                     (10, 110, 2), 
                     (10, 111, 4),
                     (10, 112, 3), 
-                    (10, 113, 2),
+                    (10, 113, 2)],
                     ['user_id', 'book_id', 'rating'])
         if version=='full':
                 return spark.createDataFrame(
@@ -818,7 +818,7 @@ def get_synth_data(spark, size='large', version='explicit'):
                     (10, 110, 2, 1), 
                     (10, 111, 4, 1),
                     (10, 112, 3, 1), 
-                    (10, 113, 2, 0),
+                    (10, 113, 2, 0)],
                     ['user_id', 'book_id', 'rating', 'is_reviewed'])
 
     if size=='large':
