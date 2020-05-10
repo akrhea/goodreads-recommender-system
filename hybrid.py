@@ -113,7 +113,8 @@ def get_both_recs(spark, train, val, fraction,
                         save_revsplits = True, save_model=True, 
                         save_recs_csv=True, save_recs_pq=False):
 
-    from pyspark.sql.functions import col, explode, collect_list
+    from pyspark.sql.functions import col, explode, collect_list, size, desc
+    from pyspark.sql import Window
     from modeling import get_recs
     
     if synthetic:
@@ -178,7 +179,7 @@ def get_both_recs(spark, train, val, fraction,
     # ..... #.sortBy(lambda x:x[1]).collect()
 
     # window!
-    w = Window.partitionBy('user_id').orderBy(F.desc('rating'))
-    pred_label = weighted_sum.withColumn('book_id', F.collect_list('book_id').over(w)).filter(F.size('book_id')==k).select('user_id', 'book_id')
+    w = Window.partitionBy('user_id').orderBy(desc('rating'))
+    pred_label = weighted_sum.withColumn('book_id', collect_list('book_id').over(w)).filter(size('book_id')==k).select('user_id', 'book_id')
 
     return pred_label
