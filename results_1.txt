@@ -87,3 +87,186 @@ Lambda 10, and Rank 500: MAP=0.00012641654606928085, NDCG=0.0010672497231691087,
 
 2020-05-10 07:29:03: Fitting model
 2020-05-10 07:29:24: Begin getting 10 recommendations for validation user subset
+2020-05-10 07:40:10: Fitting model
+2020-05-10 07:42:08: Begin getting 10 recommendations for validation user subset
+2020-05-10 07:42:38: Finish getting 10 recommendations for validation user subset
+2020-05-10 07:42:38: Begin building RDD with predictions and true labels
+2020-05-10 07:42:39: Finish building RDD with predictions and true labels
+2020-05-10 07:42:39: Begin instantiating metrics object
+2020-05-10 07:42:40: Finish instantiating metrics object
+2020-05-10 07:42:40: Getting mean average precision
+2020-05-10 07:42:53: Getting NDCT at k
+2020-05-10 07:42:59: Getting precision at k
+2020-05-10 07:43:04: Evaluation for k=10, isrev_weight=0, lambda=1.1, and rank=10: MAP=1.78826895565093e-05, NDCG=6.780283574359857e-05, Precision at k=7.153075822603712e-05
+
+
+
+2020-05-10 07:43:12: Fitting model
+2020-05-10 07:43:34: Begin getting 10 recommendations for validation user subset
+2020-05-10 07:44:08: Finish getting 10 recommendations for validation user subset
+2020-05-10 07:44:08: Begin building RDD with predictions and true labels
+2020-05-10 07:44:09: Finish building RDD with predictions and true labels
+2020-05-10 07:44:09: Begin instantiating metrics object
+2020-05-10 07:44:09: Finish instantiating metrics object
+2020-05-10 07:44:09: Getting mean average precision
+2020-05-10 07:44:31: Getting NDCT at k
+2020-05-10 07:44:41: Getting precision at k
+2020-05-10 07:44:52: Evaluation for k=10, isrev_weight=0, lambda=1.1, and rank=10: MAP=1.7882689556509297e-05, NDCG=6.780283574359848e-05, Precision at k=7.153075822603719e-05
+
+
+
+2020-05-10 07:44:59: Fitting model
+2020-05-10 07:45:21: Begin getting 10 recommendations for validation user subset
+2020-05-10 07:45:57: Finish getting 10 recommendations for validation user subset
+2020-05-10 07:45:57: Begin building RDD with predictions and true labels
+2020-05-10 07:45:59: Finish building RDD with predictions and true labels
+2020-05-10 07:45:59: Begin instantiating metrics object
+2020-05-10 07:45:59: Finish instantiating metrics object
+2020-05-10 07:45:59: Getting mean average precision
+2020-05-10 07:46:21: Getting NDCT at k
+2020-05-10 07:46:31: Getting precision at k
+2020-05-10 07:46:42: Evaluation for k=10, isrev_weight=0, lambda=1.1, and rank=10: MAP=1.7882689556509297e-05, NDCG=6.780283574359848e-05, Precision at k=7.153075822603719e-05
+
+
+
+2020-05-10 07:46:49: Fitting model
+2020-05-10 07:47:09: Begin getting 10 recommendations for validation user subset
+2020-05-10 07:47:44: Finish getting 10 recommendations for validation user subset
+2020-05-10 07:47:44: Begin building RDD with predictions and true labels
+2020-05-10 07:47:46: Finish building RDD with predictions and true labels
+2020-05-10 07:47:46: Begin instantiating metrics object
+2020-05-10 07:47:46: Finish instantiating metrics object
+2020-05-10 07:47:46: Getting mean average precision
+2020-05-10 07:48:07: Getting NDCT at k
+2020-05-10 07:48:17: Getting precision at k
+2020-05-10 07:48:28: Evaluation for k=10, isrev_weight=0, lambda=1.1, and rank=10: MAP=1.7882689556509297e-05, NDCG=6.780283574359848e-05, Precision at k=7.153075822603719e-05
+
+
+
+2020-05-10 07:48:36: Fitting model
+2020-05-10 07:48:56: Begin getting 10 recommendations for validation user subset
+2020-05-10 07:49:30: Finish getting 10 recommendations for validation user subset
+2020-05-10 07:49:30: Begin building RDD with predictions and true labels
+2020-05-10 07:49:31: Finish building RDD with predictions and true labels
+2020-05-10 07:49:31: Begin instantiating metrics object
+2020-05-10 07:49:31: Finish instantiating metrics object
+2020-05-10 07:49:31: Getting mean average precision
+2020-05-10 07:49:53: Getting NDCT at k
+2020-05-10 07:50:03: Getting precision at k
+2020-05-10 07:50:13: Evaluation for k=10, isrev_weight=0, lambda=1.1, and rank=10: MAP=1.7882689556509297e-05, NDCG=6.780283574359848e-05, Precision at k=7.153075822603719e-05
+
+
+
+2020-05-10 07:50:21: Fitting model
+2020-05-10 07:50:40: Begin getting 10 recommendations for validation user subset
+2020-05-10 07:51:19: Finish getting 10 recommendations for validation user subset
+2020-05-10 07:51:19: Begin building RDD with predictions and true labels
+2020-05-10 07:51:20: Finish building RDD with predictions and true labels
+2020-05-10 07:51:20: Begin instantiating metrics object
+2020-05-10 07:51:20: Finish instantiating metrics object
+2020-05-10 07:51:20: Getting mean average precision
+2020-05-10 07:51:42: Getting NDCT at k
+2020-05-10 07:51:52: Getting precision at k
+2020-05-10 07:52:02: Evaluation for k=10, isrev_weight=0, lambda=1.1, and rank=10: MAP=1.7882689556509297e-05, NDCG=6.780283574359848e-05, Precision at k=7.153075822603719e-05
+
+
+
+2020-05-10 07:52:10: Fitting model
+2020-05-10 07:52:33: Begin getting 10 recommendations for validation user subset
+2020-05-10 07:53:11: Finish getting 10 recommendations for validation user subset
+2020-05-10 07:53:11: Begin building RDD with predictions and true labels
+2020-05-10 07:53:12: Finish building RDD with predictions and true labels
+2020-05-10 07:53:12: Begin instantiating metrics object
+2020-05-10 07:53:13: Finish instantiating metrics object
+2020-05-10 07:53:13: Getting mean average precision
+2020-05-10 07:53:34: Getting NDCT at k
+2020-05-10 07:53:44: Getting precision at k
+2020-05-10 07:53:55: Evaluation for k=10, isrev_weight=0, lambda=1.1, and rank=10: MAP=1.7882689556509297e-05, NDCG=6.780283574359848e-05, Precision at k=7.153075822603719e-05
+
+
+
+2020-05-10 07:54:02: Fitting model
+2020-05-10 07:54:26: Begin getting 10 recommendations for validation user subset
+2020-05-10 07:55:03: Finish getting 10 recommendations for validation user subset
+2020-05-10 07:55:03: Begin building RDD with predictions and true labels
+2020-05-10 07:55:04: Finish building RDD with predictions and true labels
+2020-05-10 07:55:04: Begin instantiating metrics object
+2020-05-10 07:55:04: Finish instantiating metrics object
+2020-05-10 07:55:04: Getting mean average precision
+2020-05-10 07:55:26: Getting NDCT at k
+2020-05-10 07:55:37: Getting precision at k
+2020-05-10 07:55:47: Evaluation for k=10, isrev_weight=0, lambda=1.1, and rank=10: MAP=1.7882689556509297e-05, NDCG=6.780283574359848e-05, Precision at k=7.153075822603719e-05
+
+
+
+2020-05-10 07:55:54: Fitting model
+2020-05-10 07:56:17: Begin getting 10 recommendations for validation user subset
+2020-05-10 07:56:52: Finish getting 10 recommendations for validation user subset
+2020-05-10 07:56:52: Begin building RDD with predictions and true labels
+2020-05-10 07:56:54: Finish building RDD with predictions and true labels
+2020-05-10 07:56:54: Begin instantiating metrics object
+2020-05-10 07:56:54: Finish instantiating metrics object
+2020-05-10 07:56:54: Getting mean average precision
+2020-05-10 07:57:15: Getting NDCT at k
+2020-05-10 07:57:26: Getting precision at k
+2020-05-10 07:57:36: Evaluation for k=10, isrev_weight=0, lambda=1.1, and rank=10: MAP=1.7882689556509297e-05, NDCG=6.780283574359848e-05, Precision at k=7.153075822603719e-05
+
+
+
+2020-05-10 07:57:45: Fitting model
+2020-05-10 07:58:07: Begin getting 10 recommendations for validation user subset
+2020-05-10 07:58:42: Finish getting 10 recommendations for validation user subset
+2020-05-10 07:58:42: Begin building RDD with predictions and true labels
+2020-05-10 07:58:44: Finish building RDD with predictions and true labels
+2020-05-10 07:58:44: Begin instantiating metrics object
+2020-05-10 07:58:44: Finish instantiating metrics object
+2020-05-10 07:58:44: Getting mean average precision
+2020-05-10 07:59:05: Getting NDCT at k
+2020-05-10 07:59:16: Getting precision at k
+2020-05-10 07:59:27: Evaluation for k=10, isrev_weight=0, lambda=1.1, and rank=10: MAP=1.7882689556509297e-05, NDCG=6.780283574359848e-05, Precision at k=7.153075822603719e-05
+
+
+
+2020-05-10 07:59:34: Fitting model
+2020-05-10 07:59:57: Begin getting 10 recommendations for validation user subset
+2020-05-10 08:00:34: Finish getting 10 recommendations for validation user subset
+2020-05-10 08:00:34: Begin building RDD with predictions and true labels
+2020-05-10 08:00:35: Finish building RDD with predictions and true labels
+2020-05-10 08:00:35: Begin instantiating metrics object
+2020-05-10 08:00:35: Finish instantiating metrics object
+2020-05-10 08:00:35: Getting mean average precision
+2020-05-10 08:00:57: Getting NDCT at k
+2020-05-10 08:01:07: Getting precision at k
+2020-05-10 08:01:18: Evaluation for k=10, isrev_weight=0, lambda=1.1, and rank=10: MAP=1.7882689556509297e-05, NDCG=6.780283574359848e-05, Precision at k=7.153075822603719e-05
+
+
+
+2020-05-10 08:01:25: Fitting model
+2020-05-10 08:01:48: Begin getting 10 recommendations for validation user subset
+2020-05-10 08:02:24: Finish getting 10 recommendations for validation user subset
+2020-05-10 08:02:24: Begin building RDD with predictions and true labels
+2020-05-10 08:02:25: Finish building RDD with predictions and true labels
+2020-05-10 08:02:25: Begin instantiating metrics object
+2020-05-10 08:02:25: Finish instantiating metrics object
+2020-05-10 08:02:25: Getting mean average precision
+2020-05-10 08:02:47: Getting NDCT at k
+2020-05-10 08:02:58: Getting precision at k
+2020-05-10 08:03:08: Evaluation for k=10, isrev_weight=0, lambda=1.1, and rank=10: MAP=1.7882689556509297e-05, NDCG=6.780283574359848e-05, Precision at k=7.153075822603719e-05
+
+
+
+2020-05-10 08:03:15: Fitting model
+2020-05-10 08:03:38: Begin getting 10 recommendations for validation user subset
+2020-05-10 08:04:14: Finish getting 10 recommendations for validation user subset
+2020-05-10 08:04:14: Begin building RDD with predictions and true labels
+2020-05-10 08:04:16: Finish building RDD with predictions and true labels
+2020-05-10 08:04:16: Begin instantiating metrics object
+2020-05-10 08:04:16: Finish instantiating metrics object
+2020-05-10 08:04:16: Getting mean average precision
+2020-05-10 08:04:38: Getting NDCT at k
+2020-05-10 08:04:48: Getting precision at k
+2020-05-10 08:04:59: Evaluation for k=10, isrev_weight=0, lambda=1.1, and rank=10: MAP=1.7882689556509297e-05, NDCG=6.780283574359848e-05, Precision at k=7.153075822603719e-05
+
+
+
+2020-05-10 08:05:07: Fitting model
