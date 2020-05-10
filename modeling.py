@@ -230,7 +230,7 @@ def eval(spark, pred_labels, true_labels, fraction, rank, lamb,
         f.write('{}: Begin instantiating metrics object\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
         f.close()
 
-        metrics = RankingMetrics(pred_true_rdd)
+    metrics = RankingMetrics(pred_true_rdd)
 
     if debug and (not synthetic):
         f = open("results_{}.txt".format(int(fraction*100)), "a")

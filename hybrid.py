@@ -201,8 +201,8 @@ def tune_isrev_weight(spark, train, val, fraction, k=500, lamb=1, rank=10):
                                             fraction=fraction, k=k, lamb=lamb, rank=rank, 
                                             isrev_weight=w,
                                             debug=False, synthetic=False, 
-                                            save_revsplits = False, save_model=True, 
-                                            save_recs_pq=False)
+                                            save_revsplits = True, save_model=True, 
+                                            save_recs_pq=True)
 
         # evaluate hybrid predictions
         mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, isrev_weight=w,
