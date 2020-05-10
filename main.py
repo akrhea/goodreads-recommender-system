@@ -203,7 +203,7 @@ if __name__ == "__main__":
     # instances = sys.argv[6]
 
     assert (task=='coalesce-test') or (task=='tune') or (task == 'tune-hybrid'), \
-            'Task must be  \"coalesce-test," \"tune,\" or \"tune-hybrid,\" 
+            'Task must be  \"coalesce-test," \"tune,\" or \"tune-hybrid,\" '
     #assert (task=='predict') or (task=='tune') or (task=='eval'), 'Task must be  \"predict,\" \"eval,\"or \"tune\"'
 
     # Create the spark session object
