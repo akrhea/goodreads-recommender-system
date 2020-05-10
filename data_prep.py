@@ -732,10 +732,9 @@ def get_synth_data(spark, size='large', version='explicit'):
         130 total interactions
     '''
     if size=='small':
-            if version=='explicit':
-                return spark.createDataFrame(
-                    [
-                    (1, 101, 0),
+        if version=='explicit':
+            return spark.createDataFrame(
+                    [(1, 101, 0),
                     (1, 102, 4),
                     (1, 103, 4),
                     (1, 104, 4),
@@ -777,8 +776,7 @@ def get_synth_data(spark, size='large', version='explicit'):
                     (10, 113, 2)],
                     ['user_id', 'book_id', 'rating'])
         if version=='full':
-                return spark.createDataFrame(
-                    [
+            return spark.createDataFrame([
                     (1, 101, 0, 1),
                     (1, 102, 4, 1),
                     (1, 103, 4, 1),
@@ -820,7 +818,7 @@ def get_synth_data(spark, size='large', version='explicit'):
                     (10, 112, 3, 1), 
                     (10, 113, 2, 0)],
                     ['user_id', 'book_id', 'rating', 'is_reviewed'])
-
+                    
     if size=='large':
         if version=='explicit':
             return spark.createDataFrame(
