@@ -12,14 +12,14 @@ def get_isrev_splits(spark, train, val, test, fraction, save_pq=False, synthetic
     val_isrev_path = 'hdfs:/user/'+net_id+'/isrev_{}_val.parquet'.format(int(fraction*100))
     test_isrev_path = 'hdfs:/user/'+net_id+'/isrev_{}_test.parquet'.format(int(fraction*100))
 
-    # read in is_read dfs from parquet if they exist
+    # read in is_rev dfs from parquet if they exist
     try:
         isrev_train = spark.read.parquet(train_isrev_path)
         isrev_val = spark.read.parquet(val_isrev_path)
         isrev_test = spark.read.parquet(test_isrev_path)
-        print('Succesfullly read is_read splits from hdfs')
+        print('Succesfullly read is_rev splits from hdfs')
 
-    # create is_read dfs if they dont exist in hdfs
+    # create is_rev dfs if they dont exist in hdfs
     except:
         from data_prep import path_exist, write_to_parquet
 
