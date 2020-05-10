@@ -117,7 +117,7 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
         else:
             if implicit:
                 implicitPrefs = True
-                ratingCol = 'is_read'
+                ratingCol = 'is_reviewed'
             else:
                 implicitPrefs = False
                 ratingCol = 'rating'
@@ -288,16 +288,3 @@ def tune(spark, train, val, fraction, k=500):
         train_eval(spark, train, val_ids=val_ids, true_labels=true_labels, 
                         rank=i[0], lamb=i[1], k=k, fraction=fraction)
     return
-  
-
-
-
-
-
-
-
-
-
-
-
-

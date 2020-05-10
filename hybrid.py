@@ -1,22 +1,22 @@
 #!/usr/bin/env python
 
 
-def get_isread_splits(spark, train, val, test, fraction, save_pq=False):
+def get_isrev_splits(spark, train, val, test, fraction, save_pq=False, synthetic=True):
 
     #get netid
     from getpass import getuser
     net_id=getuser()
 
     # set split paths
-    train_isread_path = 'hdfs:/user/'+net_id+'/isread_{}_train.parquet'.format(int(fraction*100))
-    val_isread_path = 'hdfs:/user/'+net_id+'/isread_{}_val.parquet'.format(int(fraction*100))
-    test_isread_path = 'hdfs:/user/'+net_id+'/isread_{}_test.parquet'.format(int(fraction*100))
+    train_isrev_path = 'hdfs:/user/'+net_id+'/isrev_{}_train.parquet'.format(int(fraction*100))
+    val_isrev_path = 'hdfs:/user/'+net_id+'/isrev_{}_val.parquet'.format(int(fraction*100))
+    test_isrev_path = 'hdfs:/user/'+net_id+'/isrev_{}_test.parquet'.format(int(fraction*100))
 
     # read in is_read dfs from parquet if they exist
     try:
-        isread_train = spark.read.parquet(train_isread_path)
-        isread_val = spark.read.parquet(val_isread_path)
-        isread_test = spark.read.parquet(test_isread_path)
+        isrev_train = spark.read.parquet(train_isrev_path)
+        isrev_val = spark.read.parquet(val_isrev_path)
+        isrev_test = spark.read.parquet(test_isrev_path)
         print('Succesfullly read is_read splits from hdfs')
 
     # create is_read dfs if they dont exist in hdfs
@@ -42,19 +42,19 @@ def get_isread_splits(spark, train, val, test, fraction, save_pq=False):
         test.createOrReplaceTempView('test')
 
         # create dfs from inner joins
-        isread_train =  spark.sql('SELECT df.user_id, df.book_id, is_read FROM df INNER JOIN train ON df.user_id=train.user_id AND df.book_id=train.book_id')
-        isread_val = spark.sql('SELECT df.user_id, df.book_id, is_read FROM df INNER JOIN val ON df.user_id=val.user_id AND df.book_id=val.book_id')
-        isread_test = spark.sql('SELECT df.user_id, df.book_id, is_read FROM df INNER JOIN test ON df.user_id=test.user_id AND df.book_id=test.book_id')
+        isrev_train =  spark.sql('SELECT df.user_id, df.book_id, is_reviewed FROM df INNER JOIN train ON df.user_id=train.user_id AND df.book_id=train.book_id')
+        isrev_val = spark.sql('SELECT df.user_id, df.book_id, is_reviewed FROM df INNER JOIN val ON df.user_id=val.user_id AND df.book_id=val.book_id')
+        isrev_test = spark.sql('SELECT df.user_id, df.book_id, is_reviewed FROM df INNER JOIN test ON df.user_id=test.user_id AND df.book_id=test.book_id')
 
         if save_pq:
             # write splits to parquet
-            isread_train = write_to_parquet(spark, isread_train, train_isread_path)
-            isread_val = write_to_parquet(spark, isread_val, val_isread_path)
-            isread_test = write_to_parquet(spark, isread_test, test_isread_path)
+            isrev_train = write_to_parquet(spark, isrev_train, train_isrev_path)
+            isrev_val = write_to_parquet(spark, isrev_val, val_isrev_path)
+            isrev_test = write_to_parquet(spark, isrev_test, test_isrev_path)
 
-    return isread_train, isread_val, isread_test
+    return isrev_train, isrev_val, isrev_test
 
-    def get_both_recs(spark, train, val, isread_train, isread_val, fraction, 
+    def get_both_recs(spark, train, val, isrev_train, isrev_val, fraction, 
                         k=500, lamb=1, rank=10, 
                         debug=False, coalesce_num=10):
 
@@ -67,14 +67,14 @@ def get_isread_splits(spark, train, val, test, fraction, save_pq=False):
                                         save_model = True, save_recs_csv=True, save_recs_pq=False,
                                         debug=debug, coalesce_num=None)
 
-        isread_recs = get_recs(spark, isread_train, fraction, val=isread_val, #val_ids=None, 
+        isrev_recs = get_recs(spark, isrev_train, fraction, val=isrev_val, #val_ids=None, 
                                         lamb=lamb, rank=rank, k=k, implicit=True, 
                                         save_model = True, save_recs_csv=True, save_recs_pq=False,
                                         debug=debug, coalesce_num=None)
 
         if debug:
             rating_recs.show(10)
-            isread_recs.show(10)
+            isrev_recs.show(10)
         
     
 
