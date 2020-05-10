@@ -191,11 +191,11 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     from getpass import getuser
     net_id=getuser()
 
-    recs = get_recs get_recs(spark, train, fraction, 
-                                val=val, val_ids=val_ids, 
-                                lamb=lamb, rank=rank, k=k, implicit=False, 
-                                save_model=True, save_recs_csv=False, save_recs_pq=False, 
-                                debug=False, coalesce_num=10)
+    recs = get_recs(spark, train, fraction, 
+                    val=val, val_ids=val_ids, 
+                    lamb=lamb, rank=rank, k=k, implicit=False, 
+                    save_model=True, save_recs_csv=False, save_recs_pq=False, 
+                    debug=False, coalesce_num=10)
 
     # select pred labels
     print('{}: Begin selecting pred labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
