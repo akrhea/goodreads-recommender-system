@@ -77,6 +77,7 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
        
     '''
     from data_prep import path_exist
+    from time import localtime, strftime
 
     #get netid
     from getpass import getuser
@@ -88,7 +89,7 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
     if path_exist(recs_path_pq):
         recs = spark.read.parquet(recs_path_pq)
 
-    elif path_exit(recs_path_csv):
+    elif path_exist(recs_path_csv):
         recs = spark.read.csv(recs_path_csv) # schema?
 
     else:
