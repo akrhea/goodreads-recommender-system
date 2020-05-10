@@ -465,3 +465,30 @@ Lambda 10, and Rank 500: MAP=0.00012641654606928085, NDCG=0.0010672497231691087,
 
 
 
+Hyperparameter Tuning on 1% of the Goodreads Interaction Data
+2020-05-10 15:38:18: Evaluation for k=50, isrev_weight=-1, lambda=0.01, and rank=10: MAP=9.138251379740022e-05, NDCG=0.0007485601642270507, Precision at k=0.0005353466026080997
+
+
+
+Hyperparameter Tuning on 1% of the Goodreads Interaction Data
+Hyperparameter Tuning on 1% of the Goodreads Interaction Data
+2020-05-10 16:03:05: Evaluation for k=50, isrev_weight=-1, lambda=0.01, and rank=10: MAP=5.7911153935889855e-05, NDCG=0.000764175747673145, Precision at k=0.0005353466026080998
+
+
+
+2020-05-10 16:03:28: Evaluation for k=50, isrev_weight=0, lambda=0.01, and rank=10: MAP=4.860620094577189e-05, NDCG=0.0005524241838925837, Precision at k=0.00041601664066562646
+
+
+
+2020-05-10 16:03:59: Evaluation for k=50, isrev_weight=0.5, lambda=0.01, and rank=10: MAP=4.86062009457719e-05, NDCG=0.0005524241838925835, Precision at k=0.0004160166406656265
+
+
+
+2020-05-10 16:04:20: Evaluation for k=50, isrev_weight=1, lambda=0.01, and rank=10: MAP=4.8606200945771905e-05, NDCG=0.0005524241838925836, Precision at k=0.0004160166406656266
+
+
+
+2020-05-10 16:04:41: Evaluation for k=50, isrev_weight=5, lambda=0.01, and rank=10: MAP=4.8606200945771905e-05, NDCG=0.0005524241838925837, Precision at k=0.00041601664066562673
+
+
+
