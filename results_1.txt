@@ -37,3 +37,7 @@ Lambda 10, and Rank 500: MAP=0.00012641654606928085, NDCG=0.0010672497231691087,
 2020-05-10 05:52:37: Finish getting 10 recommendations for validation user subset
 2020-05-10 05:52:44: Begin getting 10 recommendations for validation user subset
 2020-05-10 05:53:03: Finish getting 10 recommendations for validation user subset
+2020-05-10 07:04:45: Fitting model
+2020-05-10 07:05:19: Begin getting 10 recommendations for validation user subset
+2020-05-10 07:06:06: Finish getting 10 recommendations for validation user subset
+2020-05-10 07:06:06: Begin building RDD with predictions and true labels
