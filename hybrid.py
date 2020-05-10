@@ -179,6 +179,6 @@ def get_both_recs(spark, train, val, fraction,
 
     # window!
     w = Window.partitionBy('user_id').orderBy(F.desc('rating'))
-    pred_label = weighted_sum.withColumn('book_id', F.collect_list('book_id').over(w)).filter(F.size('book_id')==5).select('user_id', 'book_id')
+    pred_label = weighted_sum.withColumn('book_id', F.collect_list('book_id').over(w)).filter(F.size('book_id')==k).select('user_id', 'book_id')
 
     return pred_label
