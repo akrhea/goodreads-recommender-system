@@ -148,6 +148,10 @@ def get_both_recs(spark, train, val, fraction,
 
     rev_long = isrev_recs.select('user_id', explode('recommendations')\
                                                 .alias('recs')).select('user_id', 'recs.*')
+
+    rev_long.createOrReplaceTempView('rev_long')
+    rat_long.createOrReplaceTempView('rat_long')
+    
     # compute weighted sum of ratings
     weighted_sum = spark.sql('SELECT COALESCE(rev_long.user_id, rat_long.user_id) user_id, \
                                COALESCE(rat_long.book_id, rev_long.book_id) book_id, \
