@@ -149,7 +149,8 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
 
         if val_ids==None:
                 val_ids = val.select('user_id').distinct()
-                val_ids = val_ids.coalesce((int((0.25+fraction)*200))) 
+
+        val_ids = val_ids.coalesce((int((0.25+fraction)*200))) 
                 
         # recommend for user subset
         print('{}: Begin getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
@@ -191,15 +192,11 @@ def get_val_ids_and_true_labels(spark, val):
     print('{}: Getting validation IDs'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     val_ids = val.select('user_id').distinct()
 
-    val_ids = val_ids.coalesce((int((0.25+fraction)*200))) 
-
     print('{}: Getting true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
 
     true_labels = val.filter(val.rating > 3).select('user_id', 'book_id')\
                 .groupBy('user_id')\
                 .agg(expr('collect_list(book_id) as true_item'))
-
-    true_labels = true_labels.coalesce((int((0.25+fraction)*200))) 
 
     return val_ids, true_labels
 
@@ -306,6 +303,8 @@ def tune(spark, train, val, fraction, k=500,
 
     #for all users in val set, get list of books rated over 3 stars
     val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
+    val_ids = val_ids.coalesce((int((0.25+fraction)*200))) 
+    true_labels = true_labels.coalesce((int((0.25+fraction)*200))) 
     val_ids.cache()
     true_labels.cache()
 
