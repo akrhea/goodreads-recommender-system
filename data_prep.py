@@ -518,12 +518,12 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
                 val = write_to_parquet(spark, val, val_path)
                 test = write_to_parquet(spark, test, test_path)
 
-    if synthetic==True:
+    if synthetic:
 
-        if hybrid=False:
+        if not hybrid:
             df = get_synth_data(spark, size='large', version='explicit')
 
-        if hybrid=True:
+        if hybrid:
             df = get_synth_data(spark, size='small', version='explicit')
 
         # downsample     
