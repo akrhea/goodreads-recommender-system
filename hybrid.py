@@ -116,7 +116,7 @@ def hybrid_pred_labels(spark, train, val, fraction,
                         k=500, lamb=1, rank=10, isrev_weight=1,
                         debug=False, synthetic=False, 
                         save_revsplits = True, save_model=True, 
-                        save_recs_csv=True, save_recs_pq=False):
+                        save_recs_pq=False):
 
     from pyspark.sql.functions import col, explode, collect_list, size, desc
     from pyspark.sql import Window
@@ -125,7 +125,6 @@ def hybrid_pred_labels(spark, train, val, fraction,
     if synthetic:
         print('NOTICE: Will not save splits, model, or predictions for synthetic data.')
         save_model = False
-        save_recs_csv =  False
         save_recs_pq = False
         save_revsplits = False
 
@@ -134,12 +133,12 @@ def hybrid_pred_labels(spark, train, val, fraction,
 
     rating_recs = get_recs(spark, train, fraction, val=val, 
                                     lamb=lamb, rank=rank, k=k, implicit=False,
-                                    save_model = save_model, save_recs_csv=save_recs_csv, save_recs_pq=save_recs_pq,
+                                    save_model = save_model, save_recs_pq=save_recs_pq,
                                     debug=debug)
 
     isrev_recs = get_recs(spark, isrev_train, fraction, val=isrev_val, 
                                     lamb=lamb, rank=rank, k=k, implicit=True, 
-                                    save_model = save_model, save_recs_csv=save_recs_csv, save_recs_pq=save_recs_pq,
+                                    save_model = save_model, save_recs_pq=save_recs_pq,
                                     debug=debug)
     if debug:
         rating_recs.show(10)
@@ -203,7 +202,7 @@ def tune_isrev_weight(spark, train, val, fraction, k=500, lamb=1, rank=10):
                                             isrev_weight=w,
                                             debug=False, synthetic=False, 
                                             save_revsplits = False, save_model=True, 
-                                            save_recs_csv=True, save_recs_pq=False)
+                                            save_recs_pq=False)
 
         # evaluate hybrid predictions
         mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, isrev_weight=w,

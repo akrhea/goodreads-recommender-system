@@ -55,7 +55,7 @@ def dummy_run(spark):
 
 def get_recs(spark, train, fraction, val=None, val_ids=None, 
                     lamb=1, rank=10, k=500, implicit=False, 
-                    save_model = True, save_recs_csv=True, save_recs_pq=False,
+                    save_model = True, save_recs_pq=False,
                     debug=False, synthetic=False):
     ''' 
         Fits or loads ALS model from train and makes predictions 
@@ -82,7 +82,6 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
     if synthetic:
         print('NOTICE: Will not save not save model or recommendations for synthetic data.')
         save_model = False
-        save_recs_csv=False
         save_recs_pq=False
 
     #get netid
@@ -90,13 +89,10 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
     net_id=getuser()
 
     recs_path_pq = 'hdfs:/user/{}/recs_val{}_k{}_rank{}_lambda{}.parquet'.format(net_id, int(fraction*100), k, rank, lamb)
-    recs_path_csv = 'hdfs:/user/{}/recs_val{}_k{}_rank{}_lambda{}.csv'.format(net_id, int(fraction*100), k, rank, lamb)
 
     if path_exist(recs_path_pq):
+        # read recs from hdfs if exists
         recs = spark.read.parquet(recs_path_pq)
-
-    elif path_exist(recs_path_csv):
-        recs = spark.read.csv(recs_path_csv) # schema?
 
     else:
         from data_prep import write_to_parquet
@@ -171,14 +167,10 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
 
         print('{}: Finish getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
 
-        if save_recs_pq:
-            recs = recs.coalesce(10)
-            recs= write_to_parquet(spark, recs, recs_path_pq)
-        if save_recs_csv:
-            recs = recs.coalesce(1)
-            recs.write.format("csv").save(recs_path_csv)
-
         recs = recs.coalesce((int((0.25+fraction)*200)))
+
+        if save_recs_pq:
+            recs= write_to_parquet(spark, recs, recs_path_pq)
 
     recs.cache()
 
@@ -320,7 +312,7 @@ def tune(spark, train, val, fraction, k=500,
         # train or load model, get recommendations
         recs = get_recs(spark, train, fraction, val_ids=val_ids, 
                         lamb=i[1], rank=i[0], k=k, implicit=False, 
-                        save_model=True, save_recs_csv=False, save_recs_pq=False, debug=False)
+                        save_model=True, save_recs_pq=False, debug=False)
 
         # select pred labels
         pred_labels = recs.select('user_id','recommendations.book_id')
@@ -340,7 +332,7 @@ def tune(spark, train, val, fraction, k=500,
         # train or load model, get recommendations
         recs = get_recs(spark, train, fraction, val_ids=val_ids, 
                         lamb=lamb, rank=rank, k=k, implicit=False, 
-                        save_model=True, save_recs_csv=False, save_recs_pq=False, debug=False)
+                        save_model=True, save_recs_pq=False, debug=False)
 
         # select pred labels
         pred_labels = recs.select('user_id','recommendations.book_id')
