@@ -185,29 +185,29 @@ def hybrid_pred_labels(spark, train, val, fraction,
 
     return pred_labels
 
-    def tune_isrev_weight(spark, train, val, fraction, k=500, lamb=1, rank=10):
+def tune_isrev_weight(spark, train, val, fraction, k=500, lamb=1, rank=10):
 
-        from modeling import eval, get_val_ids_and_true_labels
+    from modeling import eval, get_val_ids_and_true_labels
 
-        #for all users in val set, get list of books rated over 3 stars
-        val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
-        true_labels.cache()
+    #for all users in val set, get list of books rated over 3 stars
+    val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
+    true_labels.cache()
 
-        weights = [-1, 0, 0.5, 1, 5]
+    weights = [-1, 0, 0.5, 1, 5]
 
-        for w in weights:
+    for w in weights:
 
-            # get hybrid prediction labels for weight w
-            pred_labels = hybrid_pred_labels(spark, train, val=val, 
-                                                fraction=fraction, k=k, lamb=lamb, rank=rank, 
-                                                isrev_weight=w,
-                                                debug=False, synthetic=False, 
-                                                save_revsplits = False, save_model=True, 
-                                                save_recs_csv=True, save_recs_pq=False)
+        # get hybrid prediction labels for weight w
+        pred_labels = hybrid_pred_labels(spark, train, val=val, 
+                                            fraction=fraction, k=k, lamb=lamb, rank=rank, 
+                                            isrev_weight=w,
+                                            debug=False, synthetic=False, 
+                                            save_revsplits = False, save_model=True, 
+                                            save_recs_csv=True, save_recs_pq=False)
 
-            # evaluate hybrid predictions
-            mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, isrev_weight=w,
-                                                fraction=fraction, rank=rank, lamb=lamb, k=k,
-                                                debug=False, synthetic=False)
+        # evaluate hybrid predictions
+        mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, isrev_weight=w,
+                                            fraction=fraction, rank=rank, lamb=lamb, k=k,
+                                            debug=False, synthetic=False)
 
-        return
+    return
