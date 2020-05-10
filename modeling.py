@@ -41,8 +41,8 @@ def dummy_run(spark):
     model = als.fit(train)
 
     recs = model.recommendForUserSubset(user_id, 2)
-    pred_label = recs.select('user_id','recommendations.book_id')
-    pred_true_rdd = pred_label.join(F.broadcast(true_label), 'user_id', 'inner') \
+    pred_labels = recs.select('user_id','recommendations.book_id')
+    pred_true_rdd = pred_labels.join(F.broadcast(true_label), 'user_id', 'inner') \
                 .rdd \
                 .map(lambda row: (row[1], row[2]))
     
@@ -191,7 +191,7 @@ def get_val_ids_and_true_labels(spark, val):
                 .agg(expr('collect_list(book_id) as true_item'))
     return val_ids, true_labels
 
-# def eval():
+def eval(spark, pred_labels,  ):
 
 
 def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None, rank=10, lamb=1, k=500):
@@ -218,10 +218,10 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     f.write('{}: Begin selecting pred labels \n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     f.close()
 
-    pred_label = recs.select('user_id','recommendations.book_id') # is this correct?? 
+    pred_labels = recs.select('user_id','recommendations.book_id') # is this correct?? 
                                                                   # we don't need to pass the predicted RATING to rankingmetrics?
 
-    pred_label.show(10)
+    pred_labels.show(10)
     f = open("results_{}.txt".format(int(fraction*100)), "a")
     f.write('{}: Finish select pred labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
     f.close()
@@ -234,7 +234,7 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     f.write('{}: Begin building RDD with predictions and true labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
     f.close()
 
-    pred_true_rdd = pred_label.join(F.broadcast(true_labels), 'user_id', 'inner') \
+    pred_true_rdd = pred_labels.join(F.broadcast(true_labels), 'user_id', 'inner') \
                 .rdd \
                 .map(lambda x: (x[1], x[2]))
 

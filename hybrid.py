@@ -106,7 +106,7 @@ def get_isrev_splits(spark, train, val, fraction, test=None, get_test=True, save
     return isrev_train, isrev_val, isrev_test
 
 
-def get_both_recs(spark, train, val, fraction, 
+def hybrid_pred_labels(spark, train, val, fraction, 
                         k=500, lamb=1, rank=10, 
                         rev_weight=1, rat_weight=1,
                         debug=False, coalesce_num=10, synthetic=False, 
@@ -165,21 +165,11 @@ def get_both_recs(spark, train, val, fraction,
                             withColumn('rating', ((col('rev_rating')*rev_weight) + (col('rat_rating')*rat_weight))) \
                             .select('user_id', 'book_id', 'rating')
 
-    weighted_sum.createOrReplaceTempView('weighted_sum')
-
-    # # order by rating, then map to list of ids....
-    # 'SELECT * FROM weighted_sum ORDER BY rating DESC'
-
-    # # order first, collect 2nd
-    # ordered = spark.sql('SELECT * FROM weighted_sum ORDER BY rating DESC')
-    # collected = ordered.groupBy('user_id').agg(collect_list('book_id') as 'book_id')
-
-    # #collect first, order 2nd
-    # collected = weighted_sum.groupBy('user_id').agg(collect_list('book_id', 'rating')) 
-    # ..... #.sortBy(lambda x:x[1]).collect()
-
-    # window!
+    # define window
     w = Window.partitionBy('user_id').orderBy(desc('rating'))
-    pred_label = weighted_sum.withColumn('book_id', collect_list('book_id').over(w)).filter(size('book_id')==k).select('user_id', 'book_id')
 
-    return pred_label
+    # convert weighted_sum back to array of length k
+    pred_labels = weighted_sum.withColumn('book_id', collect_list('book_id')\
+                        .over(w)).filter(size('book_id')==k).select('user_id', 'book_id')
+
+    return pred_labels
