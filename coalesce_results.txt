@@ -1,6 +1,0 @@
-2020-05-10 07:04:37: Testing for 1% downsample, 50 train partitions and 10 val partitions
-2020-05-10 07:04:38: val_id partitions=200
-2020-05-10 07:04:38: Begin getting recs
-2020-05-10 07:06:06: Finish getting recs
-2020-05-10 07:06:06: pred_labels partitions=200
-2020-05-10 07:06:06: Beginning evaluation
