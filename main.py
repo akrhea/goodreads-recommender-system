@@ -3,7 +3,7 @@
 import sys
 from pyspark.sql import SparkSession
 from data_prep import read_sample_split_pq
-from modeling import tune, train_eval, get_val_preds
+from modeling import tune, get_recs
 
 '''
 Usage:
