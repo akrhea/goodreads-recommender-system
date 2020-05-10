@@ -2,3 +2,33 @@ Hyperparameter Tuning on 25% of the Goodreads Interaction Data
 Hyperparameter Tuning on 25% of the Goodreads Interaction Data
 Hyperparameter Tuning on 25% of the Goodreads Interaction Data
 Hyperparameter Tuning on 25% of the Goodreads Interaction Data
+2020-05-10 08:46:33: Fitting model
+2020-05-10 08:49:13: Begin getting 20 recommendations for validation user subset
+2020-05-10 09:14:25: Finish getting 20 recommendations for validation user subset
+2020-05-10 09:14:25: Begin building RDD with predictions and true labels
+2020-05-10 09:14:28: Finish building RDD with predictions and true labels
+2020-05-10 09:14:28: Begin instantiating metrics object
+2020-05-10 09:14:30: Finish instantiating metrics object
+2020-05-10 09:14:30: Getting mean average precision
+2020-05-10 09:15:06: Getting NDCT at k
+2020-05-10 09:15:23: Getting precision at k
+2020-05-10 09:15:34: Evaluation for k=20, isrev_weight=0, lambda=1.1, and rank=10: MAP=6.4462127654707104e-06, NDCG=1.6759801747901237e-05, Precision at k=1.1590507374460323e-05
+
+
+
+2020-05-10 09:15:42: Fitting model
+2020-05-10 09:19:40: Begin getting 20 recommendations for validation user subset
+2020-05-10 09:50:59: Finish getting 20 recommendations for validation user subset
+2020-05-10 09:50:59: Begin building RDD with predictions and true labels
+2020-05-10 09:51:02: Finish building RDD with predictions and true labels
+2020-05-10 09:51:02: Begin instantiating metrics object
+2020-05-10 09:51:02: Finish instantiating metrics object
+2020-05-10 09:51:02: Getting mean average precision
+2020-05-10 09:51:43: Getting NDCT at k
+2020-05-10 09:52:04: Getting precision at k
+2020-05-10 09:52:12: Evaluation for k=20, isrev_weight=0, lambda=1.1, and rank=10: MAP=2.7193908188085515e-06, NDCG=1.8300834741435463e-05, Precision at k=1.159050737446032e-05
+
+
+
+2020-05-10 09:52:21: Fitting model
+2020-05-10 09:56:43: Begin getting 20 recommendations for validation user subset
