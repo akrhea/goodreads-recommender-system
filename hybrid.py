@@ -91,6 +91,7 @@ def get_both_recs(spark, train, val, isrev_train, isrev_val, fraction,
         save_model = False
         save_recs_csv =  False
         save_recs_pq = False
+        coalesce_num=10
 
     from modeling import get_recs
     
