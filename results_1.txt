@@ -492,3 +492,24 @@ Hyperparameter Tuning on 1% of the Goodreads Interaction Data
 
 
 
+Hyperparameter Tuning on 1% of the Goodreads Interaction Data
+2020-05-10 16:27:46: Evaluation for k=500, isrev_weight=-1, lambda=0.01, and rank=10: MAP=0.00010953214711662653, NDCG=0.0032275914722027393, Precision at k=0.0006616334934797534
+
+
+
+2020-05-10 16:28:33: Evaluation for k=500, isrev_weight=0, lambda=0.01, and rank=10: MAP=8.441859498855904e-05, NDCG=0.0024170526149796864, Precision at k=0.00029101829101829116
+
+
+
+2020-05-10 16:28:55: Evaluation for k=500, isrev_weight=0.5, lambda=0.01, and rank=10: MAP=8.422783161404196e-05, NDCG=0.002415088283779998, Precision at k=0.0002910182910182911
+
+
+
+2020-05-10 16:29:21: Evaluation for k=500, isrev_weight=1, lambda=0.01, and rank=10: MAP=8.422783161404198e-05, NDCG=0.0024150882837799975, Precision at k=0.0002910182910182912
+
+
+
+2020-05-10 16:29:49: Evaluation for k=500, isrev_weight=5, lambda=0.01, and rank=10: MAP=8.426100081890581e-05, NDCG=0.002415228842920774, Precision at k=0.0002909785724034394
+
+
+
