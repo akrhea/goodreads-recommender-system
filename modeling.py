@@ -143,7 +143,7 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
 
         if val_ids==None:
                 val_ids = val.select('user_id').distinct()
-                val_ids.coalesce(coalesce_num) # test!!!
+                val_ids = val_ids.coalesce(coalesce_num) # test!!!
                 
         # recommend for user subset
         print('{}: Begin getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
