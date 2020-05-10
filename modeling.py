@@ -53,9 +53,9 @@ def dummy_run(spark):
     print('MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
     return 
 
-def get_predictions(spark, train, fraction, val=None, val_ids=None, 
+def get_recs(spark, train, fraction, val=None, val_ids=None, 
                     lamb=1, rank=10, k=500, implicit=False, 
-                    save_model = True, save_preds_csv=True, save_preds_pq=False,
+                    save_model = True, save_recs_csv=True, save_recs_pq=False,
                     debug=False, coalesce_num=10):
     ''' 
         Fits or loads ALS model from train and makes predictions 
@@ -82,14 +82,14 @@ def get_predictions(spark, train, fraction, val=None, val_ids=None,
     from getpass import getuser
     net_id=getuser()
 
-    pred_path_pq = 'hdfs:/user/{}/preds_val{}_k{}_rank{}_lambda{}.parquet'.format(net_id, int(fraction*100), k, rank, lamb)
-    pred_path_csv = 'hdfs:/user/{}/preds_val{}_k{}_rank{}_lambda{}.csv'.format(net_id, int(fraction*100), k, rank, lamb)
+    recs_path_pq = 'hdfs:/user/{}/recs_val{}_k{}_rank{}_lambda{}.parquet'.format(net_id, int(fraction*100), k, rank, lamb)
+    recs_path_csv = 'hdfs:/user/{}/recs_val{}_k{}_rank{}_lambda{}.csv'.format(net_id, int(fraction*100), k, rank, lamb)
 
-    if path_exist(pred_path_pq):
-        predictions = spark.read.parquet(pred_path_pq)
+    if path_exist(recs_path_pq):
+        recs = spark.read.parquet(recs_path_pq)
 
-    elif path_exit(pred_path_csv):
-        predictions = spark.read.csv(pred_path_csv) # schema?
+    elif path_exit(recs_path_csv):
+        recs = spark.read.csv(recs_path_csv) # schema?
 
     else:
         from data_prep import write_to_parquet
@@ -158,14 +158,12 @@ def get_predictions(spark, train, fraction, val=None, val_ids=None,
         f.close()
         print('{}: Finish getting {} recommendations for validation user subset: '.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
 
-        if save_preds_pq:
-            predictions = write_to_parquet(spark, predictions, pred_path_pq)
-        if save_preds_csv:
-            predictions.write.format("csv").save(pred_path_pq)
+        if save_recs_pq:
+            recs= write_to_parquet(spark, recs, recs_path_pq)
+        if save_recs_csv:
+            recs.write.format("csv").save(recs_path_csv)
 
-    return predictions
-
-
+    return recs
 
 def get_val_ids_and_true_labels(spark, val):
     # for all users in val set, get list of books rated over 3 stars
@@ -193,8 +191,11 @@ def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None,
     from getpass import getuser
     net_id=getuser()
 
- ....... GET PREDS
-
+    recs = get_recs get_recs(spark, train, fraction, 
+                                val=val, val_ids=val_ids, 
+                                lamb=lamb, rank=rank, k=k, implicit=False, 
+                                save_model=True, save_recs_csv=False, save_recs_pq=False, 
+                                debug=False, coalesce_num=10)
 
     # select pred labels
     print('{}: Begin selecting pred labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))

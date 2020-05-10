@@ -54,27 +54,27 @@ def get_isread_splits(spark, train, val, test, fraction, save_pq=False)
 
     return isread_train, isread_val, isread_test
 
-    def get_both_preds(spark, train, val, isread_train, isread_val, fraction, 
+    def get_both_recs(spark, train, val, isread_train, isread_val, fraction, 
                         k=500, lamb=1, rank=10, 
                         debug=False, coalesce_num=10)
 
-        from modeling import get_predictions
+        from modeling import get_recs
         
         #coalesce_num = int(fraction*100)
 
-        rating_preds = get_predictions(spark, train, fraction, val=val, #val_ids=None, 
+        rating_recs = get_recs(spark, train, fraction, val=val, #val_ids=None, 
                                         lamb=lamb, rank=rank, k=k, implicit=False, 
-                                        save_model = True, save_preds_csv=True, save_preds_pq=False,
+                                        save_model = True, save_recs_csv=True, save_recs_pq=False,
                                         debug=debug, coalesce_num=None)
 
-        isread_preds = get_predictions(spark, isread_train, fraction, val=isread_val, #val_ids=None, 
+        isread_recs = get_recs(spark, isread_train, fraction, val=isread_val, #val_ids=None, 
                                         lamb=lamb, rank=rank, k=k, implicit=True, 
-                                        save_model = True, save_preds_csv=True, save_preds_pq=False
+                                        save_model = True, save_recs_csv=True, save_recs_pq=False
                                         debug=debug, coalesce_num=None)
 
         if debug:
-            rating_preds.show(10)
-            isread_preds.show(10)
+            rating_recs.show(10)
+            isread_recs.show(10)
         
     
 
