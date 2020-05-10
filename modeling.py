@@ -181,6 +181,9 @@ def get_val_ids_and_true_labels(spark, val):
                 .agg(expr('collect_list(book_id) as true_item'))
     return val_ids, true_labels
 
+# def eval():
+
+
 def train_eval(spark, train, fraction, val=None, val_ids=None, true_labels=None, rank=10, lamb=1, k=500):
     from time import localtime, strftime
     from pyspark.ml.recommendation import ALS, ALSModel

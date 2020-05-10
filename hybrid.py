@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
 
-def get_isrev_splits(spark, train, val, test, fraction, save_pq=False, synthetic=False):
+def get_isrev_splits(spark, train, val, fraction, test=None, get_test=True, save_pq=False, synthetic=False):
 
     #get netid
     from getpass import getuser
     net_id=getuser()
+
+    if not get_test:
+        isrev_test = None
 
     if not synthetic:
 
@@ -14,14 +17,15 @@ def get_isrev_splits(spark, train, val, test, fraction, save_pq=False, synthetic
         val_isrev_path = 'hdfs:/user/'+net_id+'/isrev_{}_val.parquet'.format(int(fraction*100))
         test_isrev_path = 'hdfs:/user/'+net_id+'/isrev_{}_test.parquet'.format(int(fraction*100))
 
-        # read in is_rev dfs from parquet if they exist
+        # read in isrev dfs from parquet if they exist
         try:
             isrev_train = spark.read.parquet(train_isrev_path)
             isrev_val = spark.read.parquet(val_isrev_path)
-            isrev_test = spark.read.parquet(test_isrev_path)
-            print('Succesfullly read is_rev splits from hdfs')
+            if get_test:
+                isrev_test = spark.read.parquet(test_isrev_path)
+            print('Succesfullly read is_reviewed splits from hdfs')
 
-        # create is_rev dfs if they dont exist in hdfs
+        # create isrev dfs if they dont exist in hdfs
         except:
             from data_prep import path_exist, write_to_parquet
 
@@ -42,12 +46,29 @@ def get_isrev_splits(spark, train, val, test, fraction, save_pq=False, synthetic
             df.createOrReplaceTempView('df')
             train.createOrReplaceTempView('train')
             val.createOrReplaceTempView('val')
-            test.createOrReplaceTempView('test')
+
+            if get_test:
+                test.createOrReplaceTempView('test')
 
             # create dfs from inner joins
-            isrev_train =  spark.sql('SELECT df.user_id, df.book_id, is_reviewed FROM df INNER JOIN train ON df.user_id=train.user_id AND df.book_id=train.book_id')
-            isrev_val = spark.sql('SELECT df.user_id, df.book_id, is_reviewed FROM df INNER JOIN val ON df.user_id=val.user_id AND df.book_id=val.book_id')
-            isrev_test = spark.sql('SELECT df.user_id, df.book_id, is_reviewed FROM df INNER JOIN test ON df.user_id=test.user_id AND df.book_id=test.book_id')
+            isrev_train =  spark.sql('SELECT df.user_id, df.book_id, is_reviewed \
+                                      FROM df INNER JOIN train \
+                                          ON df.user_id=train.user_id AND df.book_id=train.book_id')
+
+            isrev_val = spark.sql('SELECT df.user_id, df.book_id, is_reviewed \
+                                  FROM df INNER JOIN val \
+                                      ON df.user_id=val.user_id AND df.book_id=val.book_id')
+            
+            if get_test:
+                isrev_test = spark.sql('SELECT df.user_id, df.book_id, is_reviewed \
+                                        FROM df INNER JOIN test \
+                                            ON df.user_id=test.user_id AND df.book_id=test.book_id')
+
+        if save_pq:
+            isrev_train = write_to_parquet(spark, isrev_train, train_isrev_path)
+            isrev_val = write_to_parquet(spark, isrev_val, val_isrev_path)
+            if get_test:
+                isrev_test = write_to_parquet(spark, isrev_test, test_isrev_path)
 
 
     if synthetic:
@@ -65,40 +86,51 @@ def get_isrev_splits(spark, train, val, test, fraction, save_pq=False, synthetic
         df.createOrReplaceTempView('df')
         train.createOrReplaceTempView('train')
         val.createOrReplaceTempView('val')
-        test.createOrReplaceTempView('test')
+        if get_test:
+            test.createOrReplaceTempView('test')
 
         # create dfs from inner joins
-        isrev_train =  spark.sql('SELECT df.user_id, df.book_id, is_reviewed FROM df INNER JOIN train ON df.user_id=train.user_id AND df.book_id=train.book_id')
-        isrev_val = spark.sql('SELECT df.user_id, df.book_id, is_reviewed FROM df INNER JOIN val ON df.user_id=val.user_id AND df.book_id=val.book_id')
-        isrev_test = spark.sql('SELECT df.user_id, df.book_id, is_reviewed FROM df INNER JOIN test ON df.user_id=test.user_id AND df.book_id=test.book_id')
+        isrev_train =  spark.sql('SELECT df.user_id, df.book_id, is_reviewed \
+                                    FROM df INNER JOIN train \
+                                        ON df.user_id=train.user_id AND df.book_id=train.book_id')
 
-        if save_pq:
-            # write splits to parquet
-            isrev_train = write_to_parquet(spark, isrev_train, train_isrev_path)
-            isrev_val = write_to_parquet(spark, isrev_val, val_isrev_path)
-            isrev_test = write_to_parquet(spark, isrev_test, test_isrev_path)
+        isrev_val = spark.sql('SELECT df.user_id, df.book_id, is_reviewed \
+                                FROM df INNER JOIN val \
+                                    ON df.user_id=val.user_id AND df.book_id=val.book_id')
+
+        if get_test:
+            isrev_test = spark.sql('SELECT df.user_id, df.book_id, is_reviewed \
+                                    FROM df INNER JOIN test \
+                                        ON df.user_id=test.user_id AND df.book_id=test.book_id')
 
     return isrev_train, isrev_val, isrev_test
 
 
-def get_both_recs(spark, train, val, isrev_train, isrev_val, fraction, 
+def get_both_recs(spark, train, val, fraction, 
                         k=500, lamb=1, rank=10, 
-                        debug=False, coalesce_num=10, synthetic = False, 
-                        save_model = True, save_recs_csv = True, save_recs_pq=False):
+                        rev_weight=1, rat_weight=1,
+                        debug=False, coalesce_num=10, synthetic=False, 
+                        save_revsplits = True, save_model=True, 
+                        save_recs_csv=True, save_recs_pq=False):
 
+    from pyspark.sql.functions import col, explode
+    from modeling import get_recs
+    
     if synthetic:
-        print('NOTICE: Will not save model or predictions for synthetic data.')
+        print('NOTICE: Will not save splits, model, or predictions for synthetic data.')
         save_model = False
         save_recs_csv =  False
         save_recs_pq = False
-        coalesce_num=10
+        save_revsplits = False
+        coalesce_num=1
 
-    from modeling import get_recs
-    
     #coalesce_num = int(fraction*100)
 
+    isrev_train, isrev_val, _ = get_isrev_splits(spark, train, val, fraction, 
+                                                  get_test=False, save_pq=save_revsplits, synthetic=synthetic)
+
     rating_recs = get_recs(spark, train, fraction, val=val, #val_ids=None, 
-                                    lamb=lamb, rank=rank, k=k, implicit=False, 
+                                    lamb=lamb, rank=rank, k=k, implicit=False,
                                     save_model = save_model, save_recs_csv=save_recs_csv, save_recs_pq=save_recs_pq,
                                     debug=debug, coalesce_num=coalesce_num)
 
@@ -106,9 +138,30 @@ def get_both_recs(spark, train, val, isrev_train, isrev_val, fraction,
                                     lamb=lamb, rank=rank, k=k, implicit=True, 
                                     save_model = save_model, save_recs_csv=save_recs_csv, save_recs_pq=save_recs_pq,
                                     debug=debug, coalesce_num=coalesce_num)
-
     if debug:
         rating_recs.show(10)
         isrev_recs.show(10)
 
-    return rating_recs, isrev_recs
+    # explode lists of books to create 1 book_id per row
+    rat_long = rating_recs.select('user_id', explode('recommendations')\
+                                                .alias('recs')).select('user_id', 'recs.*')
+
+    rev_long = isrev_recs.select('user_id', explode('recommendations')\
+                                                .alias('recs')).select('user_id', 'recs.*')
+    # compute weighted sum of ratings
+    weighted_sum = spark.sql('SELECT COALESCE(rev_long.user_id, rat_long.user_id) user_id, \
+                               COALESCE(rat_long.book_id, rev_long.book_id) book_id, \
+                               rev_long.rating AS rev_rating, \
+                               rat_long.rating AS rat_rating \
+                        FROM rev_long FULL OUTER JOIN rat_long \
+                        ON rev_long.user_id = rat_long.user_id \
+                                AND rev_long.book_id = rat_long.book_id')\
+                        .na.fill(0).\
+                            withColumn('rating', ((col('rev_rating')*rev_weight) + (col('rat_rating')*rat_weight))) \
+                            .select('user_id', 'book_id', 'rating')
+
+    weighted_sum.createOrReplaceTempView('weighted_sum')
+
+    # order by rating, then map to list of ids....
+
+    return weighted_sum
