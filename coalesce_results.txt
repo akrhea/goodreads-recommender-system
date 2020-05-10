@@ -185,3 +185,34 @@
 2020-05-10 08:23:47: Testing for 1% downsample, 50 train partitions and 200 val partitions
 2020-05-10 08:23:47: val_id partitions=50
 2020-05-10 08:23:47: Begin getting recs
+2020-05-10 08:25:14: Finish getting recs
+2020-05-10 08:25:14: pred_labels partitions=200
+2020-05-10 08:25:14: Beginning evaluation
+2020-05-10 08:25:41: Evaluation complete
+
+2020-05-10 08:25:41: Testing for 1% downsample, 100 train partitions and 200 val partitions
+2020-05-10 08:25:42: val_id partitions=10
+2020-05-10 08:25:42: Begin getting recs
+2020-05-10 08:26:34: Finish getting recs
+2020-05-10 08:26:34: pred_labels partitions=200
+2020-05-10 08:26:34: Beginning evaluation
+2020-05-10 08:27:01: Evaluation complete
+
+2020-05-10 08:27:01: Testing for 1% downsample, 100 train partitions and 200 val partitions
+2020-05-10 08:27:01: val_id partitions=20
+2020-05-10 08:27:01: Begin getting recs
+2020-05-10 08:28:16: Finish getting recs
+2020-05-10 08:28:16: pred_labels partitions=200
+2020-05-10 08:28:16: Beginning evaluation
+2020-05-10 08:29:09: Evaluation complete
+
+2020-05-10 08:29:09: Testing for 1% downsample, 100 train partitions and 200 val partitions
+2020-05-10 08:29:09: val_id partitions=50
+2020-05-10 08:29:09: Begin getting recs
+2020-05-10 08:30:26: Finish getting recs
+2020-05-10 08:30:26: pred_labels partitions=200
+2020-05-10 08:30:26: Beginning evaluation
+2020-05-10 08:31:19: Evaluation complete
+
+
+
