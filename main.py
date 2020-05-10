@@ -56,14 +56,19 @@ def main(spark, task, fraction, k):
 
         train_coalesce_nums = [50, 100, 200]
         val_coalesce_nums = [10, 50, 100]
+        val_ids_coalesce_nums = [10, 20, 50]
 
-        paramGrid = itertools.product(val_coalesce_nums, train_coalesce_nums)
+        paramGrid = itertools.product(train_coalesce_nums, val_coalesce_nums, val_ids_coalesce_nums)
 
         for i in paramGrid:
 
+            train_coalesce_num = i[0]
+            val_coalesce_num = i[1]
+            val_ids_coalesce_num = i[2]
+
             # coalesce and cache
-            train = train.coalesce(i[1])
-            val = val.coalesce(i[0])
+            train = train.coalesce(train_coalesce_num)
+            val = val.coalesce(val_coalesce_num)
             val.cache()
             train.cache()
 
@@ -78,13 +83,15 @@ def main(spark, task, fraction, k):
             #get val ids and true labels
             val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
 
+            # coalesce
+            val_ids = val_ids.coalesce(val_ids_coalesce_num)
+
             print('{}: val_id partitions={}'\
                         .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), val_ids.rdd.getNumPartitions()))
             f = open("coalesce_results.txt", "a")
             f.write('{}: val_id partitions={}\n'\
                         .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), val_ids.rdd.getNumPartitions()))
             f.close()
-            
 
             print('{}: Begin getting recs'\
                         .format(strftime("%Y-%m-%d %H:%M:%S")))
