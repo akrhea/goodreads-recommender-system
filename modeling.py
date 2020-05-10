@@ -95,7 +95,7 @@ def get_predictions(spark, train, fraction, val=None, val_ids=None,
         from data_prep import write_to_parquet
         from pyspark.ml.recommendation import ALS
 
-         if implicit:
+        if implicit:
             model_type = 'implicit'
         else:
             model_type = 'explicit'
