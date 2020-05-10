@@ -13,7 +13,7 @@ def read_data_from_csv(spark, which_csv):
     if which_csv=='interactions':
         print('Reading interactions from csv')
         df=spark.read.csv('hdfs:/user/bm106/pub/goodreads/goodreads_interactions.csv', header = True, 
-                                    schema = 'user_id INT, book_id INT, is_read INT, rating FLOAT, is_reviewed INT')
+                                    schema = 'user_id INT, book_id INT, is_read INT, rating INT, is_reviewed INT')
         return df
     elif which_csv=='users':
         print('Reading users from csv')
