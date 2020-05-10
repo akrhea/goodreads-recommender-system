@@ -111,10 +111,3 @@ def get_both_recs(spark, train, val, isrev_train, isrev_val, fraction,
         isrev_recs.show(10)
 
     return rating_recs, isrev_recs
-        
-    
-
-
-
-
-    
