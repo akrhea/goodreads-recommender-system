@@ -30,6 +30,7 @@ def get_isrev_splits(spark, train, val, test, fraction, save_pq=False, synthetic
             print('Reading interactions file from Parquet')
             df = spark.read.parquet(full_data_path)
         else:
+            from data_prep import read_data_from_csv
             print('Reading interactions file from csv')
             df_csv = read_data_from_csv(spark, 'interactions')
             # write full interactions dataset to parquet if not already saved
