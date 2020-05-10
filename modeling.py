@@ -219,7 +219,6 @@ def eval(spark, pred_labels, true_labels, fraction, rank, lamb,
                 .map(lambda x: (x[1], x[2]))
 
     if debug and (not synthetic):
-        pred_true_rdd.show(10)
         f = open("results_{}.txt".format(int(fraction*100)), "a")
         f.write('{}: Finish building RDD with predictions and true labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
         f.close()
