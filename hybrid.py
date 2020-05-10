@@ -71,6 +71,7 @@ def get_isrev_splits_from_ratings(spark, train, val, fraction, test=None, get_te
                 isrev_test = isrev_test.coalesce(int((0.25+fraction)*200))
 
         if save_pq:
+            from data_prep import write_to_parquet
             isrev_train = write_to_parquet(spark, isrev_train, train_isrev_path)
             isrev_val = write_to_parquet(spark, isrev_val, val_isrev_path)
             if get_test:
