@@ -69,7 +69,7 @@ def get_isread_splits(spark, train, val, test, fraction, save_pq=False):
 
         isread_recs = get_recs(spark, isread_train, fraction, val=isread_val, #val_ids=None, 
                                         lamb=lamb, rank=rank, k=k, implicit=True, 
-                                        save_model = True, save_recs_csv=True, save_recs_pq=False
+                                        save_model = True, save_recs_csv=True, save_recs_pq=False,
                                         debug=debug, coalesce_num=None)
 
         if debug:
