@@ -202,8 +202,8 @@ if __name__ == "__main__":
     # # Get the cores from the command line
     # instances = sys.argv[6]
 
-    assert (task=='coalesce-test') or (task=='tune') or (task == 'tune-hybrid'), \
-            'Task must be  \"coalesce-test," \"tune,\" or \"tune-hybrid,\" '
+    assert (task=='coalesce-test') or (task=='tune') or (task == 'hybrid-tune'), \
+            'Task must be  \"coalesce-test," \"tune,\" or \"hybrid-tune\" '
     #assert (task=='predict') or (task=='tune') or (task=='eval'), 'Task must be  \"predict,\" \"eval,\"or \"tune\"'
 
     # Create the spark session object
