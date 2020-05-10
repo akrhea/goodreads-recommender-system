@@ -95,7 +95,7 @@ def main(spark, task, fraction, k):
 
             #get recs
             recs = get_recs(spark, train, fraction=fraction, val_ids=val_ids,
-                            lamb=1.1, rank=11, k=k, implicit=False, 
+                            lamb=1.1, rank=10, k=k, implicit=False, 
                             save_model=False, save_recs_csv=False, save_recs_pq=False, debug=True)
 
             print('{}: Finish getting recs\n'\
