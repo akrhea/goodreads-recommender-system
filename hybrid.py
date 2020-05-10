@@ -85,23 +85,25 @@ def get_both_recs(spark, train, val, isrev_train, isrev_val, fraction,
                         k=500, lamb=1, rank=10, 
                         debug=False, coalesce_num=10):
 
-        from modeling import get_recs
-        
-        #coalesce_num = int(fraction*100)
+    from modeling import get_recs
+    
+    #coalesce_num = int(fraction*100)
 
-        rating_recs = get_recs(spark, train, fraction, val=val, #val_ids=None, 
-                                        lamb=lamb, rank=rank, k=k, implicit=False, 
-                                        save_model = True, save_recs_csv=True, save_recs_pq=False,
-                                        debug=debug, coalesce_num=None)
+    rating_recs = get_recs(spark, train, fraction, val=val, #val_ids=None, 
+                                    lamb=lamb, rank=rank, k=k, implicit=False, 
+                                    save_model = True, save_recs_csv=True, save_recs_pq=False,
+                                    debug=debug, coalesce_num=None)
 
-        isrev_recs = get_recs(spark, isrev_train, fraction, val=isrev_val, #val_ids=None, 
-                                        lamb=lamb, rank=rank, k=k, implicit=True, 
-                                        save_model = True, save_recs_csv=True, save_recs_pq=False,
-                                        debug=debug, coalesce_num=None)
+    isrev_recs = get_recs(spark, isrev_train, fraction, val=isrev_val, #val_ids=None, 
+                                    lamb=lamb, rank=rank, k=k, implicit=True, 
+                                    save_model = True, save_recs_csv=True, save_recs_pq=False,
+                                    debug=debug, coalesce_num=None)
 
-        if debug:
-            rating_recs.show(10)
-            isrev_recs.show(10)
+    if debug:
+        rating_recs.show(10)
+        isrev_recs.show(10)
+
+    return rating_recs, isrev_recs
         
     
 
