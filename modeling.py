@@ -79,6 +79,12 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
     from data_prep import path_exist
     from time import localtime, strftime
 
+    if synthetic:
+        print('NOTICE: Will not save not save model or recommendations for synthetic data.')
+        save_model = False
+        save_recs_csv=False
+        save_recs_pq=False
+
     #get netid
     from getpass import getuser
     net_id=getuser()
