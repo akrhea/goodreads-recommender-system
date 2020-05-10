@@ -56,7 +56,7 @@ def dummy_run(spark):
 def get_recs(spark, train, fraction, val=None, val_ids=None, 
                     lamb=1, rank=10, k=500, implicit=False, 
                     save_model = True, save_recs_csv=True, save_recs_pq=False,
-                    debug=False, coalesce_num=10, synthetic=False):
+                    debug=False, synthetic=False):
     ''' 
         Fits or loads ALS model from train and makes predictions 
         Imput: training file
@@ -149,7 +149,7 @@ def get_recs(spark, train, fraction, val=None, val_ids=None,
 
         if val_ids==None:
                 val_ids = val.select('user_id').distinct()
-                val_ids = val_ids.coalesce(coalesce_num) # test!
+                # val_ids = val_ids.coalesce() 
                 
         # recommend for user subset
         print('{}: Begin getting {} recommendations for validation user subset'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), k))
@@ -292,5 +292,5 @@ def tune(spark, train, val, fraction, k=500,
         # evaluate model predictions
         mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, fraction, rank, lamb, 
                 k=500, rat_weight=1, rev_weight=0, debug=False, synthetic=False)
-
+.
     return

@@ -31,12 +31,6 @@ def main(spark, task, fraction, k):
                             save_pq=False, rm_unobserved=True, rm_zeros=True, 
                             low_item_threshold=10, synthetic=False, debug=False)
 
-
-    # train.coalesce()
-    # val.coalesce()
-    # test.coalesce()
-
-
     # ensure that train and val are cached
     if not train.is_cached:
         train.cache()

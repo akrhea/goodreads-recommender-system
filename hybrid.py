@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-def get_isrev_splits(spark, train, val, fraction, test=None, get_test=True, save_pq=False, synthetic=False):
+def get_isrev_splits_from_ratings(spark, train, val, fraction, test=None, get_test=True, save_pq=False, synthetic=False):
 
     #get netid
     from getpass import getuser
@@ -109,7 +109,7 @@ def get_isrev_splits(spark, train, val, fraction, test=None, get_test=True, save
 def hybrid_pred_labels(spark, train, val, fraction, 
                         k=500, lamb=1, rank=10, 
                         rev_weight=1, rat_weight=1,
-                        debug=False, coalesce_num=10, synthetic=False, 
+                        debug=False, synthetic=False, 
                         save_revsplits = True, save_model=True, 
                         save_recs_csv=True, save_recs_pq=False):
 
@@ -123,22 +123,21 @@ def hybrid_pred_labels(spark, train, val, fraction,
         save_recs_csv =  False
         save_recs_pq = False
         save_revsplits = False
-        coalesce_num=1
 
     #coalesce_num = int(fraction*100)
 
-    isrev_train, isrev_val, _ = get_isrev_splits(spark, train, val, fraction, 
-                                                  get_test=False, save_pq=save_revsplits, synthetic=synthetic)
+    isrev_train, isrev_val, _ = get_isrev_splits_from_ratings(spark, train, val, \
+                                fraction, get_test=False, save_pq=save_revsplits, synthetic=synthetic)
 
     rating_recs = get_recs(spark, train, fraction, val=val, #val_ids=None, 
                                     lamb=lamb, rank=rank, k=k, implicit=False,
                                     save_model = save_model, save_recs_csv=save_recs_csv, save_recs_pq=save_recs_pq,
-                                    debug=debug, coalesce_num=coalesce_num)
+                                    debug=debug)
 
     isrev_recs = get_recs(spark, isrev_train, fraction, val=isrev_val, #val_ids=None, 
                                     lamb=lamb, rank=rank, k=k, implicit=True, 
                                     save_model = save_model, save_recs_csv=save_recs_csv, save_recs_pq=save_recs_pq,
-                                    debug=debug, coalesce_num=coalesce_num)
+                                    debug=debug)
     if debug:
         rating_recs.show(10)
         isrev_recs.show(10)

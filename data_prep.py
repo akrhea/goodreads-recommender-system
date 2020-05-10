@@ -13,7 +13,7 @@ def read_data_from_csv(spark, which_csv):
     if which_csv=='interactions':
         print('Reading interactions from csv')
         df=spark.read.csv('hdfs:/user/bm106/pub/goodreads/goodreads_interactions.csv', header = True, 
-                                    schema = 'user_id INT, book_id INT, is_read INT, rating INT, is_reviewed INT') # change is_read to bool?
+                                    schema = 'user_id INT, book_id INT, is_read INT, rating INT, is_reviewed INT')
         return df
     elif which_csv=='users':
         print('Reading users from csv')
@@ -531,6 +531,11 @@ def read_sample_split_pq(spark,  fraction=0.01, seed=42, \
 
         # split into train/val/test
         train, val, test = train_val_test_split(spark, down, seed=seed, rm_unobserved=rm_unobserved, debug=debug, debug_show=debug)
+
+        # save synthetic data on single partition
+        train = train.coalesce(1)
+        val = val.coalesce(1)
+        test = test.coalesce(1)
     
     # cache the splits
     train.cache()
