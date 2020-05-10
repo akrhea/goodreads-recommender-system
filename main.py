@@ -54,17 +54,17 @@ def main(spark, task, fraction, k):
         import itertools 
         from modeling import get_recs
 
-        train_coalesce_nums = [50, 100, 200]
-        val_coalesce_nums = [10, 50, 100]
+        # train_coalesce_nums = [50, 100, 200]
+        # val_coalesce_nums = [10, 50, 100]
         val_ids_coalesce_nums = [10, 20, 50]
 
-        paramGrid = itertools.product(train_coalesce_nums, val_coalesce_nums, val_ids_coalesce_nums)
+        # paramGrid = itertools.product(train_coalesce_nums, val_coalesce_nums, val_ids_coalesce_nums)
 
-        for i in paramGrid:
+        for i in val_ids_coalesce_nums: #paramGrid:
 
-            train_coalesce_num = i[0]
-            val_coalesce_num = i[1]
-            val_ids_coalesce_num = i[2]
+            train_coalesce_num = 100
+            val_coalesce_num = 50
+            val_ids_coalesce_num = i
 
             # coalesce and cache
             train = train.coalesce(train_coalesce_num)
@@ -77,8 +77,9 @@ def main(spark, task, fraction, k):
                                         train_coalesce_num, val_coalesce_num, val_ids_coalesce_num))
 
             f = open("coalesce_results.txt", "a")
-            f.write('{}: Testing for {}% downsample, {} train partitions and {} val partitions\n'\
-                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), int(fraction*100), i[1], i[0]))
+            f.write('{}: Testing for {}% downsample, {} train partitions, {} val partitions, and {} val_ids partitions\n'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), int(fraction*100), 
+                                        train_coalesce_num, val_coalesce_num, val_ids_coalesce_num))
             f.close()
 
             #get val ids and true labels
@@ -143,7 +144,7 @@ def main(spark, task, fraction, k):
         f = open("coalesce_results.txt", "a")
         f.write('\n\n')
         f.close()
-        
+
         return
 
 
