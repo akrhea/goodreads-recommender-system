@@ -107,7 +107,7 @@ def main(spark, task, fraction, k):
 
         # evaluate basic model predictions
         mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, 
-                                            fraction=fraction, rank=rank, lamb=lamb, 
+                                            fraction=fraction, rank=best_rank, lamb=best_lamb, 
                                             k=k, isrev_weight=0, debug=False, synthetic=False)   
 
         print('mean_ap: {}, ndcg_at_k: {}, p_at_k: {}'.format(mean_ap, 
