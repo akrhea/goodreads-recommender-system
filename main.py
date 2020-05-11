@@ -71,7 +71,9 @@ def main(spark, task, fraction, k):
         return
     
     if task=='test':
-        from pyspark.sql.hive import HiveContext
+        import pyspark
+        sc = pyspark.SparkContext()
+        hiveContext = pyspark.sql.HiveContext(sc)
 
         # best hyperparameteters
         best_rank = 500
@@ -79,8 +81,8 @@ def main(spark, task, fraction, k):
         best_isrev_weight = -1
 
         # uncache train and val
-        HiveContext.uncacheTable("train")
-        HiveContext.uncacheTable("val")
+        hiveContext.uncacheTable("train")
+        hiveContext.uncacheTable("val")
 
         # reassign train and val
         train = train.union(val)
