@@ -3,7 +3,7 @@
 import sys
 from pyspark.sql import SparkSession
 from data_prep import read_sample_split_pq, save_down_splits
-from modeling import tune, get_recs, get_val_ids_and_true_labels, eval
+from modeling import tune, get_recs, get_val_ids_and_true_labels, eval, test_eval
 from hybrid import tune_isrev_weight
 from time import localtime, strftime
 
@@ -14,6 +14,9 @@ Usage:
     
     Additional arguments if tuning hybrid:
     [rank] [regularization parameter]
+
+    Additional arguments if testing:
+    [rank] [regularization parameter] [train partitions] [test partitions] [weight]
 
     Additional arguments if requesting resources from Dumbo:
     [memory (# of gigabytes to request)] [# cores to request] [# instances to request]
@@ -65,6 +68,30 @@ def main(spark, task, fraction, k):
         f.close()
 
         return
+    
+    if task=='test':
+        # get hyperparameters from command line
+        rank = int(sys.argv[4])
+        lamb = float(sys.argv[5])
+        train_coalesce_num = int(sys.argv[6])
+        test_coalesce_num = int(sys.argv[7])
+        weight = int(sys.argv[8])
+        
+        print('{}: Test set results for {}% of the Goodreads Interaction Data, {} train partitions, {} test partitions'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), int(fraction*100), 
+                                        train_coalesce_num, test_coalesce_num))
+
+        f = open("results_test{}.txt".format(int(fraction*100)), "a")
+        f.write('Baseline Test set results for {}% of the Goodreads Interaction Data, {} train partitions, {} test partitions'\
+                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), int(fraction*100), 
+                                        train_coalesce_num, test_coalesce_num))
+        f.close()
+
+        tune(spark, train, val, fraction, k, 
+        rank = rank, 
+        regParam = lamb)
+
+
 
     if task=='save-splits':
         # For 1%, 5%, 25%, and 100%,

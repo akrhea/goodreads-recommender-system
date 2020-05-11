@@ -324,7 +324,7 @@ def tune(spark, train, val, fraction, k=500,
 
     return
 
-    def train_eval(spark, train, val, fraction, k=500, rank=10, lamb=1):
+def train_eval(spark, train, val, fraction, k=500, rank=10, lamb=1):
 
         #for all users in val set, get list of books rated over 3 stars
         val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
@@ -342,5 +342,81 @@ def tune(spark, train, val, fraction, k=500,
                                         fraction=fraction, rank=rank, lamb=lamb, 
                                         k=k, isrev_weight=0, debug=False, synthetic=False)
 
-        return mean_ap, ndcg_at_k, p_at_k
+    return mean_ap, ndcg_at_k, p_at_k
+
+def eval(spark, pred_labels, true_labels, fraction, rank, lamb, 
+         k=500, isrev_weight=0, debug=False, synthetic=False):
+
+    from time import localtime, strftime
+    from pyspark.mllib.evaluation import RankingMetrics
+    import pyspark.sql.functions as F
+
+    #get netid
+    from getpass import getuser
+    net_id=getuser()
+
+    print('{}: Building RDD with predictions and true labels'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    if debug and (not synthetic):
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Begin building RDD with predictions and true labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.close()
+
+    # build RDD with predictions and true labels
+    pred_true_rdd = pred_labels.join(F.broadcast(true_labels), 'user_id', 'inner') \
+                .rdd \
+                .map(lambda x: (x[1], x[2]))
+                
+    pred_true_rdd = pred_true_rdd.coalesce((int((0.25+fraction)*200))) 
+
+    if debug and (not synthetic):
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Finish building RDD with predictions and true labels\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.close()
+
+    pred_true_rdd.cache()
+
+    print('{}: Instantiating metrics object'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    if debug and (not synthetic):
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Begin instantiating metrics object\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.close()
+
+    metrics = RankingMetrics(pred_true_rdd)
+
+    if debug and (not synthetic):
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Finish instantiating metrics object\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.close()
+
+    print('{}: Getting mean average precision'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    if debug and (not synthetic):
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Getting mean average precision\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.close()
+    mean_ap = metrics.meanAveragePrecision
+
+    print('{}: Getting NDCG at k'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    if debug and (not synthetic):
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Getting NDCG at k\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.close()
+    ndcg_at_k = metrics.ndcgAt(k)
+
+
+    print('{}: Getting precision at k'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+    if debug and (not synthetic):
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Getting precision at k\n'.format(strftime("%Y-%m-%d %H:%M:%S", localtime())))
+        f.close()
+    p_at_k=  metrics.precisionAt(k)
+    print('Lambda ', lamb, 'and Rank ', rank , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
+
+    if not synthetic:
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('{}: Evaluation for k={}, isrev_weight={}, lambda={}, and rank={}: MAP={}, NDCG={}, Precision at k={}\n\n\n\n'\
+                .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), \
+                        k, isrev_weight, lamb, rank, mean_ap, ndcg_at_k, p_at_k))
+        f.close()
+
+    return mean_ap, ndcg_at_k, p_at_k
         
