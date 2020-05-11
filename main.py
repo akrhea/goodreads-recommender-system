@@ -70,26 +70,54 @@ def main(spark, task, fraction, k):
         return
     
     if task=='test':
+        from pyspark.sql import hiveContext
         # best hyperparameteters
-        rank = 500
-        regParam = 0.01
-        isrev_weight = -1
+        best_rank = 500
+        best_lamb = 0.01
+        best_isrev_weight = -1
 
-        print(train.count())
+        # uncache train and val
+        hiveContext.uncacheTable("train")
+        hiveContext.uncacheTable("val")
 
+        # reassign train and val
         train = train.union(val)
         val = test
+        
+        #re-cache train and val
         train.cache()
         val.cache()
 
-        print(train.count())
+        #for all users in val set, get list of books rated over 3 stars
+        val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
+        true_labels.cache()
 
+        # get basic recs
+        recs = get_recs(spark, train, fraction, val_ids=val_ids, 
+                        lamb=best_lamb, rank=best_rank, k=k, implicit=False, 
+                        save_model=True, save_recs_pq=True, 
+                        debug=False, final_test=True)
 
-        # # plain results
-        # train_eval(spark, final_train, test, fraction, k=500, rank=10, lamb=1)
+        # select basic pred labels
+        pred_labels = recs.select('user_id','recommendations.book_id')
 
+        # evaluate basic model predictions
+        mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, 
+                                            fraction=fraction, rank=rank, lamb=lamb, 
+                                            k=k, isrev_weight=0, debug=False, synthetic=False)   
 
-        # # hybrid results
+        # get hybrid pred labels
+        hybrid_pred_labels = hybrid_pred_labels(spark, train, val_ids=val_ids, 
+                                                fraction=fraction, k=k, lamb=best_lamb, rank=best_rank, 
+                                                isrev_weight=best_isrev_weight,
+                                                debug=False, synthetic=False, 
+                                                save_revsplits = False, save_model=False, 
+                                                save_recs_pq=False, final_test=True)
+
+        # evaluate hybrid predictions
+        mean_ap, ndcg_at_k, p_at_k = eval(spark, hybrid_pred_labels, true_labels, isrev_weight=best_isrev_weight,
+                                            fraction=fraction, rank=best_rank, lamb=best_lamb, k=k,
+                                            debug=False, synthetic=False)
         
 
 

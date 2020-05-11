@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 
-def get_isrev_splits_from_ratings(spark, train, val, fraction, test=None, get_test=True, save_pq=False, synthetic=False):
+def get_isrev_splits_from_ratings(spark, train, val, fraction, 
+                                    test=None, get_test=True, save_pq=False, 
+                                    synthetic=False, final_test=False):
 
     #get netid
     from getpass import getuser
@@ -15,7 +17,10 @@ def get_isrev_splits_from_ratings(spark, train, val, fraction, test=None, get_te
         # set split paths
         train_isrev_path = 'hdfs:/user/'+net_id+'/isrev_{}_train.parquet'.format(int(fraction*100))
         val_isrev_path = 'hdfs:/user/'+net_id+'/isrev_{}_val.parquet'.format(int(fraction*100))
-        test_isrev_path = 'hdfs:/user/'+net_id+'/isrev_{}_test.parquet'.format(int(fraction*100))
+
+        if final_test:
+            train_isrev_path = 'hdfs:/user/'+net_id+'/isrev_final_{}_train.parquet'.format(int(fraction*100))
+            val_isrev_path = 'hdfs:/user/'+net_id+'/isrev_final_{}_val.parquet'.format(int(fraction*100))
 
         # read in isrev dfs from parquet if they exist
         try:
@@ -47,9 +52,6 @@ def get_isrev_splits_from_ratings(spark, train, val, fraction, test=None, get_te
             train.createOrReplaceTempView('train')
             val.createOrReplaceTempView('val')
 
-            if get_test:
-                test.createOrReplaceTempView('test')
-
             # create dfs from inner joins
             isrev_train =  spark.sql('SELECT df.user_id, df.book_id, is_reviewed \
                                       FROM df INNER JOIN train \
@@ -62,13 +64,6 @@ def get_isrev_splits_from_ratings(spark, train, val, fraction, test=None, get_te
                                       ON df.user_id=val.user_id AND df.book_id=val.book_id')
 
             isrev_val = isrev_val.coalesce(int((0.25+fraction)*200))
-            
-            if get_test:
-                isrev_test = spark.sql('SELECT df.user_id, df.book_id, is_reviewed \
-                                        FROM df INNER JOIN test \
-                                            ON df.user_id=test.user_id AND df.book_id=test.book_id')
-
-                isrev_test = isrev_test.coalesce(int((0.25+fraction)*200))
 
         if save_pq:
             from data_prep import write_to_parquet
@@ -117,7 +112,7 @@ def hybrid_pred_labels(spark, train, val, fraction,
                         k=500, lamb=1, rank=10, isrev_weight=1,
                         debug=False, synthetic=False, 
                         save_revsplits = True, save_model=True, 
-                        save_recs_pq=False):
+                        save_recs_pq=False, final_test=False):
 
     from pyspark.sql.functions import col, explode, collect_list, size, desc
     from pyspark.sql import Window
@@ -130,17 +125,18 @@ def hybrid_pred_labels(spark, train, val, fraction,
         save_revsplits = False
 
     isrev_train, isrev_val, _ = get_isrev_splits_from_ratings(spark, train, val, \
-                                fraction, get_test=False, save_pq=save_revsplits, synthetic=synthetic)
+                                fraction, get_test=False, save_pq=save_revsplits, \
+                                synthetic=synthetic, final_test=final_test)
 
     rating_recs = get_recs(spark, train, fraction, val=val, 
                                     lamb=lamb, rank=rank, k=k, implicit=False,
                                     save_model = save_model, save_recs_pq=save_recs_pq,
-                                    debug=debug)
+                                    debug=debug, final_test=final_test)
 
     isrev_recs = get_recs(spark, isrev_train, fraction, val=isrev_val, 
                                     lamb=lamb, rank=rank, k=k, implicit=True, 
                                     save_model = save_model, save_recs_pq=save_recs_pq,
-                                    debug=debug)
+                                    debug=debug, final_test=final_test)
     if debug:
         rating_recs.show(10)
         isrev_recs.show(10)
