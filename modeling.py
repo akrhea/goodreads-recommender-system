@@ -329,7 +329,7 @@ def tune(spark, train, val, fraction, k=500,
 
     return
 
-def train_eval(spark, train, val, fraction, k=500, rank=10, lamb=1, final_test=final_test):
+def train_eval(spark, train, val, fraction, k=500, rank=10, lamb=1, final_test=False):
 
     #for all users in val set, get list of books rated over 3 stars
     val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
