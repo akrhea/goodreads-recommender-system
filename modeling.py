@@ -344,7 +344,7 @@ def train_eval(spark, train, val, fraction, k=500, rank=10, lamb=1):
 
     return mean_ap, ndcg_at_k, p_at_k
 
-def eval(spark, pred_labels, true_labels, fraction, rank, lamb, 
+def test_eval(spark, pred_labels, true_labels, fraction, rank, lamb, 
          k=500, isrev_weight=0, debug=False, synthetic=False):
 
     from time import localtime, strftime
@@ -412,11 +412,65 @@ def eval(spark, pred_labels, true_labels, fraction, rank, lamb,
     print('Lambda ', lamb, 'and Rank ', rank , 'MAP: ', mean_ap , 'NDCG: ', ndcg_at_k, 'Precision at k: ', p_at_k)
 
     if not synthetic:
-        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f = open("results_test{}.txt".format(int(fraction*100)), "a")
         f.write('{}: Evaluation for k={}, isrev_weight={}, lambda={}, and rank={}: MAP={}, NDCG={}, Precision at k={}\n\n\n\n'\
                 .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), \
                         k, isrev_weight, lamb, rank, mean_ap, ndcg_at_k, p_at_k))
         f.close()
 
     return mean_ap, ndcg_at_k, p_at_k
+
+
+def test_tune(spark, train, val, fraction, k=500, 
+        rank, regParam):
+    ''' 
+        Fits ALS model from train, ranks k top items, and evaluates with MAP, P, NDCG across combos of rank/lambda hyperparameter
+        Imput: training file
+        arguments:
+            spark - spark
+            train - training set
+            val - validation set 
+            k - how many top items to predict (default = 500)
+        Returns: MAP, P, NDCG for each model
+    '''
+    from time import localtime, strftime
+    from pyspark.ml.tuning import ParamGridBuilder
+    import itertools 
+
+    # Tune hyper-parameters with cross-validation 
+    # references https://spark.apache.org/docs/latest/api/python/pyspark.ml.html#pyspark.ml.tuning.CrossValidator
+    # https://spark.apache.org/docs/latest/ml-tuning.html
+    # https://github.com/nyu-big-data/lab-mllib-not-assignment-ldarinzo/blob/master/supervised_train.py
+    #https://vinta.ws/code/spark-ml-cookbook-pyspark.html
+
+    #for all users in val set, get list of books rated over 3 stars
+    val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
+    val_ids = val_ids.coalesce((int((0.25+fraction)*200))) 
+    true_labels = true_labels.coalesce((int((0.25+fraction)*200))) 
+    val_ids.cache()
+    true_labels.cache()
+
+    paramGrid = itertools.product(rank, regParam) # cycle through lambas first
+                                                  # work up to large ranks
+
+    #fit and evaluate for all combos
+    for i in paramGrid:
+
+        print('{}: Evaluating {}% at k={}, rank={}, lambda={}'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), \
+                                                                int(fraction*100), k, i[0], i[1]))
+
+        # train or load model, get recommendations
+        recs = get_recs(spark, train, fraction, val_ids=val_ids, 
+                        lamb=i[1], rank=i[0], k=k, implicit=False, 
+                        save_model=True, save_recs_pq=False, debug=False)
+
+        # select pred labels
+        pred_labels = recs.select('user_id','recommendations.book_id')
+
+        # evaluate model predictions
+        _, _, _ = test_eval(spark, pred_labels, true_labels, fraction=fraction, 
+                                            rank=i[0], lamb=i[1], k=500, 
+                                            isrev_weight=0, debug=False, synthetic=False)
+
+    return
         

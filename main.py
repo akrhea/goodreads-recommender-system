@@ -76,6 +76,11 @@ def main(spark, task, fraction, k):
         train_coalesce_num = int(sys.argv[6])
         test_coalesce_num = int(sys.argv[7])
         weight = int(sys.argv[8])
+
+        train = train.coalesce(train_coalesce_num)
+        test = test.coalesce(test_coalesce_num)
+        val.cache()
+        train.cache()
         
         print('{}: Test set results for {}% of the Goodreads Interaction Data, {} train partitions, {} test partitions'\
                         .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), int(fraction*100), 
@@ -87,11 +92,8 @@ def main(spark, task, fraction, k):
                                         train_coalesce_num, test_coalesce_num))
         f.close()
 
-        tune(spark, train, val, fraction, k, 
-        rank = rank, 
-        regParam = lamb)
-
-
+        test_tune(spark, train, val=test, fraction, k, rank = rank, regParam = lamb)
+        test_tune(spark, train, val=test, fraction, k, rank = rank, regParam = lamb, isrev_weight=weight)
 
     if task=='save-splits':
         # For 1%, 5%, 25%, and 100%,
