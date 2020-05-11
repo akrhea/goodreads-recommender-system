@@ -513,3 +513,52 @@ Hyperparameter Tuning on 1% of the Goodreads Interaction Data
 
 
 
+2020-05-11 15:11:18: Evaluation for k=500, isrev_weight=0, lambda=0.01, and rank=10: MAP=0.0029727435418883557, NDCG=0.011938077916664923, Precision at k=0.0019162663006177076
+
+
+
+2020-05-11 15:18:02: Evaluation for k=500, isrev_weight=0, lambda=0.01, and rank=10: MAP=0.0029727435418883557, NDCG=0.011938077916664923, Precision at k=0.0019162663006177076
+
+
+
+
+Final Basic Model Evaluation on 1% Test Data,
+                     rank=10, lamb=0.01, k=500:
+                    mean_ap=0.0029727435418883557, ndcg_at_k=0.011938077916664923, p_at_k=0.0019162663006177076
+2020-05-11 15:23:54: Evaluation for k=500, isrev_weight=0, lambda=0.01, and rank=10: MAP=0.0029727435418883553, NDCG=0.011938077916664923, Precision at k=0.0019162663006177076
+
+
+
+
+Final Basic Model Evaluation on 1% Test Data,
+                     rank=10, lamb=0.01, k=500:
+                    mean_ap=0.0029727435418883553, ndcg_at_k=0.011938077916664923, p_at_k=0.0019162663006177076
+2020-05-11 15:26:43: Evaluation for k=500, isrev_weight=0, lambda=0.01, and rank=10: MAP=0.0029727435418883557, NDCG=0.011938077916664923, Precision at k=0.0019162663006177076
+
+
+
+
+Final Basic Model Evaluation on 1% Test Data,
+                     rank=10, lamb=0.01, k=500:
+                    mean_ap=0.0029727435418883557, ndcg_at_k=0.011938077916664923, p_at_k=0.0019162663006177076
+2020-05-11 15:40:07: Evaluation for k=500, isrev_weight=-1, lambda=0.01, and rank=10: MAP=0.001122124839142209, NDCG=0.010297653197808336, Precision at k=0.0019162663006177074
+
+
+
+2020-05-11 16:25:59: Evaluation for k=500, isrev_weight=0, lambda=0.01, and rank=10: MAP=0.0029727435418883557, NDCG=0.011938077916664923, Precision at k=0.0019162663006177076
+
+
+
+
+Final Basic Model Evaluation on 1% Test Data,
+                     rank=10, lamb=0.01, k=500:
+                    mean_ap=0.0029727435418883557, ndcg_at_k=0.011938077916664923, p_at_k=0.0019162663006177076
+2020-05-11 16:37:01: Evaluation for k=500, isrev_weight=-1, lambda=0.01, and rank=10: MAP=0.0011385820785822078, NDCG=0.010240538272031852, Precision at k=0.0019162663006177067
+
+
+
+
+Final Hybrid Model Evaluation on 1% Test Data,
+                     rank=10, lamb=0.01, isrev_weight=-1, k=500:
+                     mean_ap=0.0011385820785822078, ndcg_at_k=0.010240538272031852, p_at_k=0.0019162663006177067
+
