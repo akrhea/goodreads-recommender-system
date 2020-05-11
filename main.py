@@ -92,8 +92,8 @@ def main(spark, task, fraction, k):
                                         train_coalesce_num, test_coalesce_num))
         f.close()
 
-        test_tune(spark, train, test, fraction, k, rank = rank, regParam = lamb)
-        test_tune(spark, train, test, fraction, k, rank = rank, regParam = lamb, isrev_weight=weight)
+        test_tune(spark, train, test, fraction, k, rank, regParam = lamb)
+        test_tune(spark, train, test, fraction, k, rank, regParam = lamb, isrev_weight=weight)
 
     if task=='save-splits':
         # For 1%, 5%, 25%, and 100%,
