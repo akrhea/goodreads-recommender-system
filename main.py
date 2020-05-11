@@ -3,8 +3,8 @@
 import sys
 from pyspark.sql import SparkSession
 from data_prep import read_sample_split_pq, save_down_splits
-from modeling import tune, get_recs, get_val_ids_and_true_labels, eval, test_eval, test_tune
-from hybrid import tune_isrev_weight
+from modeling import tune, get_recs, get_val_ids_and_true_labels, eval
+from hybrid import tune_isrev_weight, hybrid_pred_labels
 from time import localtime, strftime
 
 '''
@@ -71,6 +71,7 @@ def main(spark, task, fraction, k):
     
     if task=='test':
         from pyspark.sql import hiveContext
+
         # best hyperparameteters
         best_rank = 500
         best_lamb = 0.01
