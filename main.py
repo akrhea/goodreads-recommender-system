@@ -131,8 +131,8 @@ def main(spark, task, fraction, k):
                                                 save_recs_pq=False, final_test=True)
 
         # evaluate hybrid predictions
-        hybrid_mean_ap, 
-        hybrid_ndcg_at_k, 
+        hybrid_mean_ap, \
+        hybrid_ndcg_at_k, \
         hybrid_p_at_k = eval(spark, hybrid_pred_labels, true_labels, isrev_weight=best_isrev_weight,
                               fraction=fraction, rank=best_rank, lamb=best_lamb, k=k,
                               debug=False, synthetic=False)
