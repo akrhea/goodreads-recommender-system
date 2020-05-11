@@ -456,8 +456,8 @@ def test_tune(spark, train, test, fraction, rank, regParam, k=500):
     pred_labels = recs.select('user_id','recommendations.book_id')
 
     # evaluate model predictions
-    _, _, _ = test_eval(spark, pred_labels, true_labels, fraction=fraction, 
-                                        rank, lamb=regParam, k=500, 
+    _, _, _ = test_eval(spark, pred_labels, true_labels, rank fraction=fraction, 
+                                        lamb=regParam, k=500, 
                                         isrev_weight=0, debug=False, synthetic=False)
     return
         
