@@ -123,7 +123,7 @@ def main(spark, task, fraction, k):
         f.close()
 
         # get hybrid pred labels
-        hybrid_pred_labels = hybrid_pred_labels(spark, train, val_ids=val_ids, 
+        hybrid_pred_labels = hybrid_pred_labels(spark, train, val, 
                                                 fraction=fraction, k=k, lamb=best_lamb, rank=best_rank, 
                                                 isrev_weight=best_isrev_weight,
                                                 debug=False, synthetic=False, 
