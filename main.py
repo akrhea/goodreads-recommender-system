@@ -113,6 +113,14 @@ def main(spark, task, fraction, k):
         print('mean_ap: {}, ndcg_at_k: {}, p_at_k: {}'.format(mean_ap, 
                                                               ndcg_at_k, 
                                                                p_at_k))
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('\nFinal Basic Model Evaluation on {}% Test Data,\n \
+                    rank={}, lamb={}, k={}:\n\
+                    mean_ap={}, ndcg_at_k={}, p_at_k={}\n'\
+                                            .format(int(fraction*100), 
+                                                        best_rank, best_lamb,
+                                                        mean_ap, ndcg_at_k, p_at_k))
+        f.close()
 
         # get hybrid pred labels
         hybrid_pred_labels = hybrid_pred_labels(spark, train, val_ids=val_ids, 
@@ -132,6 +140,15 @@ def main(spark, task, fraction, k):
         print('hybrid_mean_ap: {}, hybrid_ndcg_at_k: {}, hybrid_p_at_k: {}'.format(hybrid_mean_ap, 
                                                                             hybrid_ndcg_at_k, 
                                                                             hybrid_p_at_k))
+
+        f = open("results_{}.txt".format(int(fraction*100)), "a")
+        f.write('\nFinal Hybrid Model Evaluation on {}% Test Data,\n \
+                    rank={}, lamb={}, isrev_weight={}, k={}:\n \
+                    mean_ap={}, ndcg_at_k={}, p_at_k={}\n\n'\
+                                            .format(int(fraction*100), 
+                                                        best_rank, best_lamb, best_isrev_weight,
+                                                        hybrid_mean_ap, hybrid_ndcg_at_k, hybrid_p_at_k))
+        f.close()
 
 
         # print('{}: Test set results for {}% of the Goodreads Interaction Data'\
