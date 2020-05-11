@@ -118,7 +118,7 @@ def main(spark, task, fraction, k):
                     rank={}, lamb={}, k={}:\n\
                     mean_ap={}, ndcg_at_k={}, p_at_k={}\n'\
                                             .format(int(fraction*100), 
-                                                        best_rank, best_lamb,
+                                                        best_rank, best_lamb, k,
                                                         mean_ap, ndcg_at_k, p_at_k))
         f.close()
 
