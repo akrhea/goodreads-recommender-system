@@ -448,8 +448,8 @@ def test_tune(spark, train, test, fraction, rank, regParam, k=500):
                                                             int(fraction*100), k, rank, regParam))
 
     # train or load model, get recommendations
-    recs = get_recs(spark, train, fraction, val_ids=val_ids, 
-                    lamb=regParam, rank, k, implicit=False, 
+    recs = get_recs(spark, train, fraction, rank, k, val_ids=val_ids, 
+                    lamb=regParam, implicit=False, 
                     save_model=True, save_recs_pq=False, debug=False)
 
     # select pred labels
