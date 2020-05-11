@@ -146,7 +146,7 @@ def main(spark, task, fraction, k):
                     rank={}, lamb={}, isrev_weight={}, k={}:\n \
                     mean_ap={}, ndcg_at_k={}, p_at_k={}\n\n'\
                                             .format(int(fraction*100), 
-                                                        best_rank, best_lamb, best_isrev_weight,
+                                                        best_rank, best_lamb, best_isrev_weight, k, 
                                                         hybrid_mean_ap, hybrid_ndcg_at_k, hybrid_p_at_k))
         f.close()
         return
