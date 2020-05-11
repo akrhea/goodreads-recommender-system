@@ -72,7 +72,7 @@ def main(spark, task, fraction, k):
     if task=='test':
         # get hyperparameters from command line
         rank = int(sys.argv[4])
-        lamb = float(sys.argv[5])
+        regParam = float(sys.argv[5])
         train_coalesce_num = int(sys.argv[6])
         test_coalesce_num = int(sys.argv[7])
         weight = int(sys.argv[8])
@@ -92,8 +92,8 @@ def main(spark, task, fraction, k):
                                         train_coalesce_num, test_coalesce_num))
         f.close()
 
-        test_tune(spark, train, test, fraction, k, rank, regParam = lamb)
-        test_tune(spark, train, test, fraction, k, rank, regParam = lamb, isrev_weight=weight)
+        test_tune(spark, train, test, fraction, k, rank, regParam)
+        test_tune(spark, train, test, fraction, k, rank, regParam, isrev_weight=weight)
 
     if task=='save-splits':
         # For 1%, 5%, 25%, and 100%,
