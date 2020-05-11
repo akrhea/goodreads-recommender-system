@@ -76,7 +76,7 @@ def main(spark, task, fraction, k):
         from hybrid import tune_isrev_weight, hybrid_pred_labels
 
         # best hyperparameteters
-        best_rank = 500
+        best_rank = rank = int(sys.argv[4]) # real best_rank is 500
         best_lamb = 0.01
         best_isrev_weight = -1
 
@@ -149,18 +149,7 @@ def main(spark, task, fraction, k):
                                                         best_rank, best_lamb, best_isrev_weight,
                                                         hybrid_mean_ap, hybrid_ndcg_at_k, hybrid_p_at_k))
         f.close()
-
-
-        # print('{}: Test set results for {}% of the Goodreads Interaction Data'\
-        #                 .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), int(fraction*100))
-
-        # f = open("results_test{}.txt".format(int(fraction*100)), "a")
-        # f.write('Baseline Test set results for {}% of the Goodreads Interaction Data'\
-        #                 .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), int(fraction*100)))
-        # f.close()
-
-        # test_tune(spark, train, test, fraction, k, rank, regParam)
-        # test_tune(spark, train, test, fraction, k, rank, regParam, isrev_weight=weight)
+        return
 
     if task=='save-splits':
         # For 1%, 5%, 25%, and 100%,
@@ -270,17 +259,6 @@ def main(spark, task, fraction, k):
         return
     return
 
-
-
-
-    # if task=='eval':
-    #     # train and evaluate default model on val set
-    #     train_eval(spark, train, val)
-
-
-    # if task=='predict':
-    #     # get predictions on validation set
-    #     preds = get_recs(spark, train, val, fraction)
 
 
 if __name__ == "__main__":
