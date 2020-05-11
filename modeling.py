@@ -326,22 +326,21 @@ def tune(spark, train, val, fraction, k=500,
 
 def train_eval(spark, train, val, fraction, k=500, rank=10, lamb=1):
 
-        #for all users in val set, get list of books rated over 3 stars
-        val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
+    #for all users in val set, get list of books rated over 3 stars
+    val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
 
-        # train or load model, get recommendations
-        recs = get_recs(spark, train, fraction, val_ids=val_ids, 
-                        lamb=lamb, rank=rank, k=k, implicit=False, 
-                        save_model=True, save_recs_pq=False, debug=False)
+    # train or load model, get recommendations
+    recs = get_recs(spark, train, fraction, val_ids=val_ids, 
+                    lamb=lamb, rank=rank, k=k, implicit=False, 
+                    save_model=True, save_recs_pq=False, debug=False)
 
-        # select pred labels
-        pred_labels = recs.select('user_id','recommendations.book_id')
+    # select pred labels
+    pred_labels = recs.select('user_id','recommendations.book_id')
 
-        # evaluate model predictions
-        mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, 
-                                        fraction=fraction, rank=rank, lamb=lamb, 
-                                        k=k, isrev_weight=0, debug=False, synthetic=False)
-
+    # evaluate model predictions
+    mean_ap, ndcg_at_k, p_at_k = eval(spark, pred_labels, true_labels, 
+                                    fraction=fraction, rank=rank, lamb=lamb, 
+                                    k=k, isrev_weight=0, debug=False, synthetic=False)                         
     return mean_ap, ndcg_at_k, p_at_k
 
 def test_eval(spark, pred_labels, true_labels, fraction, rank, lamb, 
