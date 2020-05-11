@@ -49,6 +49,7 @@ def main(spark, task, fraction, k):
         f = open("results.txt", "a")
         f.write('---------------------------------------------------------------\n\n')
         f.close()
+        return
 
     if task=='hybrid-tune':
 
@@ -239,6 +240,7 @@ def main(spark, task, fraction, k):
         f.close()
 
         return
+    return
 
 
 
