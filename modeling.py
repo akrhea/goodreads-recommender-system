@@ -420,8 +420,7 @@ def test_eval(spark, pred_labels, true_labels, fraction, rank, lamb,
     return mean_ap, ndcg_at_k, p_at_k
 
 
-def test_tune(spark, train, test, fraction, k=500, 
-        rank, regParam):
+def test_tune(spark, train, test, fraction, rank, regParam, k=500):
     ''' 
         Fits ALS model from train, ranks k top items, and evaluates with MAP, P, NDCG across combos of rank/lambda hyperparameter
         Imput: training file
@@ -435,12 +434,6 @@ def test_tune(spark, train, test, fraction, k=500,
     from time import localtime, strftime
     from pyspark.ml.tuning import ParamGridBuilder
     import itertools 
-
-    # Tune hyper-parameters with cross-validation 
-    # references https://spark.apache.org/docs/latest/api/python/pyspark.ml.html#pyspark.ml.tuning.CrossValidator
-    # https://spark.apache.org/docs/latest/ml-tuning.html
-    # https://github.com/nyu-big-data/lab-mllib-not-assignment-ldarinzo/blob/master/supervised_train.py
-    #https://vinta.ws/code/spark-ml-cookbook-pyspark.html
 
     #for all users in val set, get list of books rated over 3 stars
     val_ids, true_labels = get_val_ids_and_true_labels(spark, test)
@@ -470,6 +463,5 @@ def test_tune(spark, train, test, fraction, k=500,
         _, _, _ = test_eval(spark, pred_labels, true_labels, fraction=fraction, 
                                             rank=i[0], lamb=i[1], k=500, 
                                             isrev_weight=0, debug=False, synthetic=False)
-
     return
         
