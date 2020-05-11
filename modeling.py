@@ -420,7 +420,7 @@ def test_eval(spark, pred_labels, true_labels, fraction, rank, lamb,
     return mean_ap, ndcg_at_k, p_at_k
 
 
-def test_tune(spark, train, val, fraction, k=500, 
+def test_tune(spark, train, test, fraction, k=500, 
         rank, regParam):
     ''' 
         Fits ALS model from train, ranks k top items, and evaluates with MAP, P, NDCG across combos of rank/lambda hyperparameter
@@ -443,7 +443,7 @@ def test_tune(spark, train, val, fraction, k=500,
     #https://vinta.ws/code/spark-ml-cookbook-pyspark.html
 
     #for all users in val set, get list of books rated over 3 stars
-    val_ids, true_labels = get_val_ids_and_true_labels(spark, val)
+    val_ids, true_labels = get_val_ids_and_true_labels(spark, test)
     val_ids = val_ids.coalesce((int((0.25+fraction)*200))) 
     true_labels = true_labels.coalesce((int((0.25+fraction)*200))) 
     val_ids.cache()
