@@ -70,30 +70,39 @@ def main(spark, task, fraction, k):
         return
     
     if task=='test':
-        # get hyperparameters from command line
-        rank = int(sys.argv[4])
-        regParam = float(sys.argv[5])
-        train_coalesce_num = int(sys.argv[6])
-        test_coalesce_num = int(sys.argv[7])
-        weight = int(sys.argv[8])
+        # best hyperparameteters
+        rank = 500
+        regParam = 0.01
+        isrev_weight = -1
 
-        train = train.coalesce(train_coalesce_num)
-        test = test.coalesce(test_coalesce_num)
-        val.cache()
+        print(train.count())
+
+        train = train.union(val)
+        val = test
         train.cache()
+        val.cache()
+
+        print(train.count())
+
+
+        # # plain results
+        # train_eval(spark, final_train, test, fraction, k=500, rank=10, lamb=1)
+
+
+        # # hybrid results
         
-        print('{}: Test set results for {}% of the Goodreads Interaction Data, {} train partitions, {} test partitions'\
-                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), int(fraction*100), 
-                                        train_coalesce_num, test_coalesce_num))
 
-        f = open("results_test{}.txt".format(int(fraction*100)), "a")
-        f.write('Baseline Test set results for {}% of the Goodreads Interaction Data, {} train partitions, {} test partitions'\
-                        .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), int(fraction*100), 
-                                        train_coalesce_num, test_coalesce_num))
-        f.close()
 
-        test_tune(spark, train, test, fraction, k, rank, regParam)
-        test_tune(spark, train, test, fraction, k, rank, regParam, isrev_weight=weight)
+        # print('{}: Test set results for {}% of the Goodreads Interaction Data'\
+        #                 .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), int(fraction*100))
+
+        # f = open("results_test{}.txt".format(int(fraction*100)), "a")
+        # f.write('Baseline Test set results for {}% of the Goodreads Interaction Data'\
+        #                 .format(strftime("%Y-%m-%d %H:%M:%S", localtime()), int(fraction*100)))
+        # f.close()
+
+        # test_tune(spark, train, test, fraction, k, rank, regParam)
+        # test_tune(spark, train, test, fraction, k, rank, regParam, isrev_weight=weight)
 
     if task=='save-splits':
         # For 1%, 5%, 25%, and 100%,
@@ -159,7 +168,8 @@ def main(spark, task, fraction, k):
             #get recs
             recs = get_recs(spark, train, fraction=fraction, val_ids=val_ids,
                             lamb=1.1, rank=10, k=k, implicit=False, 
-                            save_model=False, save_recs_csv=False, save_recs_pq=False, debug=True)
+                            save_model=False, save_recs_csv=False, save_recs_pq=False, 
+                            debug=True)
 
             print('{}: Finish getting recs\n'\
                         .format(strftime("%Y-%m-%d %H:%M:%S")))
