@@ -442,26 +442,22 @@ def test_tune(spark, train, test, fraction, rank, regParam, k=500):
     val_ids.cache()
     true_labels.cache()
 
-    paramGrid = itertools.product(rank, regParam) # cycle through lambas first
-                                                  # work up to large ranks
-
     #fit and evaluate for all combos
-    for i in paramGrid:
 
-        print('{}: Evaluating {}% at k={}, rank={}, lambda={}'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), \
-                                                                int(fraction*100), k, i[0], i[1]))
+    print('{}: Evaluating {}% at k={}, rank={}, lambda={}'.format(strftime("%Y-%m-%d %H:%M:%S", localtime()), \
+                                                            int(fraction*100), k, rank, regParam))
 
-        # train or load model, get recommendations
-        recs = get_recs(spark, train, fraction, val_ids=val_ids, 
-                        lamb=i[1], rank=i[0], k=k, implicit=False, 
-                        save_model=True, save_recs_pq=False, debug=False)
+    # train or load model, get recommendations
+    recs = get_recs(spark, train, fraction, val_ids=val_ids, 
+                    lamb=regParam, rank, k, implicit=False, 
+                    save_model=True, save_recs_pq=False, debug=False)
 
-        # select pred labels
-        pred_labels = recs.select('user_id','recommendations.book_id')
+    # select pred labels
+    pred_labels = recs.select('user_id','recommendations.book_id')
 
-        # evaluate model predictions
-        _, _, _ = test_eval(spark, pred_labels, true_labels, fraction=fraction, 
-                                            rank=i[0], lamb=i[1], k=500, 
-                                            isrev_weight=0, debug=False, synthetic=False)
+    # evaluate model predictions
+    _, _, _ = test_eval(spark, pred_labels, true_labels, fraction=fraction, 
+                                        rank, lamb=regParam, k=500, 
+                                        isrev_weight=0, debug=False, synthetic=False)
     return
         
