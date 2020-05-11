@@ -72,6 +72,8 @@ def main(spark, task, fraction, k):
     
     if task=='test':
 
+        from modeling import tune, get_recs, get_val_ids_and_true_labels, eval
+        from hybrid import tune_isrev_weight, hybrid_pred_labels
 
         # best hyperparameteters
         best_rank = 500
@@ -108,6 +110,10 @@ def main(spark, task, fraction, k):
                                             fraction=fraction, rank=rank, lamb=lamb, 
                                             k=k, isrev_weight=0, debug=False, synthetic=False)   
 
+        print('mean_ap: {}, ndcg_at_k: {}, p_at_k: {}'.format(mean_ap, 
+                                                              ndcg_at_k, 
+                                                               p_at_k))
+
         # get hybrid pred labels
         hybrid_pred_labels = hybrid_pred_labels(spark, train, val_ids=val_ids, 
                                                 fraction=fraction, k=k, lamb=best_lamb, rank=best_rank, 
@@ -117,10 +123,15 @@ def main(spark, task, fraction, k):
                                                 save_recs_pq=False, final_test=True)
 
         # evaluate hybrid predictions
-        mean_ap, ndcg_at_k, p_at_k = eval(spark, hybrid_pred_labels, true_labels, isrev_weight=best_isrev_weight,
-                                            fraction=fraction, rank=best_rank, lamb=best_lamb, k=k,
-                                            debug=False, synthetic=False)
+        hybrid_mean_ap, 
+        hybrid_ndcg_at_k, 
+        hybrid_p_at_k = eval(spark, hybrid_pred_labels, true_labels, isrev_weight=best_isrev_weight,
+                              fraction=fraction, rank=best_rank, lamb=best_lamb, k=k,
+                              debug=False, synthetic=False)
         
+        print('hybrid_mean_ap: {}, hybrid_ndcg_at_k: {}, hybrid_p_at_k: {}'.format(hybrid_mean_ap, 
+                                                                            hybrid_ndcg_at_k, 
+                                                                            hybrid_p_at_k))
 
 
         # print('{}: Test set results for {}% of the Goodreads Interaction Data'\
