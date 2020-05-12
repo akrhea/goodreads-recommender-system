@@ -12,11 +12,9 @@ Usage:
 
     $ spark-submit main.py [task] [downsample fraction] [k]
     
-    Additional arguments if tuning hybrid:
+    Additional arguments if tuning:
     [rank] [regularization parameter]
-
-    Additional arguments if testing:
-    [rank] [regularization parameter] [train partitions] [test partitions] [weight]
+    Note: [regularization parameter] not necessary if tuning hybrid
 
     Additional arguments if requesting resources from Dumbo:
     [memory (# of gigabytes to request)] [# cores to request] [# instances to request]
