@@ -10,5 +10,7 @@ Our baseline collaborative filtering model uses explicit feedback in the form of
 
 
  ## The data set
-We use the [Goodreads dataset](https://sites.google.com/eng.ucsd.edu/ucsdbookgraph/home) collected by 
+We use the [Goodreads dataset](https://sites.google.com/eng.ucsd.edu/ucsdbookgraph/home), collected by: 
 > Mengting Wan, Julian McAuley, "Item Recommendation on Monotonic Behavior Chains", RecSys 2018.
+
+The dataset contains 876K users, 2.4M books, and 223M interactions.
